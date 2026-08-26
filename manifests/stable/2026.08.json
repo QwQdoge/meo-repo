@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "release": "2026.08",
+  "generation": "2026.08",
+  "architecture": "x86_64",
+  "components": {
+    "meoui-qml": {"repository": "QwQdoge/MeoUI", "tag": "v1.0.2", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "1.0.2-2"},
+    "meo-icons": {"repository": "QwQdoge/meo-kde", "tag": "v0.3.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.3.0-4"},
+    "meo-desktop": {"repository": "QwQdoge/meo-kde", "tag": "v0.3.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.3.0-2"},
+    "meo-settings": {"repository": "QwQdoge/MeoSettings", "tag": "v0.1.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.0-1"},
+    "omnistore-bin": {"repository": "QwQdoge/OmniStore", "tag": "v0.1.2", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.2-1"}
+  }
+}

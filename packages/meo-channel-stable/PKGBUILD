@@ -1,0 +1,15 @@
+pkgname=meo-channel-stable
+pkgver=1
+pkgrel=1
+pkgdesc="Select the MeoArch stable pacman channel"
+arch=('any')
+license=('MIT')
+depends=('meo-mirrorlist')
+provides=('meo-channel')
+conflicts=('meo-channel-beta')
+source=('meo-channel.conf')
+sha256sums=('SKIP')
+
+package() {
+  install -Dm644 meo-channel.conf "$pkgdir/etc/pacman.d/meo-channel.conf"
+}

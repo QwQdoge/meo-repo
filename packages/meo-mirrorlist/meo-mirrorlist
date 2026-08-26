@@ -1,0 +1,3 @@
+## Official MeoArch mirror list. Channel selection is owned by meo-channel-*.
+## Future regional official mirrors may be added above this fallback.
+Server = https://packages.meoarch.org/$repo/os/$arch

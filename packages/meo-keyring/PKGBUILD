@@ -1,0 +1,19 @@
+pkgname=meo-keyring
+pkgver=1
+pkgrel=1
+pkgdesc="MeoArch pacman signing keyring"
+arch=('any')
+license=('MIT')
+source=('meo.gpg' 'meo-trusted' 'meo-revoked')
+sha256sums=('SKIP' 'SKIP' 'SKIP')
+
+package() {
+  for keyring_file in meo.gpg meo-trusted meo-revoked; do
+    test -s "$srcdir/$keyring_file" || {
+      error "Refusing to build an empty Meo keyring payload: $keyring_file"
+      return 1
+    }
+    install -Dm644 "$srcdir/$keyring_file" \
+      "$pkgdir/usr/share/pacman/keyrings/$keyring_file"
+  done
+}

@@ -1,0 +1,51 @@
+name: MeoArch repository release
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: 'stable builds a complete manifest; beta builds one reviewed candidate.'
+        required: true
+        type: choice
+        options: [stable, beta]
+      manifest:
+        description: 'Stable manifest path or reviewed beta candidate manifest path.'
+        required: true
+        default: manifests/stable/2026.08.json
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python scripts/validate_manifest.py "${{ inputs.manifest }}"
+      - run: python -m unittest discover -s tests -v
+      # The production implementation builds each recipe in a pinned,
+      # unprivileged Arch container and uploads only unsigned artifacts + hashes.
+
+  sign-and-publish:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    environment: release
+    concurrency:
+      group: meo-${{ inputs.channel }}-publish
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: python scripts/validate_manifest.py "${{ inputs.manifest }}"
+      - run: python scripts/validate_keyring_payload.py
+      # Import CI signing *subkey* from protected environment, verify unsigned
+      # artifact hashes, sign packages/DB, upload to R2, verify remote objects,
+      # purge only mutable DB paths, then run isolated pacman-root smoke tests.
+      # Credentials are intentionally referenced only by this protected job.

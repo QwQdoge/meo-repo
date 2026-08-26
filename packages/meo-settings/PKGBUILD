@@ -1,0 +1,18 @@
+pkgname=meo-settings
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="MeoArch settings application"
+arch=('x86_64')
+url='https://github.com/QwQdoge/MeoSettings'
+license=('GPL-3.0-or-later')
+depends=('meoui-qml' 'meo-desktop' 'qt6-declarative' 'qt6-svg' 'kconfig' 'kcoreaddons' 'ki18n' 'solid')
+makedepends=('cmake' 'ninja' 'qt6-tools' 'extra-cmake-modules')
+source=()
+sha256sums=()
+
+build() {
+  cmake -S "$srcdir/source" -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() { DESTDIR="$pkgdir" cmake --install build; }

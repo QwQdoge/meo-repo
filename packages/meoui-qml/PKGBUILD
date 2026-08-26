@@ -1,0 +1,19 @@
+# Rendered by the protected release job with source tag/commit/checksum from a manifest.
+pkgname=meoui-qml
+pkgver=1.0.2
+pkgrel=2
+pkgdesc="MeoUI Qt Quick Material Design 3 component library"
+arch=('x86_64')
+url='https://github.com/QwQdoge/MeoUI'
+license=('MIT')
+depends=('qt6-declarative')
+makedepends=('cmake' 'ninja' 'qt6-tools')
+source=()
+sha256sums=()
+
+build() {
+  cmake -B build -S "$srcdir/source" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DMEOUI_BUILD_SHOWCASE=OFF
+  cmake --build build
+}
+
+package() { DESTDIR="$pkgdir" cmake --install build; }

@@ -1,0 +1,35 @@
+# The protected renderer sets pkgver, _release_tag and source checksums from
+# the immutable manifest.  The verifier is fetched from that exact source tag.
+pkgname=omnistore-bin
+pkgver=0.1.2
+pkgrel=1
+pkgdesc="OmniStore package management application"
+arch=('x86_64')
+url='https://github.com/QwQdoge/OmniStore'
+license=('MIT')
+depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass')
+provides=('omnistore')
+conflicts=('omnistore' 'omnistore-git')
+source=()
+sha256sums=()
+
+prepare() {
+  test -x "$srcdir/release_bundle/backends/python_server"
+  test -x "$srcdir/release_bundle/frontend"
+  python "$srcdir/verify_release_exporter_contract.py" --backend "$srcdir/release_bundle/backends/python_server"
+}
+
+package() {
+  install -d "$pkgdir/opt/omnistore"
+  cp -a "$srcdir/release_bundle/." "$pkgdir/opt/omnistore/"
+  install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore" <<'EOF'
+#!/bin/sh
+exec /opt/omnistore/frontend "$@"
+EOF
+  install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore-apps-export" <<'EOF'
+#!/bin/sh
+set -eu
+[ "$#" -eq 0 ] || exit 64
+exec /opt/omnistore/backends/python_server --export-installed-usage --json
+EOF
+}

@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "generation": "2026.08",
+  "officialPackages": ["meoui-qml", "meo-icons", "meo-desktop", "meo-settings", "omnistore-bin"]
+}

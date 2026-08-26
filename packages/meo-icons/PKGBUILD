@@ -1,0 +1,17 @@
+pkgname=meo-icons
+pkgver=0.3.0
+pkgrel=4
+pkgdesc="Meo Symbols Material Design 3 icon theme"
+arch=('any')
+url='https://github.com/QwQdoge/meo-kde'
+license=('Apache-2.0')
+depends=('breeze-icons' 'hicolor-icon-theme')
+source=()
+sha256sums=()
+
+package() {
+  for theme in MeoSymbols MeoSymbolsDark; do
+    install -d "$pkgdir/usr/share/icons/$theme"
+    cp -a "$srcdir/source/themes/icons/$theme/." "$pkgdir/usr/share/icons/$theme/"
+  done
+}

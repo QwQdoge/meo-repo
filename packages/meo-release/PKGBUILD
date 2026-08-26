@@ -1,0 +1,13 @@
+pkgname=meo-release
+pkgver=2026.08
+pkgrel=1
+pkgdesc="MeoArch release generation and official package catalog"
+arch=('any')
+license=('MIT')
+depends=('meo-keyring' 'meo-mirrorlist' 'meo-channel')
+source=('package-catalog.json')
+sha256sums=('SKIP')
+
+package() {
+  install -Dm644 package-catalog.json "$pkgdir/usr/share/meo-release/package-catalog.json"
+}

@@ -1,0 +1,23 @@
+pkgname=meo-desktop
+pkgver=0.3.0
+pkgrel=2
+pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
+arch=('x86_64')
+url='https://github.com/QwQdoge/meo-kde'
+license=('GPL-3.0-or-later')
+depends=('meoui-qml>=1.0.2' 'meo-icons>=0.3.0' 'plasma-desktop' 'plasma-workspace' 'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin' 'konsole' 'sddm' 'breeze')
+makedepends=('cmake' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative')
+source=()
+sha256sums=()
+
+# The release renderer supplies a pinned source tree as $srcdir/source.  This
+# recipe intentionally never reads a developer sibling checkout.
+build() {
+  cmake -S "$srcdir/source/native" -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build --parallel
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$srcdir/source/defaults/system/os-release" "$pkgdir/etc/os-release"
+}

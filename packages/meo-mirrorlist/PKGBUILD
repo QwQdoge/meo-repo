@@ -1,0 +1,12 @@
+pkgname=meo-mirrorlist
+pkgver=1
+pkgrel=1
+pkgdesc="Official MeoArch package mirror list"
+arch=('any')
+license=('MIT')
+source=('meo-mirrorlist')
+sha256sums=('SKIP')
+
+package() {
+  install -Dm644 meo-mirrorlist "$pkgdir/etc/pacman.d/meo-mirrorlist"
+}
