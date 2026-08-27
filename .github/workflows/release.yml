@@ -4,14 +4,18 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: 'stable builds a complete manifest; beta builds one reviewed candidate.'
+        description: Stable builds the full train; Beta builds one sparse-overlay candidate.
         required: true
         type: choice
         options: [stable, beta]
       manifest:
-        description: 'Stable manifest path or reviewed beta candidate manifest path.'
+        description: Reviewed immutable manifest path.
         required: true
         default: manifests/stable/2026.08.json
+      beta_candidate:
+        description: Required only for Beta (one core package name).
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -19,33 +23,125 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    container: archlinux:base-devel
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: python scripts/validate_manifest.py "${{ inputs.manifest }}"
-      - run: python -m unittest discover -s tests -v
-      # The production implementation builds each recipe in a pinned,
-      # unprivileged Arch container and uploads only unsigned artifacts + hashes.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Prepare unprivileged Arch builder
+        run: |
+          pacman -Syu --noconfirm --needed python curl git sudo namcap
+          useradd --create-home builder
+          printf 'builder ALL=(ALL:ALL) NOPASSWD: /usr/bin/pacman\n' >/etc/sudoers.d/meo-builder
+          chmod 0440 /etc/sudoers.d/meo-builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+      - name: Validate release contracts
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: |
+          sudo -u builder python scripts/validate_manifest.py "$RELEASE_MANIFEST"
+          sudo -u builder python -m unittest discover -s tests -v
+      - name: Resolve Beta candidate against current signed overlay and Stable fallback
+        if: inputs.channel == 'beta'
+        run: ci/configure-build-repositories.sh
+      - name: Build unsigned packages
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_BETA_CANDIDATE: ${{ inputs.beta_candidate }}
+        run: |
+          sudo -u builder ci/build-release.sh \
+            "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output" \
+            "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"
+      - name: Run package metadata checks
+        run: |
+          for package in build-output/packages/*.pkg.tar.*; do
+            case "$package" in *.sig) continue ;; esac
+            namcap "$package"
+          done
+      - name: Run installed Stable train smoke
+        if: inputs.channel == 'stable'
+        run: ci/smoke-installed.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-${{ inputs.channel }}-${{ github.run_id }}
+          path: build-output/
+          if-no-files-found: error
+          retention-days: 7
 
   sign-and-publish:
     needs: build-and-test
     runs-on: ubuntu-latest
+    container: archlinux:base-devel
     environment: release
     concurrency:
-      group: meo-${{ inputs.channel }}-publish
+      # Stable publication also prunes meo-beta. One global publication lock
+      # prevents that cleanup from racing a Beta candidate publication.
+      group: meo-repository-publish
       cancel-in-progress: false
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: python scripts/validate_manifest.py "${{ inputs.manifest }}"
-      - run: python scripts/validate_keyring_payload.py
-      # Import CI signing *subkey* from protected environment, verify unsigned
-      # artifact hashes, sign packages/DB, upload to R2, verify remote objects,
-      # purge only mutable DB paths, then run isolated pacman-root smoke tests.
-      # Credentials are intentionally referenced only by this protected job.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: unsigned-${{ inputs.channel }}-${{ github.run_id }}
+          path: build-output
+      - name: Install protected publication tooling
+        run: pacman -Syu --noconfirm --needed python aws-cli gnupg curl jq pacman-contrib
+      - name: Verify artifact identity before importing signing material
+        id: publication-preflight
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          digest="$(ci/preflight-publication.sh "$RELEASE_MANIFEST" build-output "$RELEASE_CHANNEL")"
+          printf 'contract_sha256=%s\n' "$digest" >>"$GITHUB_OUTPUT"
+      - name: Import revocable CI signing subkey
+        env:
+          MEO_GPG_SIGNING_SUBKEY_B64: ${{ secrets.MEO_GPG_SIGNING_SUBKEY_B64 }}
+        run: |
+          set +x
+          test -n "$MEO_GPG_SIGNING_SUBKEY_B64"
+          printf '%s' "$MEO_GPG_SIGNING_SUBKEY_B64" | base64 --decode | gpg --batch --import
+      - name: Verify, sign, and publish in dependency-safe order
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          MEO_SIGNING_KEY_FINGERPRINT: ${{ secrets.MEO_SIGNING_KEY_FINGERPRINT }}
+          MEO_PUBLICATION_PREFLIGHT_SHA256: ${{ steps.publication-preflight.outputs.contract_sha256 }}
+          ALLOW_INITIAL_BETA_REPOSITORY: ${{ inputs.channel == 'beta' && vars.ALLOW_INITIAL_BETA_REPOSITORY || '0' }}
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: ci/publish-repository.sh "$RELEASE_MANIFEST" build-output "$RELEASE_CHANNEL"
+      - name: Remove beta overlays superseded by Stable
+        if: inputs.channel == 'stable'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          MEO_SIGNING_KEY_FINGERPRINT: ${{ secrets.MEO_SIGNING_KEY_FINGERPRINT }}
+        run: ci/cleanup-beta-overlay.sh
+
+  remote-pacman-smoke:
+    needs: sign-and-publish
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install from the signed remote repository
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_BETA_CANDIDATE: ${{ inputs.beta_candidate }}
+        run: ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"

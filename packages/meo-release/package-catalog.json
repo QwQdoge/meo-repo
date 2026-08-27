@@ -1,5 +1,16 @@
 {
   "schemaVersion": 1,
   "generation": "2026.08",
-  "officialPackages": ["meoui-qml", "meo-icons", "meo-desktop", "meo-settings", "omnistore-bin"]
+  "architecture": "x86_64",
+  "repositoryBaseUrl": "https://packages.meoarch.org",
+  "repositoryNames": {"stable": "meo", "beta": "meo-beta"},
+  "bootstrapPackages": ["meo-keyring", "meo-mirrorlist"],
+  "channelPackages": {"stable": "meo-channel-stable", "beta": "meo-channel-beta"},
+  "packages": {
+    "meoui-qml": {"requiredBy": ["desktop"], "profiles": ["recommended", "minimal"]},
+    "meo-icons": {"requiredBy": ["desktop"], "profiles": ["recommended", "minimal"]},
+    "meo-desktop": {"requires": ["meoui-qml", "meo-icons"], "profiles": ["recommended", "minimal"]},
+    "meo-settings": {"requires": ["meoui-qml", "meo-desktop"], "profiles": ["recommended"]},
+    "omnistore-bin": {"profiles": ["recommended"]}
+  }
 }

@@ -6,7 +6,7 @@ arch=('any')
 license=('MIT')
 depends=('meo-keyring' 'meo-mirrorlist' 'meo-channel')
 source=('package-catalog.json')
-sha256sums=('SKIP')
+sha256sums=('5eedbc99a0925418524160db332c1cc23e30b9625a00b4f7f7122d42d414c24e')
 
 package() {
   install -Dm644 package-catalog.json "$pkgdir/usr/share/meo-release/package-catalog.json"

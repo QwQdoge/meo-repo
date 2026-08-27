@@ -5,7 +5,7 @@ pkgdesc="Official MeoArch package mirror list"
 arch=('any')
 license=('MIT')
 source=('meo-mirrorlist')
-sha256sums=('SKIP')
+sha256sums=('516b35aa52187ee8ef528071e4d5069ab808b03e2c96f3f8734dd2d5cf8d67bb')
 
 package() {
   install -Dm644 meo-mirrorlist "$pkgdir/etc/pacman.d/meo-mirrorlist"

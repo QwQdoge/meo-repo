@@ -4,7 +4,9 @@ pkgrel=1
 pkgdesc="MeoArch pacman signing keyring"
 arch=('any')
 license=('MIT')
-source=('meo.gpg' 'meo-trusted' 'meo-revoked')
+# Public bootstrap payload is reviewed under files/. Private key material is
+# never a package source.
+source=('files/meo.gpg' 'files/meo-trusted' 'files/meo-revoked')
 sha256sums=('SKIP' 'SKIP' 'SKIP')
 
 package() {
