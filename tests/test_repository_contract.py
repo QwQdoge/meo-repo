@@ -30,11 +30,25 @@ class RepositoryContractTests(unittest.TestCase):
     def test_catalog_has_no_name_prefix_rule(self):
         catalog = json.loads((ROOT / "manifests/package-catalog.json").read_text())
         self.assertIn("omnistore-bin", catalog["packages"])
+        self.assertIn("meo-account", catalog["packages"])
         self.assertEqual(catalog["channelPackages"]["beta"], "meo-channel-beta")
         self.assertEqual(
             (ROOT / "manifests/package-catalog.json").read_bytes(),
             (ROOT / "packages/meo-release/package-catalog.json").read_bytes(),
         )
+        self.assertEqual(
+            (ROOT / "manifests/application-catalog.json").read_bytes(),
+            (ROOT / "packages/meo-release/application-catalog.json").read_bytes(),
+        )
+
+    def test_application_catalog_is_opt_in_and_arch_official_for_installer(self):
+        catalog = json.loads((ROOT / "manifests/application-catalog.json").read_text())
+        self.assertEqual(catalog["policy"]["thirdPartyDefault"], "opt-in")
+        self.assertTrue(catalog["applications"])
+        for application in catalog["applications"]:
+            self.assertEqual(application["installer"]["source"], "arch-official")
+            if application["installer"]["tier"] == "third-party":
+                self.assertEqual(application["installer"]["profiles"], [])
 
     def test_manifest_requires_real_commit_before_release(self):
         manifest = ROOT / "manifests/stable/2026.08.json"
@@ -55,6 +69,30 @@ class RepositoryContractTests(unittest.TestCase):
         for package in ("meo-channel-stable", "meo-channel-beta", "meo-mirrorlist", "meo-release"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
             self.assertNotIn("SKIP", recipe)
+
+    def test_meta_packages_cover_core_apps_and_recommended_profiles(self):
+        expected = {
+            "meo-core-meta": ("meo-release", "meo-desktop"),
+            "meo-apps-meta": ("meo-account", "meo-settings", "omnistore-bin", "flatpak"),
+            "meo-recommended-meta": ("meo-core-meta", "meo-apps-meta"),
+        }
+        for package, dependencies in expected.items():
+            recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
+            for dependency in dependencies:
+                self.assertIn(f"'{dependency}'", recipe)
+
+    def test_omnistore_package_owns_system_account_and_cold_callback_contract(self):
+        recipe = (ROOT / "packages/omnistore-bin/PKGBUILD").read_text()
+        manifest = json.loads(
+            (ROOT / "packages/omnistore-bin/org.meo.OmniStore.json").read_text()
+        )
+        desktop = (ROOT / "packages/omnistore-bin/omnistore.desktop").read_text()
+        self.assertIn("'libsecret'", recipe)
+        self.assertIn("org.meo.OmniStore.json", recipe)
+        self.assertEqual(manifest["executables"], ["/opt/omnistore/frontend"])
+        self.assertEqual(manifest["redirectUri"], "omnistore://auth/callback")
+        self.assertIn("Exec=/usr/bin/omnistore %u", desktop)
+        self.assertIn("MimeType=x-scheme-handler/omnistore;", desktop)
 
     def test_stable_artifact_contract_is_complete_and_hash_bound(self):
         manifest_path = ROOT / "manifests/stable/2026.08.json"

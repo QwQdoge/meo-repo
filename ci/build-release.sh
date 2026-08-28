@@ -10,7 +10,7 @@ candidate="${4:-}"
 case "$channel" in
   stable) ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-settings|omnistore-bin) ;; *)
+    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-account|meo-settings|omnistore-bin) ;; *)
       echo "Beta build requires one reviewed core package candidate" >&2; exit 2;;
     esac
     ;;
@@ -43,7 +43,7 @@ build_context() {
 }
 
 if [ "$channel" = stable ]; then
-  core_packages=(meoui-qml meo-icons meo-desktop meo-settings omnistore-bin)
+  core_packages=(meoui-qml meo-icons meo-desktop meo-account meo-settings omnistore-bin)
 else
   core_packages=("$candidate")
 fi
@@ -57,7 +57,8 @@ for package in "${core_packages[@]}"; do
 done
 
 if [ "$channel" = stable ]; then
-  for package in meo-keyring meo-mirrorlist meo-channel-stable meo-channel-beta meo-release; do
+  for package in meo-keyring meo-mirrorlist meo-channel-stable meo-channel-beta meo-release \
+                 meo-core-meta meo-apps-meta meo-recommended-meta; do
     context="$output/contexts/$package"
     cp -a -- "$repo_root/packages/$package" "$context"
     if [ "$package" = meo-keyring ]; then

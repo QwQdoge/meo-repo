@@ -10,7 +10,11 @@
     "meoui-qml": {"requiredBy": ["desktop"], "profiles": ["recommended", "minimal"]},
     "meo-icons": {"requiredBy": ["desktop"], "profiles": ["recommended", "minimal"]},
     "meo-desktop": {"requires": ["meoui-qml", "meo-icons"], "profiles": ["recommended", "minimal"]},
-    "meo-settings": {"requires": ["meoui-qml", "meo-desktop"], "profiles": ["recommended"]},
-    "omnistore-bin": {"profiles": ["recommended"]}
+    "meo-account": {"requires": ["meoui-qml"], "profiles": ["recommended"]},
+    "meo-settings": {"requires": ["meo-account", "meoui-qml", "meo-desktop"], "profiles": ["recommended"]},
+    "omnistore-bin": {"requires": ["meo-account"], "profiles": ["recommended"]},
+    "meo-core-meta": {"requires": ["meo-desktop"], "profiles": ["recommended", "minimal"], "kind": "meta"},
+    "meo-apps-meta": {"requires": ["meo-account", "meo-settings", "omnistore-bin"], "profiles": ["recommended"], "kind": "meta"},
+    "meo-recommended-meta": {"requires": ["meo-core-meta", "meo-apps-meta"], "profiles": ["recommended"], "kind": "meta"}
   }
 }

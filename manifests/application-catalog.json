@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "generation": "2026.08",
+  "architecture": "x86_64",
+  "policy": {
+    "installerSources": ["arch-official"],
+    "thirdPartyDefault": "opt-in"
+  },
+  "applications": [
+    {
+      "id": "org.kde.ark",
+      "name": "Ark",
+      "summary": "Open and create compressed archives.",
+      "category": "System",
+      "installer": {"source": "arch-official", "package": "ark", "tier": "system", "profiles": ["recommended"]},
+      "store": {"source": "Flatpak", "id": "org.kde.ark", "featured": false}
+    },
+    {
+      "id": "org.kde.okular",
+      "name": "Okular",
+      "summary": "Read PDF documents, ebooks, and digital comics.",
+      "category": "System",
+      "installer": {"source": "arch-official", "package": "okular", "tier": "system", "profiles": ["recommended"]},
+      "store": {"source": "Flatpak", "id": "org.kde.okular", "featured": false}
+    },
+    {
+      "id": "org.kde.kate",
+      "name": "Kate",
+      "summary": "Edit text and source code with KDE integration.",
+      "category": "System",
+      "installer": {"source": "arch-official", "package": "kate", "tier": "system", "profiles": ["recommended"]},
+      "store": {"source": "Flatpak", "id": "org.kde.kate", "featured": false}
+    },
+    {
+      "id": "org.kde.spectacle",
+      "name": "Spectacle",
+      "summary": "Capture screenshots and annotate the result.",
+      "category": "System",
+      "installer": {"source": "arch-official", "package": "spectacle", "tier": "system", "profiles": ["recommended"]},
+      "store": {"source": "Flatpak", "id": "org.kde.spectacle", "featured": false}
+    },
+    {
+      "id": "org.mozilla.firefox",
+      "name": "Firefox",
+      "summary": "Fast, private web browsing.",
+      "category": "Internet",
+      "installer": {"source": "arch-official", "package": "firefox", "tier": "recommended", "profiles": []},
+      "store": {"source": "Flatpak", "id": "org.mozilla.firefox", "featured": true, "order": 1}
+    },
+    {
+      "id": "org.libreoffice.LibreOffice",
+      "name": "LibreOffice",
+      "summary": "A complete, free office suite.",
+      "category": "Office",
+      "installer": {"source": "arch-official", "package": "libreoffice-fresh", "tier": "recommended", "profiles": []},
+      "store": {"source": "Flatpak", "id": "org.libreoffice.LibreOffice", "featured": true, "order": 2}
+    },
+    {
+      "id": "org.videolan.VLC",
+      "name": "VLC",
+      "summary": "Play almost any media format.",
+      "category": "Audio & Video",
+      "installer": {"source": "arch-official", "package": "vlc", "tier": "recommended", "profiles": []},
+      "store": {"source": "Flatpak", "id": "org.videolan.VLC", "featured": true, "order": 3}
+    },
+    {
+      "id": "org.gimp.GIMP",
+      "name": "GIMP",
+      "summary": "Create and edit raster images.",
+      "category": "Creative",
+      "installer": {"source": "arch-official", "package": "gimp", "tier": "third-party", "profiles": []},
+      "store": {"source": "Flatpak", "id": "org.gimp.GIMP", "featured": true, "order": 4}
+    },
+    {
+      "id": "org.kde.krita",
+      "name": "Krita",
+      "summary": "Digital painting and illustration tools.",
+      "category": "Creative",
+      "installer": {"source": "arch-official", "package": "krita", "tier": "third-party", "profiles": []},
+      "store": {"source": "Flatpak", "id": "org.kde.krita", "featured": true, "order": 5}
+    },
+    {
+      "id": "org.kde.kdenlive",
+      "name": "Kdenlive",
+      "summary": "Non-linear video editing for creators.",
+      "category": "Creative",
+      "installer": {"source": "arch-official", "package": "kdenlive", "tier": "third-party", "profiles": []},
+      "store": {"source": "Flatpak", "id": "org.kde.kdenlive", "featured": true, "order": 6}
+    },
+    {
+      "id": "com.obsproject.Studio",
+      "name": "OBS Studio",
+      "summary": "Record and stream video from the desktop.",
+      "category": "Creative",
+      "installer": {"source": "arch-official", "package": "obs-studio", "tier": "third-party", "profiles": []},
+      "store": {"source": "Flatpak", "id": "com.obsproject.Studio", "featured": true, "order": 7}
+    }
+  ]
+}

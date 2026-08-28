@@ -27,7 +27,7 @@ PY
     channel_package=meo-channel-stable
     ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-settings|omnistore-bin) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
+    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-account|meo-settings|omnistore-bin) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
     repositories=$'[meo-beta]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo-beta/os/x86_64\n\n[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
     packages=("$candidate")
     channel_package=meo-channel-beta

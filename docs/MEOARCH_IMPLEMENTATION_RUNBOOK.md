@@ -4,7 +4,7 @@
 `MEOARCH_IMPLEMENTATION_HANDOFF.md`、`ARCH_RELEASE_CHECKLIST.md` 和
 `RELEASES.md`。复制到 Arch 工作站时只需要复制本文件。
 
-更新时间：2026-08-27。
+更新时间：2026-08-28。
 
 ## 1. 不可改变的架构边界
 
@@ -35,8 +35,12 @@ R2 = 包和 repo DB 分发
 meoui-qml
 meo-icons
 meo-desktop
+meo-account
 meo-settings
 omnistore-bin
+meo-core-meta
+meo-apps-meta
+meo-recommended-meta
 meo-keyring
 meo-mirrorlist
 meo-channel-stable
@@ -47,6 +51,8 @@ meo-release
 已有实现：
 
 - Stable manifest 固定 tag、40 位 commit、expected package version、source SHA-256 和 compatibility generation。
+- `meo-account` 是正式核心包；Settings 强依赖它，OmniStore 安装自己的客户端 manifest 并可选接入系统账号。
+- `meo-release` 同时安装 package catalog 与 application catalog；三类 meta 包分别覆盖核心桌面、Meo 应用和推荐全集。
 - Stable train 构建所有核心包，任一失败则整个 train 不进入发布。
 - Beta workflow 只接受一个明确 candidate，保留稀疏 overlay。
 - 构建、签名/发布分 job；受保护 job 会重新校验 artifact hash 及包内 `.PKGINFO` 的 name/version/arch。
@@ -54,7 +60,7 @@ meo-release
 - Stable 发布后使用 pacman `vercmp` 清理已被 Stable 追平的 Beta overlay。
 - Stable 发布也会修改 Beta DB，因此发布使用全局不取消 concurrency lock。
 - `SigLevel = Required TrustedOnly` 属于 channel package-owned 配置。
-- host-independent release contract tests 当前为 14 项。
+- host-independent release contract tests 当前为 16 项。
 
 ### Installer / ISO
 
@@ -64,8 +70,12 @@ meo-release
 
 - 共享 Python `InstallConfig` / `RepositoryPlan` / `PackagePlan` / `InstallPlan`。
 - Recommended、Minimal、Custom 和 Stable/Beta 选择。
+- Recommended 默认加入 Ark、Kate、Okular、Spectacle；Firefox、LibreOffice、VLC 与创作类第三方推荐均为明确勾选后才安装。
+- 软件 ID 由 application catalog 映射到 Arch 官方签名仓库包名，未知 ID 和非官方 installer source 会在写盘前拒绝。
+- Cage 内置自定义全盘分区布局，可调整 root 并创建独立 `/home`；不会尝试启动第二个 GParted GUI。
 - Custom 会把 `meo-desktop` 真正写入 config，并由共享 backend 强制 MeoUI/icons 依赖闭包。
 - Python backend 生成的 `generated/install-plan.json` 会回传给 Qt Controller；Review 显示真实 repo 顺序和最终 Meo 包集合，不在 QML 复制依赖规则。
+- Review 同时显示解析后的系统应用包；目标验收逐个执行 `pacman -Q`，选择 OmniStore 时还验证 GUI、CLI 和跨应用 exporter 三个入口。
 - 用户返回修改任何选择时，Controller 会废弃已准备 plan 和确认状态，必须重新 preflight，避免旧计划被安装。
 - Review 在任何磁盘写入之前要求先准备计划，再单独确认擦除磁盘。
 - QML 使用 MeoUI surfaces/theme roles；源测试禁止 raw Rectangle 和色值绕开设计系统。
@@ -86,6 +96,7 @@ meo-release
 - 频道卡使用 Material 3 segmented control、状态面板、repo priority、Beta 风险说明和降级待确认状态。
 - 用户取消降级确认后仍保留“Review downgrades”入口，不会因频道已显示 Stable 而失去继续操作路径。
 - backend 异常会保留上一次已知频道，不再把整个 UI 退回不明确的 Checking 状态。
+- 离线精选优先读取 `/usr/share/meo-release/application-catalog.json`，开发/非 MeoArch 环境继续使用内置 fallback。
 - `core.sources` 改为按需加载；频道 helper 不再为了导入 privilege helper 而提前加载 AUR/GitHub 等网络插件。
 - 测试依赖修正为公开包索引真实可安装的 `pytest==8.4.2` 和 `pytest-asyncio==1.2.0`。
 
@@ -104,7 +115,7 @@ Updates 页面保持只读：
 | 优先级 | 仓库/区域 | 真实状态 | 需要完成 |
 | --- | --- | --- | --- |
 | P0 | meo-repo trust root | 缺少真实 `meo.gpg`、`meo-trusted`、`meo-revoked`；当前正确 fail closed | 离线生成 master/subkey，提交仅公钥 payload，并完成 disposable root populate 测试 |
-| P0 | component release inputs | MeoUI、meo-kde、MeoSettings 缺计划 tag；OmniStore 现有旧 release 不含当前 exporter verifier | 创建评审 tag/release asset，记录 commit 和 SHA-256，填满 Stable manifest |
+| P0 | component release inputs | MeoUI、meo-kde、MeoArch-account、MeoSettings 缺计划 tag；OmniStore 现有旧 release 不含当前 exporter verifier 与系统账号接入 | 创建评审 tag/release asset，记录 commit 和 SHA-256，填满 Stable manifest，并配置真实公开 OAuth client ID |
 | P0 | OmniStore Stable rollback | UI 与安全预览存在，最终签名包下载/libalpm local-package transaction 未实现 | 按第 8 节实现；在此之前拒绝降级是正确行为 |
 | P0 | Installer target payload | 安装计划会安装 pacman 包，但 `apply-target-customizations.sh` 仍从 Live runtime 复制 MeoUI/MeoKDE 运行时到目标 | 首个签名 Stable repo 可用后删除目标源码/runtime copy，目标只验证已安装包；Live ISO staging 可继续消费已验证源码 |
 | P0 | Installer bootstrap | `installer/bootstrap/` 只有说明，没有已评审公钥 material | 放入与 `meo-keyring` 同源且 hash 固定的公开 bootstrap 文件 |
@@ -131,6 +142,7 @@ Updates 页面保持只读：
 - `QwQdoge/MeoUI` 没有计划中的 `v1.0.2`。
 - `QwQdoge/meo-kde` 没有计划中的 `v0.3.0`。
 - `QwQdoge/MeoSettings` 没有计划中的 `v0.1.0`。
+- `QwQdoge/MeoArch-account` 的桌面 broker 仍需 Arch/Plasma/KWallet 构建验收和正式 release tag。
 - OmniStore 只有旧 `v0.1.2`。其 release bundle SHA-256 是
   `e7220b46e35ba614e69a4b2727c5df4f116ed95f2886a5cca02661b751a6d7d3`，
   但该 tag 不含当前 `verify_release_exporter_contract.py`，不能进入新 train。

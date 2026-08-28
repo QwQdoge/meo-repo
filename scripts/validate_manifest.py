@@ -5,7 +5,7 @@ import re
 import sys
 from pathlib import Path
 
-REQUIRED = {"meoui-qml", "meo-icons", "meo-desktop", "meo-settings", "omnistore-bin"}
+REQUIRED = {"meoui-qml", "meo-icons", "meo-desktop", "meo-account", "meo-settings", "omnistore-bin"}
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 VERSION = re.compile(r"^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")

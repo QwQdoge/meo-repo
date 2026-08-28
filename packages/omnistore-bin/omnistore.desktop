@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=OmniStore
+GenericName=App Store
+Comment=Unified software store for MeoArch
+Exec=/usr/bin/omnistore %u
+Icon=omnistore
+Terminal=false
+Type=Application
+Categories=Utility;PackageManager;
+MimeType=x-scheme-handler/omnistore;
+StartupNotify=true

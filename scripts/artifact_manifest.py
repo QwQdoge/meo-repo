@@ -10,7 +10,10 @@ from pathlib import Path
 
 PACKAGE_FILE = re.compile(r"^[A-Za-z0-9@._+:-]+\.pkg\.tar\.(?:zst|xz|gz)$")
 ROOT = Path(__file__).resolve().parents[1]
-CONTROL_PACKAGES = ("meo-keyring", "meo-mirrorlist", "meo-channel-stable", "meo-channel-beta", "meo-release")
+CONTROL_PACKAGES = (
+    "meo-keyring", "meo-mirrorlist", "meo-channel-stable", "meo-channel-beta",
+    "meo-release", "meo-core-meta", "meo-apps-meta", "meo-recommended-meta",
+)
 
 
 def digest(path: Path) -> str:
