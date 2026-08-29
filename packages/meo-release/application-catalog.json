@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "generation": "2026.08",
+  "applications": {
+    "ark": {"package": "ark", "defaultProfile": "recommended"},
+    "kate": {"package": "kate", "defaultProfile": "recommended"},
+    "okular": {"package": "okular", "defaultProfile": "recommended"},
+    "spectacle": {"package": "spectacle", "defaultProfile": "recommended"},
+    "firefox": {"package": "firefox"},
+    "libreoffice-fresh": {"package": "libreoffice-fresh"},
+    "vlc": {"package": "vlc"},
+    "gimp": {"package": "gimp"},
+    "inkscape": {"package": "inkscape"},
+    "kdenlive": {"package": "kdenlive"}
+  }
+}

@@ -5,9 +5,10 @@ pkgdesc="MeoArch release generation and official package catalog"
 arch=('any')
 license=('MIT')
 depends=('meo-keyring' 'meo-mirrorlist' 'meo-channel')
-source=('package-catalog.json')
-sha256sums=('SKIP')
+source=('package-catalog.json' 'application-catalog.json')
+sha256sums=('SKIP' 'SKIP')
 
 package() {
   install -Dm644 package-catalog.json "$pkgdir/usr/share/meo-release/package-catalog.json"
+  install -Dm644 application-catalog.json "$pkgdir/usr/share/meo-release/application-catalog.json"
 }

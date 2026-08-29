@@ -7,7 +7,8 @@ pkgdesc="OmniStore package management application"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'
 license=('MIT')
-depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass')
+# The helper is supplied by the same immutable release bundle.
+depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass' 'python' 'pyalpm')
 provides=('omnistore')
 conflicts=('omnistore' 'omnistore-git')
 source=()
@@ -22,6 +23,12 @@ prepare() {
 package() {
   install -d "$pkgdir/opt/omnistore"
   cp -a "$srcdir/release_bundle/." "$pkgdir/opt/omnistore/"
+  test -x "$pkgdir/opt/omnistore/backends/meo_stable_rollback.py" || {
+    error "Release bundle lacks the required Stable rollback root helper"
+    return 1
+  }
+  install -Dm755 "$pkgdir/opt/omnistore/backends/meo_stable_rollback.py" \
+    "$pkgdir/usr/lib/omnistore/meo-stable-rollback.py"
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore" <<'EOF'
 #!/bin/sh
 exec /opt/omnistore/frontend "$@"

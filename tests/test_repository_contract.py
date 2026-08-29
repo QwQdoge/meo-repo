@@ -23,6 +23,21 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("omnistore-bin", catalog["packages"])
         self.assertEqual(catalog["channelPackages"]["beta"], "meo-channel-beta")
 
+    def test_meo_release_installs_full_package_and_application_catalogs(self):
+        package_catalog = json.loads((ROOT / "packages/meo-release/package-catalog.json").read_text())
+        application_catalog = json.loads((ROOT / "packages/meo-release/application-catalog.json").read_text())
+        recipe = (ROOT / "packages/meo-release/PKGBUILD").read_text()
+        self.assertIn("packages", package_catalog)
+        self.assertIn("omnistore-bin", package_catalog["packages"])
+        self.assertEqual(application_catalog["applications"]["ark"]["package"], "ark")
+        self.assertIn("application-catalog.json", recipe)
+
+    def test_omnistore_package_requires_the_system_alpm_helper(self):
+        recipe = (ROOT / "packages/omnistore-bin/PKGBUILD").read_text()
+        self.assertIn("'pyalpm'", recipe)
+        self.assertIn("meo_stable_rollback.py", recipe)
+        self.assertNotIn("python-pyalpm", recipe)
+
     def test_manifest_requires_real_commit_before_release(self):
         manifest = ROOT / "manifests/stable/2026.08.json"
         result = subprocess.run([sys.executable, ROOT / "scripts/validate_manifest.py", manifest], capture_output=True, text=True)
