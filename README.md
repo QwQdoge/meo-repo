@@ -21,6 +21,9 @@ README.md and AGENTS.md are the human/agent entry points. Root-level package
 tool configuration remains when required. Do not add project plans, review
 reports, architecture drafts, screenshots, or build logs to the root.
 
+The single copyable cross-repository implementation and Arch release runbook is
+[`docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md`](docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md).
+
 ## Package-source boundary
 
 Package recipes and their package-owned files are source. The x86_64 repository

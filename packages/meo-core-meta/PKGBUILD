@@ -1,0 +1,15 @@
+pkgname=meo-core-meta
+pkgver=2026.08
+pkgrel=1
+pkgdesc="MeoArch core desktop integration package"
+arch=('any')
+license=('MIT')
+depends=('meo-release' 'meo-desktop')
+source=()
+sha256sums=()
+
+package() {
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/licenses/$pkgname/package-note" <<'EOF'
+This dependency-only package installs the supported MeoArch desktop core.
+EOF
+}

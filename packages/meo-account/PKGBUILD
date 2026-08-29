@@ -1,0 +1,25 @@
+pkgname=meo-account
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="MeoArch system account broker and authentication dialog"
+arch=('x86_64')
+url='https://github.com/QwQdoge/MeoArch-account'
+license=('GPL-3.0-or-later')
+depends=('qt6-base' 'qt6-declarative' 'kwallet' 'meoui-qml')
+makedepends=('cmake' 'ninja')
+backup=('etc/meo-account/broker.conf')
+source=()
+sha256sums=()
+
+build() {
+  cmake -S "$srcdir/source/desktop" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm640 "$srcdir/source/desktop/data/broker.conf.example" \
+    "$pkgdir/etc/meo-account/broker.conf"
+}

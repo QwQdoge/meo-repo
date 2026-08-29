@@ -4,10 +4,11 @@
   "generation": "2026.08",
   "architecture": "x86_64",
   "components": {
-    "meoui-qml": {"repository": "QwQdoge/MeoUI", "tag": "v1.0.2", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "1.0.2-2"},
-    "meo-icons": {"repository": "QwQdoge/meo-kde", "tag": "v0.3.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.3.0-4"},
-    "meo-desktop": {"repository": "QwQdoge/meo-kde", "tag": "v0.3.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.3.0-2"},
-    "meo-settings": {"repository": "QwQdoge/MeoSettings", "tag": "v0.1.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.0-1"},
-    "omnistore-bin": {"repository": "QwQdoge/OmniStore", "tag": "v0.1.2", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.2-1"}
+    "meoui-qml": {"repository": "QwQdoge/MeoUI", "tag": "v1.0.2", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "1.0.2-2", "sourceUrl": "REPLACE_WITH_IMMUTABLE_HTTPS_ARCHIVE", "sourceSha256": "REPLACE_WITH_ARCHIVE_SHA256", "sourceLayout": "source"},
+    "meo-icons": {"repository": "QwQdoge/meo-kde", "tag": "v0.3.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.3.0-4", "sourceUrl": "REPLACE_WITH_IMMUTABLE_HTTPS_ARCHIVE", "sourceSha256": "REPLACE_WITH_ARCHIVE_SHA256", "sourceLayout": "source"},
+    "meo-desktop": {"repository": "QwQdoge/meo-kde", "tag": "v0.3.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.3.0-2", "sourceUrl": "REPLACE_WITH_IMMUTABLE_HTTPS_ARCHIVE", "sourceSha256": "REPLACE_WITH_ARCHIVE_SHA256", "sourceLayout": "source"},
+    "meo-account": {"repository": "QwQdoge/MeoArch-account", "tag": "v0.1.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.0-1", "sourceUrl": "REPLACE_WITH_IMMUTABLE_HTTPS_ARCHIVE", "sourceSha256": "REPLACE_WITH_ARCHIVE_SHA256", "sourceLayout": "source"},
+    "meo-settings": {"repository": "QwQdoge/MeoSettings", "tag": "v0.1.0", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.0-1", "sourceUrl": "REPLACE_WITH_IMMUTABLE_HTTPS_ARCHIVE", "sourceSha256": "REPLACE_WITH_ARCHIVE_SHA256", "sourceLayout": "source"},
+    "omnistore-bin": {"repository": "QwQdoge/OmniStore", "tag": "v0.1.2", "commit": "REPLACE_WITH_PROTECTED_RELEASE_COMMIT", "expectedVersion": "0.1.2-2", "sourceUrl": "REPLACE_WITH_IMMUTABLE_RELEASE_BUNDLE", "sourceSha256": "REPLACE_WITH_RELEASE_BUNDLE_SHA256", "sourceLayout": "release-bundle", "verifierUrl": "REPLACE_WITH_PINNED_VERIFIER_URL", "verifierSha256": "REPLACE_WITH_VERIFIER_SHA256"}
   }
 }

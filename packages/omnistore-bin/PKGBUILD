@@ -2,17 +2,21 @@
 # the immutable manifest.  The verifier is fetched from that exact source tag.
 pkgname=omnistore-bin
 pkgver=0.1.2
-pkgrel=1
+pkgrel=2
 pkgdesc="OmniStore package management application"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'
 license=('MIT')
-# The helper is supplied by the same immutable release bundle.
-depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass' 'python' 'pyalpm')
+depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass' 'libsecret' 'python' 'pyalpm')
+optdepends=('meo-release: shared MeoArch application catalog and channel integration'
+             'meo-account: use the MeoArch system account'
+             'flatpak: install applications from Flatpak remotes')
 provides=('omnistore')
 conflicts=('omnistore' 'omnistore-git')
-source=()
-sha256sums=()
+source=('org.meo.OmniStore.json'
+        'omnistore.desktop')
+sha256sums=('8672649172f81e3a4d80e5fac3636732473d14b22e8cda0790bcbbbbc797551c'
+            '7cefb27397315c09d4f0efbea8c94dfa184420e7a6131902f7665f7280bdf621')
 
 prepare() {
   test -x "$srcdir/release_bundle/backends/python_server"
@@ -39,4 +43,14 @@ set -eu
 [ "$#" -eq 0 ] || exit 64
 exec /opt/omnistore/backends/python_server --export-installed-usage --json
 EOF
+  install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore-cli" <<'EOF'
+#!/bin/sh
+set -eu
+cd /opt/omnistore
+exec /opt/omnistore/backends/python_server "$@"
+EOF
+  install -Dm644 "$srcdir/org.meo.OmniStore.json" \
+    "$pkgdir/usr/share/meo-account/clients/org.meo.OmniStore.json"
+  install -Dm644 "$srcdir/omnistore.desktop" \
+    "$pkgdir/usr/share/applications/omnistore.desktop"
 }
