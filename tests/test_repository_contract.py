@@ -64,8 +64,20 @@ class RepositoryContractTests(unittest.TestCase):
     def test_omnistore_package_requires_the_system_alpm_helper(self):
         recipe = (ROOT / "packages/omnistore-bin/PKGBUILD").read_text()
         self.assertIn("'pyalpm'", recipe)
+        self.assertIn("'pacman-contrib'", recipe)
         self.assertIn("meo_stable_rollback.py", recipe)
         self.assertNotIn("python-pyalpm", recipe)
+
+    def test_omnistore_package_owns_the_unified_update_runtime(self):
+        recipe = (ROOT / "packages/omnistore-bin/PKGBUILD").read_text()
+        for required in (
+            "meo-update",
+            "meo_repository_helper.py",
+            "omnistore-update.service",
+            "omnistore-update.timer",
+            "UNIFIED_UPDATES.md",
+        ):
+            self.assertIn(required, recipe)
 
     def test_manifest_requires_real_commit_before_release(self):
         manifest = ROOT / "manifests/stable/2026.08.json"
