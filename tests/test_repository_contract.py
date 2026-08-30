@@ -88,6 +88,11 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('source/qml/MeoKDE', runtime)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
+    def test_meo_account_oauth_config_is_readable_by_the_user_daemon(self):
+        recipe = (ROOT / "packages/meo-account/PKGBUILD").read_text()
+        self.assertIn('install -Dm644 "$srcdir/source/desktop/data/broker.conf.example"', recipe)
+        self.assertNotIn('install -Dm640 "$srcdir/source/desktop/data/broker.conf.example"', recipe)
+
     def test_manifest_requires_real_commit_before_release(self):
         manifest = ROOT / "manifests/stable/2026.08.json"
         result = subprocess.run([sys.executable, ROOT / "scripts/validate_manifest.py", manifest], capture_output=True, text=True)

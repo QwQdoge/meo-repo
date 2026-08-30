@@ -1,6 +1,6 @@
 pkgname=meo-account
 pkgver=0.1.0
-pkgrel=2
+pkgrel=3
 pkgdesc="MeoArch system account broker and authentication dialog"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-account'
@@ -20,6 +20,8 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
-  install -Dm640 "$srcdir/source/desktop/data/broker.conf.example" \
+  # This file contains only public OAuth metadata and must be readable by the
+  # per-user meo-accountd process.
+  install -Dm644 "$srcdir/source/desktop/data/broker.conf.example" \
     "$pkgdir/etc/meo-account/broker.conf"
 }
