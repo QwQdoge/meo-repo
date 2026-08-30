@@ -1,0 +1,32 @@
+pkgname=meo-kde-runtime
+pkgver=0.4.0beta1
+pkgrel=1
+pkgdesc="Minimal Meo KDE runtime bridge for Meo applications"
+arch=('x86_64')
+url='https://github.com/QwQdoge/meo-kde'
+license=('GPL-3.0-or-later')
+depends=('meoui-qml>=1.0.3beta1' 'qt6-declarative' 'kirigami'
+         'networkmanager-qt' 'bluez-qt' 'solid' 'pulseaudio-qt'
+         'kguiaddons' 'libplasma' 'kconfig')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules')
+source=()
+sha256sums=()
+
+# The protected release renderer supplies a pinned MeoKDE tree as
+# $srcdir/source.  Building only native/system keeps the application-facing
+# bridge independent from the full desktop-defaults package: installing
+# Settings on an existing Arch/KDE system must not replace /etc/os-release,
+# SDDM, KWin, Plasma, or input-method defaults.
+build() {
+  cmake -S "$srcdir/source/native/system" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -d "$pkgdir/usr/lib/qt6/qml/MeoKDE"
+  cp -a "$srcdir/source/qml/MeoKDE/." \
+    "$pkgdir/usr/lib/qt6/qml/MeoKDE/"
+}

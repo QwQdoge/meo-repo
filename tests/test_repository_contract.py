@@ -79,6 +79,15 @@ class RepositoryContractTests(unittest.TestCase):
         ):
             self.assertIn(required, recipe)
 
+    def test_settings_uses_the_minimal_kde_runtime(self):
+        settings = (ROOT / "packages/meo-settings/PKGBUILD").read_text()
+        runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
+        self.assertIn("'meo-kde-runtime>=0.4.0beta1'", settings)
+        self.assertNotIn("'meo-desktop'", settings)
+        self.assertIn('source/native/system', runtime)
+        self.assertIn('source/qml/MeoKDE', runtime)
+        self.assertNotRegex(runtime, r'install[^\n]*os-release')
+
     def test_manifest_requires_real_commit_before_release(self):
         manifest = ROOT / "manifests/stable/2026.08.json"
         result = subprocess.run([sys.executable, ROOT / "scripts/validate_manifest.py", manifest], capture_output=True, text=True)
