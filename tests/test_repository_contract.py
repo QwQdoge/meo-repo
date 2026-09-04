@@ -108,6 +108,12 @@ class RepositoryContractTests(unittest.TestCase):
             result = subprocess.run([sys.executable, ROOT / "scripts/validate_keyring_payload.py", directory], capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
 
+    def test_keyring_validator_requires_public_keyring_metadata_to_reference_importable_keys(self):
+        validator = (ROOT / "scripts/validate_keyring_payload.py").read_text()
+        self.assertIn("--no-default-keyring", validator)
+        self.assertIn("meo-trusted references a key absent from meo.gpg", validator)
+        self.assertIn("meo-revoked references a key absent from meo.gpg", validator)
+
     def test_static_package_sources_use_real_checksums(self):
         for package in ("meo-channel-stable", "meo-channel-beta", "meo-mirrorlist", "meo-release"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()

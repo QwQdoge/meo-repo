@@ -7,7 +7,7 @@ license=('MIT')
 # Public bootstrap payload is reviewed under files/. Private key material is
 # never a package source.
 source=('files/meo.gpg' 'files/meo-trusted' 'files/meo-revoked')
-sha256sums=('SKIP' 'SKIP' 'SKIP')
+sha256sums=('67912eaaab10f6b57658c9aad9854bd8023cc99e3cb99a2320d5c175ec87e5e9' '9d0170fe838e6bd43b78c0d3244a891028d0a038c3438d7e98b8b303b58e9a02' 'bf84cedbff5a2ed7f27e1c39fba21db4bf54807190219248f245d47149e224f8')
 
 package() {
   for keyring_file in meo.gpg meo-trusted meo-revoked; do
