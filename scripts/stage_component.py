@@ -36,7 +36,11 @@ def download(url: str, expected: str, destination: Path) -> None:
         raise ValueError(f"source checksum mismatch: expected {expected}, got {actual}")
 
 
-def safe_extract(archive: Path, destination: Path) -> None:
+def safe_extract(archive: Path, destination: Path, source_paths: list[str] | None = None) -> None:
+    if source_paths is not None and (not source_paths or any(
+            not isinstance(path, str) or not path or PurePosixPath(path).is_absolute()
+            or ".." in PurePosixPath(path).parts for path in source_paths)):
+        raise ValueError("invalid source path allowlist")
     with tarfile.open(archive, "r:*") as bundle:
         members = [member for member in bundle.getmembers() if member.name not in {"", "."}]
         roots = {PurePosixPath(member.name).parts[0] for member in members if PurePosixPath(member.name).parts}
@@ -47,6 +51,12 @@ def safe_extract(archive: Path, destination: Path) -> None:
                 raise ValueError(f"archive path is unsafe: {member.name}")
             relative = parts[1:] if strip_root and parts and parts[0] == strip_root else parts
             if not relative:
+                continue
+            relative_name = str(PurePosixPath(*relative))
+            if source_paths is not None and not any(
+                    relative_name == path or relative_name.startswith(path.rstrip('/') + '/')
+                    or (member.isdir() and path.startswith(relative_name.rstrip('/') + '/'))
+                    for path in source_paths):
                 continue
             if member.islnk() or member.isdev() or member.isfifo():
                 raise ValueError(f"unsafe archive member type: {member.name}")
@@ -88,7 +98,7 @@ def stage(manifest_path: Path, package: str, output: Path) -> None:
     layout = component.get("sourceLayout", "source")
     destination = output / "src" / ("release_bundle" if layout == "release-bundle" else "source")
     destination.mkdir(parents=True)
-    safe_extract(archive, destination)
+    safe_extract(archive, destination, component.get("sourcePaths"))
     archive.unlink()
 
     if package == "omnistore-bin":

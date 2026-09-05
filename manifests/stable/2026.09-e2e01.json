@@ -19,6 +19,7 @@
       "tag": "v2026.09-e2e01",
       "commit": "30485b4b15bd25c867122e399a65fe20918b6448",
       "expectedVersion": "0.4.0-1",
+      "sourcePaths": ["themes/icons"],
       "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/30485b4b15bd25c867122e399a65fe20918b6448",
       "sourceSha256": "3256c7492b8b646a0f9a0ddee9d5d001c2915068ab10b54dac51313a4f5f5067",
       "sourceLayout": "source"
@@ -28,6 +29,7 @@
       "tag": "v2026.09-e2e01",
       "commit": "30485b4b15bd25c867122e399a65fe20918b6448",
       "expectedVersion": "0.4.0-1",
+      "sourcePaths": ["native", "qml", "defaults", "data", "plasmoids", "themes", "tools", "assets/fonts", "assets/wallpapers", "assets/icons/meoarch-logo.svg"],
       "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/30485b4b15bd25c867122e399a65fe20918b6448",
       "sourceSha256": "3256c7492b8b646a0f9a0ddee9d5d001c2915068ab10b54dac51313a4f5f5067",
       "sourceLayout": "source"

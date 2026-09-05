@@ -63,3 +63,20 @@ class MinimalReleaseTests(unittest.TestCase):
                 else:
                     with self.assertRaises(ValueError):
                         safe_extract(archive, root / "out")
+
+    def test_reviewed_source_allowlist_excludes_unused_vendor_symlink_cycle(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / "source.tar.gz"
+            with tarfile.open(archive, "w:gz") as bundle:
+                file = tarfile.TarInfo("source/native/CMakeLists.txt")
+                file.size = 5
+                bundle.addfile(file, io.BytesIO(b"cmake"))
+                link = tarfile.TarInfo("source/vendor/cycle")
+                link.type, link.linkname = tarfile.SYMTYPE, "cycle"
+                bundle.addfile(link)
+            safe_extract(archive, root / "out", ["native"])
+            self.assertEqual((root / "out/native/CMakeLists.txt").read_bytes(), b"cmake")
+            self.assertFalse((root / "out/vendor").exists())
+            with self.assertRaises(ValueError):
+                safe_extract(archive, root / "bad", ["../outside"])
