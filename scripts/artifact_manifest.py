@@ -16,6 +16,14 @@ CONTROL_PACKAGES = (
 )
 
 
+def control_packages(manifest: dict) -> tuple[str, ...]:
+    profile = manifest.get("profile", "recommended")
+    if profile not in {"minimal", "recommended"}:
+        raise ValueError("unsupported release profile")
+    return tuple(name for name in CONTROL_PACKAGES
+                 if profile != "minimal" or name not in {"meo-apps-meta", "meo-recommended-meta"})
+
+
 def digest(path: Path) -> str:
     value = hashlib.sha256()
     with path.open("rb") as handle:
@@ -45,7 +53,7 @@ def expected_versions(manifest: dict) -> dict[str, str]:
     if not isinstance(components, dict):
         raise ValueError("manifest has no component set")
     expected = {name: str(metadata.get("expectedVersion", "")) for name, metadata in components.items()}
-    expected.update({name: literal_recipe_version(name) for name in CONTROL_PACKAGES})
+    expected.update({name: literal_recipe_version(name) for name in control_packages(manifest)})
     return expected
 
 
@@ -66,7 +74,7 @@ def create(manifest_path: Path, package_dir: Path, output: Path, channel: str, c
                         "sha256": digest(path), "size": path.stat().st_size})
     names = {entry["name"] for entry in entries}
     core = set(manifest["components"])
-    if channel == "stable" and names != core | set(CONTROL_PACKAGES):
+    if channel == "stable" and names != core | set(control_packages(manifest)):
         raise ValueError("Stable artifact must contain the complete release train and control packages")
     if channel == "beta" and (candidate not in core or names != {candidate}):
         raise ValueError("Beta artifact must contain exactly the reviewed candidate")
@@ -102,7 +110,8 @@ def verify(contract_path: Path, manifest_path: Path, package_dir: Path) -> None:
             raise ValueError("artifact package identity does not match its filename")
     names = {entry["name"] for entry in entries}
     core = set(json.loads(manifest_path.read_text(encoding="utf-8"))["components"])
-    if contract["channel"] == "stable" and names != core | set(CONTROL_PACKAGES):
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if contract["channel"] == "stable" and names != core | set(control_packages(manifest)):
         raise ValueError("Stable artifact package set is incomplete")
     if contract["channel"] == "beta" and names != {contract.get("candidate")}:
         raise ValueError("Beta artifact package set is not sparse")

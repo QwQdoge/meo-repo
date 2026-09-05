@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import re
+import shutil
 from pathlib import Path
 
 FILES = ("meo.gpg", "meo-trusted", "meo-revoked")
@@ -23,6 +24,9 @@ def render(context: Path) -> None:
     rendered, count = re.subn(r"^sha256sums=\([^\n]*\)$", replacement, recipe, count=1, flags=re.MULTILINE)
     if count != 1:
         raise ValueError("meo-keyring recipe has no single-line sha256sums declaration")
+    # makepkg resolves local sources by basename beside PKGBUILD, not files/.
+    for name in FILES:
+        shutil.copyfile(context / "files" / name, context / name)
     recipe_path.write_text(rendered, encoding="utf-8")
 
 

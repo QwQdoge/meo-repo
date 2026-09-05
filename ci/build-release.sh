@@ -26,9 +26,10 @@ python3 "$repo_root/scripts/validate_keyring_payload.py" "$repo_root/packages/me
 build_context() {
   local package="$1"
   local context="$2"
+  shift 2
   (
     cd "$context"
-    makepkg --syncdeps --noconfirm --needed --noextract
+    makepkg --syncdeps --noconfirm --needed "$@"
   )
   local built=()
   while IFS= read -r package_file; do built+=("$package_file"); done < <(
@@ -43,22 +44,35 @@ build_context() {
 }
 
 if [ "$channel" = stable ]; then
-  core_packages=(meoui-qml meo-icons meo-desktop meo-account meo-settings omnistore-bin)
+  core_output="$(python3 - "$manifest" <<'PY'
+import json, sys
+manifest = json.load(open(sys.argv[1]))
+order = ('meoui-qml', 'meo-icons', 'meo-desktop', 'meo-account', 'meo-settings', 'omnistore-bin')
+print(*(name for name in order if name in manifest['components']), sep='\n')
+PY
+)"
+  mapfile -t core_packages <<<"$core_output"
 else
   core_packages=("$candidate")
 fi
 for package in "${core_packages[@]}"; do
   context="$output/contexts/$package"
   python3 "$repo_root/scripts/stage_component.py" "$manifest" "$package" "$context"
-  build_context "$package" "$context"
+  build_context "$package" "$context" --noextract
   # Build jobs have no release secrets. Installing their own unsigned outputs
   # is confined to this disposable builder and only enables downstream builds.
   sudo pacman -U --noconfirm "$output/packages/$package-"*.pkg.tar.*
 done
 
 if [ "$channel" = stable ]; then
-  for package in meo-keyring meo-mirrorlist meo-channel-stable meo-channel-beta meo-release \
-                 meo-core-meta meo-apps-meta meo-recommended-meta; do
+  control_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
+import json, sys
+from artifact_manifest import control_packages
+print(*control_packages(json.load(open(sys.argv[1]))), sep='\n')
+PY
+)"
+  mapfile -t controls <<<"$control_output"
+  for package in "${controls[@]}"; do
     context="$output/contexts/$package"
     cp -a -- "$repo_root/packages/$package" "$context"
     if [ "$package" = meo-keyring ]; then

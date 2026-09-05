@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: Stable builds the full train; Beta builds one sparse-overlay candidate.
+        description: Stable builds the manifest's complete profile; Beta builds one sparse-overlay candidate.
         required: true
         type: choice
         options: [stable, beta]
       manifest:
         description: Reviewed immutable manifest path.
         required: true
-        default: manifests/stable/2026.08.json
+        default: manifests/stable/2026.09-e2e01.json
       beta_candidate:
         description: Required only for Beta (one core package name).
         required: false
@@ -61,11 +61,15 @@ jobs:
           done
       - name: Run installed Stable train smoke
         if: inputs.channel == 'stable'
-        run: ci/smoke-installed.sh
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: ci/smoke-installed.sh "$RELEASE_MANIFEST"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: unsigned-${{ inputs.channel }}-${{ github.run_id }}
-          path: build-output/
+          path: |
+            build-output/packages/
+            build-output/artifacts.json
           if-no-files-found: error
           retention-days: 7
 
@@ -119,18 +123,8 @@ jobs:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
         run: ci/publish-repository.sh "$RELEASE_MANIFEST" build-output "$RELEASE_CHANNEL"
-      - name: Remove beta overlays superseded by Stable
-        if: inputs.channel == 'stable'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          MEO_SIGNING_KEY_FINGERPRINT: ${{ secrets.MEO_SIGNING_KEY_FINGERPRINT }}
-        run: ci/cleanup-beta-overlay.sh
+      # Beta retains the previous signing authority during this Stable rotation.
+      # Do not mutate that unrelated channel as an incidental cleanup action.
 
   remote-pacman-smoke:
     needs: sign-and-publish
@@ -144,4 +138,7 @@ jobs:
         env:
           RELEASE_CHANNEL: ${{ inputs.channel }}
           RELEASE_BETA_CANDIDATE: ${{ inputs.beta_candidate }}
-        run: ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: |
+          pacman -Syu --noconfirm --needed python curl
+          ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE" "$RELEASE_MANIFEST"

@@ -3,14 +3,29 @@
 # build container. No network refresh or privilege credentials are used here.
 set -euo pipefail
 
-for package in meoui-qml meo-icons meo-desktop meo-account meo-settings omnistore-bin \
-               meo-keyring meo-mirrorlist meo-channel-stable meo-release \
-               meo-core-meta meo-apps-meta meo-recommended-meta; do
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+manifest="${1:?reviewed manifest is required}"
+package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
+import json, sys
+from artifact_manifest import control_packages
+manifest = json.load(open(sys.argv[1]))
+print(*manifest['components'], *(name for name in control_packages(manifest) if name != 'meo-channel-beta'), sep='\n')
+PY
+)"
+mapfile -t packages <<<"$package_output"
+for package in "${packages[@]}"; do
   pacman -Q "$package" >/dev/null
 done
 pacman -Qlq meoui-qml | grep -q '/MeoUI/qmldir$'
 pacman -Qlq meo-icons | grep -q '/icons/MeoSymbols/index.theme$'
 pacman -Qlq meo-desktop | grep -Eq '/(wayland-sessions|xsessions|plasma/look-and-feel)/'
+for path in /usr/bin/meo-dock /usr/lib/qt6/qml/MeoKDE/qmldir \
+  /usr/lib/qt6/qml/Meo/System/libmeosystemplugin.so /etc/xdg/autostart/org.meo.dock.desktop \
+  /usr/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do
+  test -s "$path"
+done
+profile="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("profile", "recommended"))' "$manifest")"
+[ "$profile" != minimal ] || { echo "PASS: installed minimal Meo package payload"; exit 0; }
 command -v meo-settings >/dev/null
 command -v meo-accountd >/dev/null
 command -v meo-account-auth-dialog >/dev/null

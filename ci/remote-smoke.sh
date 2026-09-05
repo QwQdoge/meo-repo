@@ -5,12 +5,13 @@ set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 channel="${1:?stable or beta is required}"
 candidate="${2:-}"
+manifest="${3:?reviewed manifest is required}"
 for file in meo.gpg meo-trusted meo-revoked; do
   [ -s "$repo_root/packages/meo-keyring/files/$file" ] || { echo "Missing public keyring file: $file" >&2; exit 2; }
-  install -Dm644 "$repo_root/packages/meo-keyring/files/$file" "/usr/share/pacman/keyrings/$file"
 done
 pacman-key --init
-pacman-key --populate archlinux meo
+pacman-key --populate archlinux
+pacman-key --populate-from "$repo_root/packages/meo-keyring/files" --populate meo
 
 config="$(mktemp)"
 trap 'rm -f -- "$config"' EXIT
@@ -18,12 +19,14 @@ cp -- /etc/pacman.conf "$config"
 case "$channel" in
   stable)
     repositories=$'[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
-    mapfile -t packages < <(python3 - "$repo_root/manifests/package-catalog.json" <<'PY'
+    package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
 import json,sys
-catalog=json.load(open(sys.argv[1], encoding="utf-8"))
-print(*catalog["packages"], sep="\n")
+from artifact_manifest import control_packages
+manifest=json.load(open(sys.argv[1], encoding="utf-8"))
+print(*manifest['components'], *(name for name in control_packages(manifest) if name != 'meo-channel-beta'), sep="\n")
 PY
-)
+)"
+    mapfile -t packages <<<"$package_output"
     channel_package=meo-channel-stable
     ;;
   beta)
@@ -54,3 +57,4 @@ fi
 pacman --config "$config" -S --needed --noconfirm \
   meo-keyring meo-mirrorlist "$channel_package" meo-release "${packages[@]}"
 pacman-conf --repo-list
+[ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"

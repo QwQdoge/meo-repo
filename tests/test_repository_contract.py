@@ -187,6 +187,8 @@ class RepositoryContractTests(unittest.TestCase):
             rendered = (context / "PKGBUILD").read_text()
             self.assertNotIn("SKIP", rendered)
             self.assertEqual(rendered.count("'"), 6)
+            for name in ("meo.gpg", "meo-trusted", "meo-revoked"):
+                self.assertEqual((context / name).read_bytes(), name.encode())
 
     def test_overlay_cleanup_uses_actual_repository_records(self):
         with tempfile.TemporaryDirectory() as directory:

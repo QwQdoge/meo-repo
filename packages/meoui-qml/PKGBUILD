@@ -1,6 +1,6 @@
 # Rendered by the protected release job with source tag/commit/checksum from a manifest.
 pkgname=meoui-qml
-pkgver=1.0.3beta1
+pkgver=1.0.3
 pkgrel=1
 pkgdesc="MeoUI Qt Quick Material Design 3 component library"
 arch=('x86_64')

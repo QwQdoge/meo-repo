@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import re
@@ -47,23 +48,17 @@ def safe_extract(archive: Path, destination: Path) -> None:
             relative = parts[1:] if strip_root and parts and parts[0] == strip_root else parts
             if not relative:
                 continue
-            if member.issym() or member.islnk() or member.isdev() or member.isfifo():
+            if member.islnk() or member.isdev() or member.isfifo():
                 raise ValueError(f"unsafe archive member type: {member.name}")
-            target = destination.joinpath(*relative)
-            if destination.resolve() not in target.resolve().parents:
-                raise ValueError(f"archive path escapes destination: {member.name}")
-            if member.isdir():
-                target.mkdir(parents=True, exist_ok=True)
-                continue
-            if not member.isfile():
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            source = bundle.extractfile(member)
-            if source is None:
-                raise ValueError(f"could not extract archive member: {member.name}")
-            with source, target.open("wb") as output:
-                shutil.copyfileobj(source, output)
-            target.chmod(member.mode & 0o777)
+            adjusted = copy.copy(member)
+            adjusted.name = str(PurePosixPath(*relative))
+            # Git archives contain legitimate relative icon-theme symlinks.
+            # Python's data filter checks resolved paths and symlink targets on
+            # every extraction, while stripping ownership and dangerous modes.
+            try:
+                bundle.extract(adjusted, destination, filter="data")
+            except tarfile.FilterError as error:
+                raise ValueError(f"unsafe archive member: {member.name}") from error
 
 
 def recipe_version(recipe: str) -> str:

@@ -1,23 +1,79 @@
 pkgname=meo-desktop
-pkgver=0.3.0
-pkgrel=2
+pkgver=0.4.0
+pkgrel=1
 pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
 license=('GPL-3.0-or-later')
-depends=('meoui-qml>=1.0.2' 'meo-icons>=0.3.0' 'plasma-desktop' 'plasma-workspace' 'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin' 'konsole' 'sddm' 'breeze')
-makedepends=('cmake' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative')
+depends=('meoui-qml>=1.0.3' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
+         'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
+         'konsole' 'sddm' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
+         'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
+         'layer-shell-qt' 'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
+provides=('meo-kde-runtime=0.4.0')
+conflicts=('meo-kde-runtime')
 source=()
 sha256sums=()
 
 # The release renderer supplies a pinned source tree as $srcdir/source.  This
 # recipe intentionally never reads a developer sibling checkout.
 build() {
-  cmake -S "$srcdir/source/native" -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
+  cmake -S "$srcdir/source/native" -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_SYSCONFDIR=/etc
   cmake --build build --parallel
 }
 
 package() {
-  DESTDIR="$pkgdir" cmake --install build
-  install -Dm644 "$srcdir/source/defaults/system/os-release" "$pkgdir/etc/os-release"
+  # Use the existing KDE polkit agent for this E2E candidate. Do not install a
+  # second agent's overlapping service/autostart paths into the same target.
+  for component in system dynamic-color dock decoration application-style; do
+    DESTDIR="$pkgdir" cmake --install "build/$component"
+  done
+  local source="$srcdir/source"
+  install -d "$pkgdir/usr/lib/qt6/qml/MeoKDE" "$pkgdir/usr/share/plasma/look-and-feel" \
+    "$pkgdir/usr/share/plasma/desktoptheme" "$pkgdir/usr/share/plasma/plasmoids" \
+    "$pkgdir/usr/share/color-schemes" "$pkgdir/usr/share/fonts/meo"
+  cp -a "$source/qml/MeoKDE/." "$pkgdir/usr/lib/qt6/qml/MeoKDE/"
+  cp -a "$source/themes/look-and-feel/org.meo.desktop" "$pkgdir/usr/share/plasma/look-and-feel/"
+  for theme in MeoLight MeoDark; do
+    cp -a "$source/themes/desktoptheme/$theme" "$pkgdir/usr/share/plasma/desktoptheme/"
+  done
+  for plasmoid in org.meo.topbar org.meo.timecenter; do
+    cp -a "$source/plasmoids/$plasmoid" "$pkgdir/usr/share/plasma/plasmoids/"
+  done
+  install -m644 "$source"/themes/color-schemes/*.colors "$pkgdir/usr/share/color-schemes/"
+  install -m644 "$source"/assets/fonts/*.ttf "$pkgdir/usr/share/fonts/meo/"
+  install -Dm644 "$source/assets/wallpapers/installer_background.png" "$pkgdir/usr/share/wallpapers/MeoArch/installer_background.png"
+  install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/pixmaps/meoarch-logo.svg"
+  install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/meoarch-logo.svg"
+  install -Dm755 "$source/tools/theme/apply-meo-mode.sh" "$pkgdir/usr/bin/meo-theme-mode"
+  install -Dm755 "$source/tools/theme/apply-meo-desktop.sh" "$pkgdir/usr/bin/meo-desktop-apply"
+  install -Dm755 "$source/tools/shell/apply-meo-panel-layout.sh" "$pkgdir/usr/bin/meo-desktop-layout"
+  install -Dm755 "$source/tools/input-method/meo-input-method.sh" "$pkgdir/usr/bin/meo-input-method"
+  install -Dm644 "$source/defaults/kwin/kwinrc" "$pkgdir/usr/share/meo-desktop/defaults/kwinrc"
+  # os-release is target configuration, not an overwrite of Arch filesystem's
+  # package-owned symlink. The Installer applies this packaged template.
+  install -Dm644 "$source/defaults/system/os-release" "$pkgdir/usr/share/meo-desktop/os-release"
+  for entry in kde/kdeglobals kwin/kwinrc plasma/plasmarc plasma/plasma-welcomerc plasma/meo-shellrc; do
+    install -Dm644 "$source/defaults/$entry" "$pkgdir/etc/xdg/${entry##*/}"
+  done
+  install -Dm644 "$source/data/autostart/org.meo.dock.desktop" "$pkgdir/etc/xdg/autostart/org.meo.dock.desktop"
+  install -Dm644 "$source/defaults/sddm/meoarch.conf" "$pkgdir/etc/sddm.conf.d/20-meoarch.conf"
+  install -Dm644 "$source/defaults/sddm/theme.conf.user" "$pkgdir/usr/share/sddm/themes/breeze/theme.conf.user"
+  install -Dm644 "$source/defaults/environment/90-meo-applications.conf" "$pkgdir/etc/environment.d/90-meo-applications.conf"
+  install -Dm644 "$source/defaults/input-method/fcitx5/conf/classicui.conf" "$pkgdir/etc/xdg/fcitx5/conf/classicui.conf"
+  install -d "$pkgdir/usr/share/fcitx5/themes"
+  cp -a "$source/themes/input-method/fcitx5/MeoInputMethod-Light" "$source/themes/input-method/fcitx5/MeoInputMethod-Dark" "$pkgdir/usr/share/fcitx5/themes/"
+  for file in gtk.css.in index.theme; do
+    install -Dm644 "$source/themes/input-method/ibus/$file" "$pkgdir/usr/share/meo-desktop/input-method/ibus/$file"
+  done
+  for unit in meo-dynamic-colors.path meo-dynamic-colors.service; do
+    install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
+  done
+  sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
+  install -d "$pkgdir/usr/lib/systemd/user/default.target.wants" "$pkgdir/etc/fonts/conf.d"
+  ln -s ../meo-dynamic-colors.path "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path"
+  install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
+  ln -s ../conf.avail/50-meo-fonts.conf "$pkgdir/etc/fonts/conf.d/50-meo-fonts.conf"
 }

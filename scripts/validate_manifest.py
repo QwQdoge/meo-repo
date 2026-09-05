@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 REQUIRED = {"meoui-qml", "meo-icons", "meo-desktop", "meo-account", "meo-settings", "omnistore-bin"}
+MINIMAL = {"meoui-qml", "meo-icons", "meo-desktop"}
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 VERSION = re.compile(r"^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -18,8 +19,12 @@ def main(path: str) -> None:
     if payload.get("schemaVersion") != 1 or payload.get("architecture") != "x86_64":
         fail("unsupported schema or architecture")
     components = payload.get("components")
-    if not isinstance(components, dict) or set(components) != REQUIRED:
-        fail("components must be exactly the core Meo package set")
+    profile = payload.get("profile", "recommended")
+    if profile not in {"minimal", "recommended"}:
+        fail("unsupported release profile")
+    required = MINIMAL if profile == "minimal" else REQUIRED
+    if not isinstance(components, dict) or set(components) != required:
+        fail("components must be exactly the selected Meo release profile")
     for name, component in components.items():
         if not isinstance(component, dict):
             fail(f"{name} is not an object")
