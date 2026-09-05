@@ -11,6 +11,7 @@ depends=('meoui-qml>=1.0.3' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspac
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
          'layer-shell-qt' 'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
+options=('!debug')
 provides=('meo-kde-runtime=0.4.0')
 conflicts=('meo-kde-runtime')
 source=()

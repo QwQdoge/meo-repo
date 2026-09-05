@@ -15,6 +15,15 @@ from stage_component import safe_extract
 
 
 class MinimalReleaseTests(unittest.TestCase):
+    def test_minimal_native_recipes_do_not_emit_unreviewed_debug_packages(self):
+        for package in ("meoui-qml", "meo-desktop"):
+            recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
+            self.assertIn("options=('!debug'", recipe)
+        self.assertIn("'staticlibs'", (ROOT / "packages/meoui-qml/PKGBUILD").read_text())
+        build_script = (ROOT / "ci/build-release.sh").read_text()
+        self.assertIn('makepkg --config "$output/makepkg.conf" --syncdeps', build_script)
+        self.assertIn('makepkg --config "$output/makepkg.conf" --packagelist', build_script)
+
     def test_repository_order_checks_exact_set_and_parser_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

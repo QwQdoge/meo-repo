@@ -18,6 +18,11 @@ case "$channel" in
 esac
 [ ! -e "$output" ] || { echo "Refusing to overwrite output directory: $output" >&2; exit 2; }
 mkdir -p "$output/contexts" "$output/packages"
+# Keep makepkg and --packagelist on the same explicit train policy. Arch's
+# default debug option can list a debug split even for data-only packages,
+# while the signed release contract intentionally contains only named inputs.
+cp -- /etc/makepkg.conf "$output/makepkg.conf"
+printf '\nOPTIONS+=(\x27!debug\x27)\n' >>"$output/makepkg.conf"
 
 python3 "$repo_root/scripts/validate_manifest.py" "$manifest"
 python3 "$repo_root/scripts/verify_manifest_sources.py" "$manifest"
@@ -29,12 +34,12 @@ build_context() {
   shift 2
   (
     cd "$context"
-    makepkg --syncdeps --noconfirm --needed "$@"
+    makepkg --config "$output/makepkg.conf" --syncdeps --noconfirm --needed "$@"
   )
   local built=()
   while IFS= read -r package_file; do built+=("$package_file"); done < <(
     cd "$context"
-    makepkg --packagelist
+    makepkg --config "$output/makepkg.conf" --packagelist
   )
   [ "${#built[@]}" -gt 0 ] || { echo "No package produced for $package" >&2; exit 3; }
   for package_file in "${built[@]}"; do
