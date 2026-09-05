@@ -16,9 +16,11 @@ mapfile -t packages <<<"$package_output"
 for package in "${packages[@]}"; do
   pacman -Q "$package" >/dev/null
 done
-pacman -Qlq meoui-qml | grep -q '/MeoUI/qmldir$'
-pacman -Qlq meo-icons | grep -q '/icons/MeoSymbols/index.theme$'
-pacman -Qlq meo-desktop | grep -Eq '/(wayland-sessions|xsessions|plasma/look-and-feel)/'
+# Consume the complete listing: grep -q can close a large package listing
+# early, giving pacman SIGPIPE and a false failure under pipefail.
+pacman -Qlq meoui-qml | grep '/MeoUI/qmldir$' >/dev/null
+pacman -Qlq meo-icons | grep '/icons/MeoSymbols/index.theme$' >/dev/null
+pacman -Qlq meo-desktop | grep -E '/(wayland-sessions|xsessions|plasma/look-and-feel)/' >/dev/null
 for path in /usr/bin/meo-dock /usr/lib/qt6/qml/MeoKDE/qmldir \
   /usr/lib/qt6/qml/Meo/System/libmeosystemplugin.so /etc/xdg/autostart/org.meo.dock.desktop \
   /usr/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do

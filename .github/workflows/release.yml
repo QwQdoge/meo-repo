@@ -79,8 +79,7 @@ jobs:
     container: archlinux:base-devel
     environment: release
     concurrency:
-      # Stable publication also prunes meo-beta. One global publication lock
-      # prevents that cleanup from racing a Beta candidate publication.
+      # Keep all channel publication operations serialized.
       group: meo-repository-publish
       cancel-in-progress: false
     permissions:

@@ -39,14 +39,8 @@ PY
 esac
 printf '\n%s\n' "$repositories" >>"$config"
 pacman --config "$config" -Syy --noconfirm
-mapfile -t resolved < <(pacman-conf --config "$config" --repo-list)
+bash "$repo_root/ci/check-repository-order.sh" "$config" "$channel"
 if [ "$channel" = beta ]; then
-  beta_index=-1; stable_index=-1
-  for index in "${!resolved[@]}"; do
-    [ "${resolved[$index]}" = meo-beta ] && beta_index="$index"
-    [ "${resolved[$index]}" = meo ] && stable_index="$index"
-  done
-  [ "$beta_index" -ge 0 ] && [ "$stable_index" -gt "$beta_index" ] || { echo "Invalid beta repository priority" >&2; exit 3; }
   ! pacman --config "$config" -Si meo-beta/meo-release >/dev/null 2>&1 || {
     echo "Beta overlay must not duplicate the Stable control package meo-release" >&2; exit 3;
   }
@@ -55,6 +49,11 @@ if [ "$channel" = beta ]; then
   }
 fi
 pacman --config "$config" -S --needed --noconfirm \
-  meo-keyring meo-mirrorlist "$channel_package" meo-release "${packages[@]}"
-pacman-conf --repo-list
+  meo/meo-keyring meo/meo-mirrorlist "meo/$channel_package" meo/meo-release "${packages[@]}"
+# Verify the installed, package-owned channel configuration too, not only
+# the temporary bootstrap configuration used for the first transaction.
+test -s /etc/pacman.d/meo-channel.conf
+printf '\nInclude = /etc/pacman.d/meo-channel.conf\n' >>/etc/pacman.conf
+bash "$repo_root/ci/check-repository-order.sh" /etc/pacman.conf "$channel"
+pacman -Sy --noconfirm
 [ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"
