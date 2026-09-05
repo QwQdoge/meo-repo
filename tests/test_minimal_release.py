@@ -24,6 +24,12 @@ class MinimalReleaseTests(unittest.TestCase):
         self.assertIn('makepkg --config "$output/makepkg.conf" --syncdeps', build_script)
         self.assertIn('makepkg --config "$output/makepkg.conf" --packagelist', build_script)
 
+    def test_desktop_recipe_owns_sddm_config_without_ignored_upstream_file(self):
+        recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        self.assertNotIn('$source/defaults/sddm/theme.conf.user', recipe)
+        self.assertIn('install -Dm644 /dev/stdin "$pkgdir/usr/share/sddm/themes/breeze/theme.conf.user"', recipe)
+        self.assertIn('background=/usr/share/wallpapers/MeoArch/installer_background.png', recipe)
+
     def test_repository_order_checks_exact_set_and_parser_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

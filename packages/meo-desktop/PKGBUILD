@@ -61,7 +61,16 @@ package() {
   done
   install -Dm644 "$source/data/autostart/org.meo.dock.desktop" "$pkgdir/etc/xdg/autostart/org.meo.dock.desktop"
   install -Dm644 "$source/defaults/sddm/meoarch.conf" "$pkgdir/etc/sddm.conf.d/20-meoarch.conf"
-  install -Dm644 "$source/defaults/sddm/theme.conf.user" "$pkgdir/usr/share/sddm/themes/breeze/theme.conf.user"
+  # *.user is excluded from the pinned upstream source archive. This is
+  # package-owned SDDM integration, not a copy from a developer's local tree.
+  install -Dm644 /dev/stdin "$pkgdir/usr/share/sddm/themes/breeze/theme.conf.user" <<'EOF'
+[General]
+background=/usr/share/wallpapers/MeoArch/installer_background.png
+logo=/usr/share/pixmaps/meoarch-logo.svg
+showlogo=shown
+type=image
+color=#6750A4
+EOF
   install -Dm644 "$source/defaults/environment/90-meo-applications.conf" "$pkgdir/etc/environment.d/90-meo-applications.conf"
   install -Dm644 "$source/defaults/input-method/fcitx5/conf/classicui.conf" "$pkgdir/etc/xdg/fcitx5/conf/classicui.conf"
   install -d "$pkgdir/usr/share/fcitx5/themes"
