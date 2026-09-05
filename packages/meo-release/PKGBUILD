@@ -10,6 +10,7 @@ sha256sums=('6ad05fb193e52296fcee42198dd166fef91342ae01ccfce0bfc9f9bce45b7da8'
             'acfa4170b08f89ca3dec8baf099adc6f00247824f442b0190cc13e76060acac5')
 
 package() {
+  install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 package-catalog.json "$pkgdir/usr/share/meo-release/package-catalog.json"
   install -Dm644 application-catalog.json "$pkgdir/usr/share/meo-release/application-catalog.json"
 }

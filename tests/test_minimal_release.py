@@ -15,6 +15,29 @@ from stage_component import safe_extract
 
 
 class MinimalReleaseTests(unittest.TestCase):
+    def test_namcap_errors_block_even_when_command_returns_zero(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "candidate.pkg.tar.zst").touch()
+            command = root / "namcap"
+            command.write_text('#!/bin/sh\nprintf "%s\\n" "$TEST_REPORT"\nexit "$TEST_STATUS"\n')
+            command.chmod(0o755)
+            for report, status, valid in (("candidate E: missing dependency", 0, False),
+                                          ("candidate W: redundant dependency", 0, True),
+                                          ("", 1, False)):
+                with self.subTest(report=report, status=status):
+                    result = subprocess.run(["bash", ROOT / "ci/check-package-metadata.sh", root],
+                                            env=dict(os.environ, PATH=f"{root}:{os.environ['PATH']}",
+                                                     TEST_REPORT=report, TEST_STATUS=str(status)), capture_output=True)
+                    self.assertEqual(result.returncode == 0, valid, result.stderr)
+
+    def test_minimal_control_packages_ship_declared_mit_license(self):
+        for package in control_packages(self.manifest()):
+            license_text = (ROOT / "packages" / package / "LICENSE").read_text()
+            self.assertIn("Permission is hereby granted", license_text)
+            recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
+            self.assertIn('"$pkgdir/usr/share/licenses/$pkgname/LICENSE"', recipe)
+
     def test_minimal_native_recipes_do_not_emit_unreviewed_debug_packages(self):
         for package in ("meoui-qml", "meo-desktop"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()

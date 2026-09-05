@@ -9,6 +9,7 @@ source=()
 sha256sums=()
 
 package() {
+  install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 /dev/stdin "$pkgdir/usr/share/licenses/$pkgname/package-note" <<'EOF'
 This dependency-only package installs the supported MeoArch desktop core.
 EOF

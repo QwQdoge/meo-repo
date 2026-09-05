@@ -6,7 +6,7 @@ pkgdesc="MeoUI Qt Quick Material Design 3 component library"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoUI'
 license=('MIT')
-depends=('qt6-declarative')
+depends=('qt6-declarative' 'hicolor-icon-theme')
 makedepends=('cmake' 'ninja' 'qt6-tools')
 # The reviewed minimal train does not publish implicit split debug packages.
 # MeoKDE's application style links the exported meoui_tokens CMake target.
@@ -19,4 +19,7 @@ build() {
   cmake --build build
 }
 
-package() { DESTDIR="$pkgdir" cmake --install build; }
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$srcdir/source/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

@@ -54,11 +54,7 @@ jobs:
             "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output" \
             "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"
       - name: Run package metadata checks
-        run: |
-          for package in build-output/packages/*.pkg.tar.*; do
-            case "$package" in *.sig) continue ;; esac
-            namcap "$package"
-          done
+        run: bash ci/check-package-metadata.sh build-output/packages
       - name: Run installed Stable train smoke
         if: inputs.channel == 'stable'
         env:

@@ -11,5 +11,6 @@ source=('meo-channel.conf')
 sha256sums=('8263f9c81060e957302b8de57d12240a1df4e215ad532430f0b3837f0056e7ea')
 
 package() {
+  install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 meo-channel.conf "$pkgdir/etc/pacman.d/meo-channel.conf"
 }

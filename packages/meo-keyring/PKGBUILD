@@ -11,6 +11,7 @@ source=('meo.gpg' 'meo-trusted' 'meo-revoked')
 sha256sums=('67912eaaab10f6b57658c9aad9854bd8023cc99e3cb99a2320d5c175ec87e5e9' '9d0170fe838e6bd43b78c0d3244a891028d0a038c3438d7e98b8b303b58e9a02' 'bf84cedbff5a2ed7f27e1c39fba21db4bf54807190219248f245d47149e224f8')
 
 package() {
+  install -Dm644 "$startdir/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   for keyring_file in meo.gpg meo-trusted meo-revoked; do
     test -s "$srcdir/$keyring_file" || {
       error "Refusing to build an empty Meo keyring payload: $keyring_file"
