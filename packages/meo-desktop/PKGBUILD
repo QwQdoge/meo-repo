@@ -7,10 +7,14 @@ url='https://github.com/QwQdoge/meo-kde'
 license=('GPL-3.0-or-later')
 depends=('meoui-qml>=1.0.3' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
          'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
-         'konsole' 'sddm' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
+         'konsole' 'plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
-         'layer-shell-qt' 'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme')
+         'layer-shell-qt' 'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
+         'system76-scheduler' 'zram-generator' 'dbus-broker-units'
+         'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
+optdepends=('preload-ng: optional learned application prefetching (disabled by default)'
+            'prelockd: optional bounded desktop memory locking (disabled by default)')
 options=('!debug')
 provides=('meo-kde-runtime=0.4.0')
 conflicts=('meo-kde-runtime')
@@ -60,18 +64,16 @@ package() {
     install -Dm644 "$source/defaults/$entry" "$pkgdir/etc/xdg/${entry##*/}"
   done
   install -Dm644 "$source/data/autostart/org.meo.dock.desktop" "$pkgdir/etc/xdg/autostart/org.meo.dock.desktop"
-  install -Dm644 "$source/defaults/sddm/meoarch.conf" "$pkgdir/etc/sddm.conf.d/20-meoarch.conf"
-  # *.user is excluded from the pinned upstream source archive. This is
-  # package-owned SDDM integration, not a copy from a developer's local tree.
-  install -Dm644 /dev/stdin "$pkgdir/usr/share/sddm/themes/breeze/theme.conf.user" <<'EOF'
-[General]
-background=/usr/share/wallpapers/MeoArch/installer_background.png
-logo=/usr/share/pixmaps/meoarch-logo.svg
-showlogo=shown
-type=image
-color=#6750A4
-EOF
+  # Plasma Login Manager is the primary supported login manager.  SDDM files
+  # stay out of the base package so a compatibility adapter can never silently
+  # select or configure SDDM on a new Meo installation.
   install -Dm644 "$source/defaults/environment/90-meo-applications.conf" "$pkgdir/etc/environment.d/90-meo-applications.conf"
+  install -Dm644 "$source/defaults/responsiveness/zram-generator.conf" "$pkgdir/usr/lib/systemd/zram-generator.conf.d/50-meo-desktop.conf"
+  install -Dm644 "$source/defaults/responsiveness/gamemode.ini" "$pkgdir/etc/gamemode.ini"
+  install -Dm644 "$source/defaults/responsiveness/cachyos-ananicy.kdl" "$pkgdir/etc/system76-scheduler/process-scheduler/meo-cachyos.kdl"
+  install -Dm644 "$source/defaults/responsiveness/preload-ng-meo.toml" "$pkgdir/usr/share/meo-desktop/optional/preload-ng.toml"
+  install -Dm644 "$source/defaults/responsiveness/prelockd-meo.conf" "$pkgdir/usr/share/meo-desktop/optional/prelockd.conf"
+  install -Dm644 "$source/defaults/systemd/50-meo-responsiveness.preset" "$pkgdir/usr/lib/systemd/system-preset/50-meo-responsiveness.preset"
   install -Dm644 "$source/defaults/input-method/fcitx5/conf/classicui.conf" "$pkgdir/etc/xdg/fcitx5/conf/classicui.conf"
   install -d "$pkgdir/usr/share/fcitx5/themes"
   cp -a "$source/themes/input-method/fcitx5/MeoInputMethod-Light" "$source/themes/input-method/fcitx5/MeoInputMethod-Dark" "$pkgdir/usr/share/fcitx5/themes/"
