@@ -53,6 +53,17 @@ class MinimalReleaseTests(unittest.TestCase):
         self.assertNotIn("sddm.conf.d", recipe)
         self.assertNotIn("usr/share/sddm", recipe)
 
+    def test_desktop_recipe_installs_all_supported_meo_topbar_applets(self):
+        recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        for applet in (
+            "org.meo.topbar",
+            "org.meo.time",
+            "org.meo.notifications",
+            "org.meo.time-notifications",
+            "org.meo.timecenter",
+        ):
+            self.assertIn(applet, recipe)
+
     def test_repository_order_checks_exact_set_and_parser_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

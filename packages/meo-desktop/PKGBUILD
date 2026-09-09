@@ -44,7 +44,10 @@ package() {
   for theme in MeoLight MeoDark; do
     cp -a "$source/themes/desktoptheme/$theme" "$pkgdir/usr/share/plasma/desktoptheme/"
   done
-  for plasmoid in org.meo.topbar org.meo.timecenter; do
+  # The default layout remains defined by the source layout script.  Install
+  # every supported Meo top-bar applet so optional variants are available from
+  # Plasma's Widget Explorer without rewriting an existing user panel.
+  for plasmoid in org.meo.topbar org.meo.time org.meo.notifications org.meo.time-notifications org.meo.timecenter; do
     cp -a "$source/plasmoids/$plasmoid" "$pkgdir/usr/share/plasma/plasmoids/"
   done
   install -m644 "$source"/themes/color-schemes/*.colors "$pkgdir/usr/share/color-schemes/"
