@@ -7,10 +7,10 @@ url='https://github.com/QwQdoge/meo-kde'
 license=('GPL-3.0-or-later')
 depends=('meoui-qml>=1.0.3' 'qt6-declarative' 'kirigami'
          'networkmanager-qt' 'bluez-qt' 'solid' 'pulseaudio-qt'
-         'kguiaddons' 'libplasma' 'kconfig')
-# plasma-workspace provides LibTaskManagerConfig.cmake, required by the
-# source-tree task role smoke target but not linked into installed runtime files.
-makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'plasma-workspace')
+         'kguiaddons' 'libplasma' 'kconfig' 'plasma-workspace')
+# plasma-workspace also provides LibTaskManagerConfig.cmake for the source-tree
+# task role smoke target; its runtime QML modules and libkrdb are consumed too.
+makedepends=('cmake' 'ninja' 'extra-cmake-modules')
 source=()
 sha256sums=()
 
