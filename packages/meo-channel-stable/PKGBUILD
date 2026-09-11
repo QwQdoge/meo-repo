@@ -1,6 +1,6 @@
 pkgname=meo-channel-stable
 pkgver=1
-pkgrel=2
+pkgrel=3
 pkgdesc="Select the MeoArch stable pacman channel"
 arch=('any')
 license=('MIT')
