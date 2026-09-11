@@ -41,6 +41,9 @@ grep -q '^MimeType=x-scheme-handler/omnistore;$' /usr/share/applications/omnisto
 command -v omnistore >/dev/null
 command -v omnistore-cli >/dev/null
 command -v omnistore-apps-export >/dev/null
+test -x /usr/lib/omnistore/frontend
+! find /usr/lib/omnistore/lib -maxdepth 1 -name '*_plugin.so' -exec readelf -d {} \; \
+  | grep -F '/home/'
 test -s /usr/share/meo-release/application-catalog.json
 timeout 10 omnistore-cli --help | grep -q -- '--install'
 

@@ -6,7 +6,7 @@ pkgrel=1
 pkgdesc="OmniStore package management application"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'
-license=('MIT')
+license=('GPL-3.0-or-later')
 depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass'
          'libsecret' 'pacman-contrib' 'python' 'pyalpm')
 optdepends=('meo-release: shared MeoArch application catalog and channel integration'
@@ -14,9 +14,10 @@ optdepends=('meo-release: shared MeoArch application catalog and channel integra
              'flatpak: install applications from Flatpak remotes')
 provides=('omnistore')
 conflicts=('omnistore' 'omnistore-git')
+makedepends=('patchelf')
 source=('org.meo.OmniStore.json'
         'omnistore.desktop')
-sha256sums=('8672649172f81e3a4d80e5fac3636732473d14b22e8cda0790bcbbbbc797551c'
+sha256sums=('e5265abe3df69aa6525c0351af21a143cc24b09c0cb037b3b061382e65410b9a'
             '7cefb27397315c09d4f0efbea8c94dfa184420e7a6131902f7665f7280bdf621')
 
 prepare() {
@@ -26,40 +27,45 @@ prepare() {
 }
 
 package() {
-  install -d "$pkgdir/opt/omnistore"
-  cp -a "$srcdir/release_bundle/." "$pkgdir/opt/omnistore/"
-  test -x "$pkgdir/opt/omnistore/backends/meo_stable_rollback.py" || {
+  install -d "$pkgdir/usr/lib/omnistore"
+  cp -a "$srcdir/release_bundle/." "$pkgdir/usr/lib/omnistore/"
+  # Flutter plugin builds can retain the developer SDK's absolute ephemeral
+  # directory. The executable already resolves bundled plugins via $ORIGIN/lib.
+  for plugin in "$pkgdir/usr/lib/omnistore/lib/"*_plugin.so; do
+    patchelf --remove-rpath "$plugin"
+  done
+  test -x "$pkgdir/usr/lib/omnistore/backends/meo_stable_rollback.py" || {
     error "Release bundle lacks the required Stable rollback root helper"
     return 1
   }
-  install -Dm755 "$pkgdir/opt/omnistore/backends/meo_stable_rollback.py" \
+  install -Dm755 "$pkgdir/usr/lib/omnistore/backends/meo_stable_rollback.py" \
     "$pkgdir/usr/lib/omnistore/meo-stable-rollback.py"
-  test -x "$pkgdir/opt/omnistore/backends/meo_repository_helper.py" || {
+  test -x "$pkgdir/usr/lib/omnistore/backends/meo_repository_helper.py" || {
     error "Release bundle lacks the Pacman repository helper"
     return 1
   }
-  install -Dm755 "$pkgdir/opt/omnistore/backends/meo_repository_helper.py" \
+  install -Dm755 "$pkgdir/usr/lib/omnistore/backends/meo_repository_helper.py" \
     "$pkgdir/usr/lib/omnistore/meo-repository-helper.py"
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore" <<'EOF'
 #!/bin/sh
-exec /opt/omnistore/frontend "$@"
+exec /usr/lib/omnistore/frontend "$@"
 EOF
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore-apps-export" <<'EOF'
 #!/bin/sh
 set -eu
 [ "$#" -eq 0 ] || exit 64
-exec /opt/omnistore/backends/python_server --export-installed-usage --json
+exec /usr/lib/omnistore/backends/python_server --export-installed-usage --json
 EOF
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore-cli" <<'EOF'
 #!/bin/sh
 set -eu
-cd /opt/omnistore
-exec /opt/omnistore/backends/python_server "$@"
+cd /usr/lib/omnistore
+exec /usr/lib/omnistore/backends/python_server "$@"
 EOF
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/meo-update" <<'EOF'
 #!/bin/sh
 set -eu
-backend=/opt/omnistore/backends/python_server
+backend=/usr/lib/omnistore/backends/python_server
 command="${1:-help}"
 [ "$#" -eq 0 ] || shift
 case "$command" in

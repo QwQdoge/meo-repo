@@ -164,10 +164,13 @@ class RepositoryContractTests(unittest.TestCase):
         desktop = (ROOT / "packages/omnistore-bin/omnistore.desktop").read_text()
         self.assertIn("'libsecret'", recipe)
         self.assertIn("org.meo.OmniStore.json", recipe)
-        self.assertEqual(manifest["executables"], ["/opt/omnistore/frontend"])
+        self.assertEqual(manifest["executables"], ["/usr/lib/omnistore/frontend"])
         self.assertEqual(manifest["redirectUri"], "omnistore://auth/callback")
         self.assertIn("Exec=/usr/bin/omnistore %u", desktop)
         self.assertIn("MimeType=x-scheme-handler/omnistore;", desktop)
+        self.assertIn("license=('GPL-3.0-or-later')", recipe)
+        self.assertIn("patchelf --remove-rpath", recipe)
+        self.assertNotIn("/opt/omnistore", recipe)
 
     def test_preextracted_build_stages_omnistore_recipe_sources(self):
         with tempfile.TemporaryDirectory() as directory:

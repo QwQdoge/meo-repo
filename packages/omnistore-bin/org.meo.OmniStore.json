@@ -3,6 +3,6 @@
   "name": "OmniStore",
   "oauthClientId": "registered-omnistore-oauth-client-id",
   "redirectUri": "omnistore://auth/callback",
-  "executables": ["/opt/omnistore/frontend"],
+  "executables": ["/usr/lib/omnistore/frontend"],
   "scopes": ["openid", "profile", "email"]
 }
