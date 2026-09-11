@@ -35,6 +35,16 @@ python3 "$repo_root/scripts/artifact_manifest.py" verify \
 contract_channel="$(jq -r .channel "$contract")"
 [ "$contract_channel" = "$channel" ] || { echo "Artifact channel does not match publication channel" >&2; exit 3; }
 
+# The protected job starts with an empty GnuPG home.  Verify and import the
+# reviewed public payload before checking an existing signed beta overlay;
+# otherwise a legitimate previous repository signature is indistinguishable
+# from an unknown signer.  This imports public material only, never a signing
+# secret.
+keyring_dir="$repo_root/packages/meo-keyring/files"
+python3 "$repo_root/scripts/validate_keyring_payload.py" "$keyring_dir"
+gpg --batch --import "$keyring_dir/meo.gpg" >/dev/null
+gpg --batch --import-ownertrust "$keyring_dir/meo-trusted" >/dev/null
+
 signing_key="$(gpg --batch --with-colons --list-secret-keys "$MEO_SIGNING_KEY_FINGERPRINT" | awk -F: '$1 == "sec" { print $5; exit }')"
 [ -n "$signing_key" ] || { echo "Configured signing subkey is unavailable" >&2; exit 3; }
 
