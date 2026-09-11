@@ -285,6 +285,19 @@ class RepositoryContractTests(unittest.TestCase):
         )
         self.assertEqual(calls, [("QwQdoge/MeoUI", "v1.0.3-beta.3")])
 
+    def test_private_account_source_uses_repository_scoped_ssh_transport(self):
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
+        account = manifest["components"]["meo-account"]
+        self.assertEqual(account["sourceTransport"], "git-ssh")
+        self.assertEqual(
+            account["sourceUrl"],
+            f"ssh://git@github.com/{account['repository']}.git",
+        )
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        self.assertIn("inputs.beta_candidate == 'meo-account'", workflow)
+        self.assertIn("secrets.MEO_ACCOUNT_DEPLOY_KEY", workflow)
+        self.assertIn("--preserve-env=MEO_ACCOUNT_SOURCE_SSH", workflow)
+
     def test_latest_beta_manifest_pins_every_current_release(self):
         manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
         self.assertEqual(manifest["profile"], "recommended")

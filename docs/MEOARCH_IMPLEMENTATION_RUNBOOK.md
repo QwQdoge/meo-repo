@@ -139,9 +139,10 @@ Updates 页面保持只读：
 
 当前 Beta 3 train 使用 `manifests/beta/2026.09-beta.3.json`。不要再回退到
 旧 E2E source tag、Beta 1 package version 或 OmniStore `v0.1.2` bundle。
-Meo Account 的 owning repository 是 private；公共 candidate 可独立验证和发布，
-Account candidate 必须在有明确只读私有源码权限的受保护构建环境中执行，禁止把
-个人 GitHub token、私有源码 archive 或 service-role credential 搬进公共仓库。
+Meo Account 的 owning repository 是 private；公共 candidate 可独立验证和发布。
+Account candidate 使用仅授权读取该单一私有仓库的 Deploy Key，经 SSH 拉取固定
+commit 后生成确定性 tar，并再次核对 SHA-256；禁止把个人 GitHub token、私有源码
+archive 或 service-role credential 搬进公共仓库。
 
 下载每个 immutable commit archive/release bundle，记录 SHA-256。源码包 URL 必须绑定
 commit；OmniStore bundle 与 verifier 必须绑定同一 commit。填写 manifest 后运行：

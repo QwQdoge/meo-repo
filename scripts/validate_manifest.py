@@ -41,8 +41,13 @@ def main(path: str) -> None:
         if not VERSION.fullmatch(str(component.get("expectedVersion", ""))):
             fail(f"{name} expectedVersion is invalid")
         source_url = component.get("sourceUrl")
-        if not isinstance(source_url, str) or not source_url.startswith("https://"):
-            fail(f"{name} sourceUrl must use HTTPS")
+        transport = component.get("sourceTransport", "https")
+        if transport == "git-ssh":
+            expected_url = f"ssh://git@github.com/{component['repository']}.git"
+            if name != "meo-account" or source_url != expected_url:
+                fail(f"{name} git-ssh source must be the private Account repository")
+        elif transport != "https" or not isinstance(source_url, str) or not source_url.startswith("https://"):
+            fail(f"{name} sourceUrl must use HTTPS or the reviewed private git-ssh transport")
         if not SHA256.fullmatch(str(component.get("sourceSha256", ""))):
             fail(f"{name} sourceSha256 must be a pinned SHA-256")
         layout = component.get("sourceLayout", "source")

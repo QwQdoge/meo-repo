@@ -41,6 +41,18 @@ jobs:
         run: |
           sudo -u builder python scripts/validate_manifest.py "$RELEASE_MANIFEST"
           sudo -u builder python -m unittest discover -s tests -v
+      - name: Install read-only private Account source credential
+        if: inputs.channel == 'beta' && inputs.beta_candidate == 'meo-account'
+        env:
+          MEO_ACCOUNT_DEPLOY_KEY: ${{ secrets.MEO_ACCOUNT_DEPLOY_KEY }}
+        run: |
+          set +x
+          test -n "$MEO_ACCOUNT_DEPLOY_KEY"
+          install -d -m700 -o builder -g builder /home/builder/.ssh
+          printf '%s\n' "$MEO_ACCOUNT_DEPLOY_KEY" | \
+            install -m600 -o builder -g builder /dev/stdin /home/builder/.ssh/id_ed25519
+          ssh-keyscan github.com | \
+            install -m600 -o builder -g builder /dev/stdin /home/builder/.ssh/known_hosts
       - name: Resolve Beta candidate against current signed overlay and Stable fallback
         if: inputs.channel == 'beta'
         run: ci/configure-build-repositories.sh
@@ -49,8 +61,9 @@ jobs:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
           RELEASE_BETA_CANDIDATE: ${{ inputs.beta_candidate }}
+          MEO_ACCOUNT_SOURCE_SSH: ${{ inputs.channel == 'beta' && inputs.beta_candidate == 'meo-account' && '1' || '0' }}
         run: |
-          sudo -u builder ci/build-release.sh \
+          sudo --preserve-env=MEO_ACCOUNT_SOURCE_SSH -u builder ci/build-release.sh \
             "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output" \
             "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"
       - name: Run package metadata checks

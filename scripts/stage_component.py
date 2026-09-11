@@ -8,7 +8,9 @@ import hashlib
 import json
 import re
 import shutil
+import subprocess
 import tarfile
+import tempfile
 import urllib.request
 from pathlib import Path, PurePosixPath
 
@@ -30,6 +32,30 @@ def download(url: str, expected: str, destination: Path) -> None:
     request = urllib.request.Request(url, headers={"User-Agent": "meo-repo-release/1"})
     with urllib.request.urlopen(request, timeout=120) as response, destination.open("wb") as output:
         shutil.copyfileobj(response, output)
+    actual = sha256(destination)
+    if actual != expected:
+        destination.unlink(missing_ok=True)
+        raise ValueError(f"source checksum mismatch: expected {expected}, got {actual}")
+
+
+def download_git_archive(url: str, commit: str, expected: str, destination: Path) -> None:
+    """Create a deterministic archive through a repository-scoped SSH key."""
+    if not re.fullmatch(r"ssh://git@github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git", url):
+        raise ValueError("private component source must use a GitHub SSH URL")
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("private component commit must be a pinned SHA")
+    with tempfile.TemporaryDirectory(prefix="meo-private-source-") as directory:
+        checkout = Path(directory)
+        subprocess.run(["git", "init", "--quiet", checkout], check=True, timeout=30)
+        subprocess.run(["git", "-C", checkout, "remote", "add", "origin", url], check=True, timeout=30)
+        subprocess.run(
+            ["git", "-C", checkout, "fetch", "--quiet", "--depth=1", "origin", commit],
+            check=True, timeout=120,
+        )
+        subprocess.run(
+            ["git", "-C", checkout, "archive", "--format=tar", f"--output={destination}", "FETCH_HEAD"],
+            check=True, timeout=120,
+        )
     actual = sha256(destination)
     if actual != expected:
         destination.unlink(missing_ok=True)
@@ -105,7 +131,12 @@ def stage(manifest_path: Path, package: str, output: Path) -> None:
         raise ValueError(f"{package} PKGBUILD version does not match manifest")
 
     archive = output / "component-source.archive"
-    download(component["sourceUrl"], component["sourceSha256"], archive)
+    if component.get("sourceTransport") == "git-ssh":
+        download_git_archive(
+            component["sourceUrl"], component["commit"], component["sourceSha256"], archive,
+        )
+    else:
+        download(component["sourceUrl"], component["sourceSha256"], archive)
     layout = component.get("sourceLayout", "source")
     destination = output / "src" / ("release_bundle" if layout == "release-bundle" else "source")
     destination.mkdir(parents=True)

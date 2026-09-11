@@ -49,8 +49,9 @@
       "tag": "v0.1.0-beta.3",
       "commit": "4da2d662e9d5b3c9a02ea6bd07d04328d7bc9c67",
       "expectedVersion": "0.1.0-4",
-      "sourceUrl": "https://api.github.com/repos/QwQdoge/MeoArch-account/tarball/4da2d662e9d5b3c9a02ea6bd07d04328d7bc9c67",
-      "sourceSha256": "bfec0d36cab173767d87c516ca076c1285446c86ea1b0fbd260408fcb625bcc1",
+      "sourceTransport": "git-ssh",
+      "sourceUrl": "ssh://git@github.com/QwQdoge/MeoArch-account.git",
+      "sourceSha256": "c7f45fe7909624fc9b111e24b8a409d54df8a665438a89847e057ab0123b91eb",
       "sourceLayout": "source"
     },
     "meo-settings": {
