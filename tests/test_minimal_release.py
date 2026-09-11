@@ -58,6 +58,8 @@ class MinimalReleaseTests(unittest.TestCase):
         for applet in (
             "org.meo.topbar",
             "org.meo.timecenter",
+            "org.meo.notifications",
+            "org.meo.time-notifications",
             "org.meo.shelf",
             "org.meo.toptasks",
         ):

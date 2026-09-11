@@ -110,13 +110,13 @@ Updates 页面保持只读：
 - 紧凑宽度的操作按钮使用自动换行，避免三按钮固定 Row 溢出。
 - “Manage updates & channel in OmniStore” 只负责打开 OmniStore。
 
-## 3. 完整度审查：仍未做全的内容
+## 3. 完整度审查：已完成与仍需验收
 
 | 优先级 | 仓库/区域 | 真实状态 | 需要完成 |
 | --- | --- | --- | --- |
-| P0 | meo-repo trust root | 缺少真实 `meo.gpg`、`meo-trusted`、`meo-revoked`；当前正确 fail closed | 离线生成 master/subkey，提交仅公钥 payload，并完成 disposable root populate 测试 |
-| P0 | component release inputs | MeoUI、meo-kde、MeoArch-account、MeoSettings 缺计划 tag；OmniStore 现有旧 release 不含当前 exporter verifier 与系统账号接入 | 创建评审 tag/release asset，记录 commit 和 SHA-256，填满 Stable manifest，并配置真实公开 OAuth client ID |
-| P0 | OmniStore Stable rollback | UI 与安全预览存在，最终签名包下载/libalpm local-package transaction 未实现 | 按第 8 节实现；在此之前拒绝降级是正确行为 |
+| Done | meo-repo trust root | 已提交可导入的公开 keyring payload，protected Environment 只持有可撤销签名子钥；自动 populate 与远端签名验证已通过 | 保持 master secret 离线并按轮换流程维护 |
+| Done | Beta 3 component release inputs | `2026.09-beta.3.json` 固定 MeoUI、MeoKDE、Meo Account、Meo Settings 与 OmniStore 的最新评审 tag、commit、package version、URL 和 SHA-256 | 每个稀疏 Beta candidate 必须独立跑完整发布与远端安装 smoke |
+| Done | OmniStore Stable rollback | hash-bound 下载、local-package transaction、Pacman repository helper 与 release exporter 已进入最新 bundle | 真实用户降级仍需按第 9 节保留人工数据验收 |
 | P0 | Installer target payload | 安装计划会安装 pacman 包，但 `apply-target-customizations.sh` 仍从 Live runtime 复制 MeoUI/MeoKDE 运行时到目标 | 首个签名 Stable repo 可用后删除目标源码/runtime copy，目标只验证已安装包；Live ISO staging 可继续消费已验证源码 |
 | P0 | Installer bootstrap | `installer/bootstrap/` 只有说明，没有已评审公钥 material | 放入与 `meo-keyring` 同源且 hash 固定的公开 bootstrap 文件 |
 | P1 | CLI parity | CLI 当前只生成/打印 Meo 软件与频道 plan，不是完整磁盘、用户、网络、archinstall CLI | 在同一 Installer 中补全 full InstallConfig 输入和 runner；不要另建 CLI backend |
@@ -125,7 +125,7 @@ Updates 页面保持只读：
 | P1 | Installer storage | 只支持经过验证的 erase-disk；manual partition 与 disk encryption 明确阻塞 | 基于真实 archinstall schema 实现并加 destructive VM tests，不能只解除 UI 禁用 |
 | P1 | offline install | ISO 不携带完整本地 Meo repo | 当前明确 online-only；未来建立签名 local ISO repo + 安装后在线 channel |
 | P1 | mirror UI | backend 首期只允许 automatic/packages.meoarch.org | 有第二个真实官方镜像后再增加 mirror 选择；不能把 mirror 和 channel 混合 |
-| P1 | R2/CDN | workflow 和脚本存在，未对真实 R2 执行 | 配置 protected Environment 后跑首次 Stable/Beta 初始化及远程 smoke |
+| Done | R2/CDN | protected Environment、Stable/Beta 仓库、签名 DB、精确 cache purge 与远程 Pacman smoke 已投入使用 | 继续保持全频道 publication serialization 与不可变对象预检 |
 | P1 | end-to-end | 尚未完成 Live ISO → 安装 → reboot → pacman/Omni/Settings 一致性 | 按第 9 节跑 VM matrix 并保存证据 |
 | P2 | OmniStore localization | 新频道卡的频道专用文案仍为英文，公共 Cancel/Refresh 已复用 l10n | 在 Flutter SDK 可用机器补 ARB 五语言并运行 `flutter gen-l10n` |
 | P2 | OmniStore channel deep link | Settings 只能打开 OmniStore，不能直达频道锚点 | 为 OmniStore 定义稳定的内部 route/desktop action，再让 Settings 调用；不能以重复按钮假装 deep link |
@@ -137,15 +137,11 @@ Updates 页面保持只读：
 不要强行创建旧 placeholder tag。对计划进入首个 train 的 commit 做评审 tag，并记录完整
 40 位 commit ID。
 
-2026-08-27 已知阻塞：
-
-- `QwQdoge/MeoUI` 没有计划中的 `v1.0.2`。
-- `QwQdoge/meo-kde` 没有计划中的 `v0.3.0`。
-- `QwQdoge/MeoSettings` 没有计划中的 `v0.1.0`。
-- `QwQdoge/MeoArch-account` 的桌面 broker 仍需 Arch/Plasma/KWallet 构建验收和正式 release tag。
-- OmniStore 只有旧 `v0.1.2`。其 release bundle SHA-256 是
-  `e7220b46e35ba614e69a4b2727c5df4f116ed95f2886a5cca02661b751a6d7d3`，
-  但该 tag 不含当前 `verify_release_exporter_contract.py`，不能进入新 train。
+当前 Beta 3 train 使用 `manifests/beta/2026.09-beta.3.json`。不要再回退到
+旧 E2E source tag、Beta 1 package version 或 OmniStore `v0.1.2` bundle。
+Meo Account 的 owning repository 是 private；公共 candidate 可独立验证和发布，
+Account candidate 必须在有明确只读私有源码权限的受保护构建环境中执行，禁止把
+个人 GitHub token、私有源码 archive 或 service-role credential 搬进公共仓库。
 
 下载每个 immutable commit archive/release bundle，记录 SHA-256。源码包 URL 必须绑定
 commit；OmniStore bundle 与 verifier 必须绑定同一 commit。填写 manifest 后运行：
@@ -242,7 +238,7 @@ Beta dispatch：
 ```text
 channel=beta
 manifest=<包含 candidate 身份的评审 manifest>
-beta_candidate=<精确一个核心包名>
+beta_candidate=<精确一个评审包名>
 ```
 
 流水线顺序：
@@ -251,6 +247,7 @@ beta_candidate=<精确一个核心包名>
 unprivileged build/test/namcap/install smoke
 → hash-bound unsigned artifact
 → protected job 重新验证 hash 和 package metadata
+→ preflight every immutable object name/content before the first upload
 → sign package
 → upload package + .sig
 → remote existence verification

@@ -72,6 +72,9 @@ if [ "$channel" = beta ]; then
 fi
 
 package_files=()
+new_package_files=()
+# Preflight every immutable package object before uploading any of them. A
+# late collision must never leave a partially uploaded release train behind.
 for package in "$work_dir"/*.pkg.tar.*; do
   case "$package" in *.sig) continue ;; esac
   package_files+=("$package")
@@ -88,6 +91,13 @@ for package in "$work_dir"/*.pkg.tar.*; do
     gpg --batch --verify "$remote_package.sig" "$remote_package"
     continue
   fi
+  new_package_files+=("$package")
+done
+
+for package in "${new_package_files[@]}"; do
+  filename="$(basename -- "$package")"
+  object_key="$repository/os/x86_64/$filename"
+  object="s3://$R2_BUCKET/$object_key"
   gpg --batch --yes --detach-sign --local-user "$MEO_SIGNING_KEY_FINGERPRINT" "$package"
   aws --endpoint-url "$R2_ENDPOINT" s3 cp "$package" "$object" \
     --cache-control 'public,max-age=31536000,immutable' --content-type application/octet-stream --only-show-errors

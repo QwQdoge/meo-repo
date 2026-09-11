@@ -10,7 +10,7 @@ candidate="${4:-}"
 case "$channel" in
   stable) ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-account|meo-settings|omnistore-bin) ;; *)
+    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-kde-runtime|meo-account|meo-settings|omnistore-bin) ;; *)
       echo "Beta build requires one reviewed core package candidate" >&2; exit 2;;
     esac
     ;;
@@ -25,7 +25,14 @@ cp -- /etc/makepkg.conf "$output/makepkg.conf"
 printf '\nOPTIONS+=(\x27!debug\x27)\n' >>"$output/makepkg.conf"
 
 python3 "$repo_root/scripts/validate_manifest.py" "$manifest"
-python3 "$repo_root/scripts/verify_manifest_sources.py" "$manifest"
+if [ "$channel" = beta ]; then
+  # A sparse Beta run verifies the immutable source it actually consumes.
+  # This keeps unrelated private components from weakening or blocking a
+  # public candidate build; each candidate is verified by its own run.
+  python3 "$repo_root/scripts/verify_manifest_sources.py" "$manifest" --component "$candidate"
+else
+  python3 "$repo_root/scripts/verify_manifest_sources.py" "$manifest"
+fi
 python3 "$repo_root/scripts/validate_keyring_payload.py" "$repo_root/packages/meo-keyring/files"
 
 build_context() {

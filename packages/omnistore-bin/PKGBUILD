@@ -1,8 +1,8 @@
 # The protected renderer sets pkgver, _release_tag and source checksums from
 # the immutable manifest.  The verifier is fetched from that exact source tag.
 pkgname=omnistore-bin
-pkgver=0.1.2
-pkgrel=3
+pkgver=0.1.4beta3
+pkgrel=1
 pkgdesc="OmniStore package management application"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'

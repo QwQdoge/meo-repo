@@ -26,8 +26,14 @@ def remote_tag_commit(repository: str, tag: str) -> str:
     return peeled or records[0][0]
 
 
-def verify(manifest: dict, resolver=remote_tag_commit) -> None:
-    for name, component in manifest["components"].items():
+def verify(manifest: dict, resolver=remote_tag_commit, components: set[str] | None = None) -> None:
+    available = manifest["components"]
+    selected = set(available) if components is None else components
+    missing = selected - set(available)
+    if missing:
+        raise ValueError(f"manifest has no selected component: {', '.join(sorted(missing))}")
+    for name in sorted(selected):
+        component = available[name]
         actual = resolver(component["repository"], component["tag"])
         if actual != component["commit"]:
             raise ValueError(f"{name} tag resolves to {actual}, not pinned commit {component['commit']}")
@@ -40,8 +46,12 @@ def verify(manifest: dict, resolver=remote_tag_commit) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("manifest", type=Path)
+    parser.add_argument("--component", action="append", dest="components")
     arguments = parser.parse_args()
-    verify(json.loads(arguments.manifest.read_text(encoding="utf-8")))
+    verify(
+        json.loads(arguments.manifest.read_text(encoding="utf-8")),
+        components=set(arguments.components) if arguments.components else None,
+    )
 
 
 if __name__ == "__main__":

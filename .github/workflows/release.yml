@@ -13,7 +13,7 @@ on:
         required: true
         default: manifests/stable/2026.09-e2e01.json
       beta_candidate:
-        description: Required only for Beta (one core package name).
+        description: Required only for Beta (one reviewed package name).
         required: false
         type: string
 

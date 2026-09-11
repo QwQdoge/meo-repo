@@ -82,7 +82,7 @@ class RepositoryContractTests(unittest.TestCase):
     def test_settings_uses_the_minimal_kde_runtime(self):
         settings = (ROOT / "packages/meo-settings/PKGBUILD").read_text()
         runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
-        self.assertIn("'meo-kde-runtime>=0.4.0beta1'", settings)
+        self.assertIn("'meo-kde-runtime>=0.4.0beta3'", settings)
         self.assertNotIn("'meo-desktop'", settings)
         self.assertIn('source/native/system', runtime)
         self.assertIn('source/qml/MeoKDE', runtime)
@@ -229,6 +229,55 @@ class RepositoryContractTests(unittest.TestCase):
         verify_manifest_sources(manifest, lambda repository, tag: commit)
         with self.assertRaises(ValueError):
             verify_manifest_sources(manifest, lambda repository, tag: "b" * 40)
+
+    def test_sparse_manifest_source_verification_is_candidate_scoped(self):
+        selected = "a" * 40
+        unrelated = "b" * 40
+        manifest = {"components": {
+            "meoui-qml": {
+                "repository": "QwQdoge/MeoUI", "tag": "v1.0.3-beta.3", "commit": selected,
+                "sourceUrl": f"https://example.invalid/{selected}.tar.gz", "sourceLayout": "source",
+            },
+            "meo-account": {
+                "repository": "QwQdoge/MeoArch-account", "tag": "v0.1.0-beta.3", "commit": unrelated,
+                "sourceUrl": f"https://example.invalid/{unrelated}.tar.gz", "sourceLayout": "source",
+            },
+        }}
+        calls = []
+        verify_manifest_sources(
+            manifest,
+            lambda repository, tag: calls.append((repository, tag)) or selected,
+            {"meoui-qml"},
+        )
+        self.assertEqual(calls, [("QwQdoge/MeoUI", "v1.0.3-beta.3")])
+
+    def test_latest_beta_manifest_pins_every_current_release(self):
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
+        self.assertEqual(manifest["profile"], "recommended")
+        self.assertEqual(set(manifest["components"]), {
+            "meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime",
+            "meo-account", "meo-settings", "omnistore-bin",
+        })
+        expected_tags = {
+            "meoui-qml": "v1.0.3-beta.3",
+            "meo-icons": "v0.4.0-beta.3",
+            "meo-desktop": "v0.4.0-beta.3",
+            "meo-kde-runtime": "v0.4.0-beta.3",
+            "meo-account": "v0.1.0-beta.3",
+            "meo-settings": "v0.2.0-beta.3",
+            "omnistore-bin": "v0.1.4-beta.3",
+        }
+        self.assertEqual(
+            {name: component["tag"] for name, component in manifest["components"].items()},
+            expected_tags,
+        )
+
+    def test_publication_preflights_all_immutable_objects_before_upload(self):
+        script = (ROOT / "ci/publish-repository.sh").read_text()
+        marker = script.index("Preflight every immutable package object")
+        uploader = script.index("gpg --batch --yes --detach-sign", marker)
+        self.assertIn('new_package_files+=("$package")', script[marker:uploader])
+        self.assertNotIn('s3 cp "$package" "$object"', script[marker:uploader])
 
     def test_protected_publication_is_globally_serialized_and_secrets_are_step_scoped(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()

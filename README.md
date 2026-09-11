@@ -23,6 +23,10 @@ reports, architecture drafts, screenshots, or build logs to the root.
 
 The single copyable cross-repository implementation and Arch release runbook is
 [`docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md`](docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md).
+The current complete prerelease train is pinned in
+[`manifests/beta/2026.09-beta.3.json`](manifests/beta/2026.09-beta.3.json); it
+records every component's owning GitHub repository, immutable release tag,
+commit, package version, source URL, and SHA-256.
 
 ## Package-source boundary
 
