@@ -1,7 +1,7 @@
 # Rendered by the protected release job with source tag/commit/checksum from a manifest.
 pkgname=meoui-qml
 pkgver=1.0.3
-pkgrel=1
+pkgrel=2
 pkgdesc="MeoUI Qt Quick Material Design 3 component library"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoUI'
@@ -21,5 +21,12 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
+  # Older immutable release tags declare these JavaScript modules in qmldir
+  # but do not install them. Keep downstream tooling functional without
+  # altering the pinned component source.
+  install -Dm644 "$srcdir/source/components/MeoMaterialShapes.js" \
+    "$pkgdir/usr/lib/qt6/qml/MeoUI/components/MeoMaterialShapes.js"
+  install -Dm644 "$srcdir/source/showcase/SettingsPreviewSchemes.js" \
+    "$pkgdir/usr/lib/qt6/qml/MeoUI/showcase/SettingsPreviewSchemes.js"
   install -Dm644 "$srcdir/source/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

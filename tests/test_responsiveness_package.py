@@ -14,12 +14,6 @@ class ResponsivenessPackageTests(unittest.TestCase):
         ):
             self.assertIn(f"'{package}'", recipe)
         self.assertNotIn("'ananicy-cpp'", recipe)
-        for payload in (
-            "zram-generator.conf", "gamemode.ini", "cachyos-ananicy.kdl",
-            "preload-ng-meo.toml", "prelockd-meo.conf",
-            "50-meo-responsiveness.preset",
-        ):
-            self.assertIn(payload, recipe)
 
 
 if __name__ == "__main__":

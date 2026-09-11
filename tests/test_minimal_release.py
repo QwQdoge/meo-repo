@@ -57,10 +57,9 @@ class MinimalReleaseTests(unittest.TestCase):
         recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
         for applet in (
             "org.meo.topbar",
-            "org.meo.time",
-            "org.meo.notifications",
-            "org.meo.time-notifications",
             "org.meo.timecenter",
+            "org.meo.shelf",
+            "org.meo.toptasks",
         ):
             self.assertIn(applet, recipe)
 
