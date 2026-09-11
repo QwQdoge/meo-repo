@@ -9,7 +9,7 @@ depends=('meoui-qml>=1.0.3' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspac
          'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
          'konsole' 'plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
-         'layer-shell-qt' 'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
+         'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
          'system76-scheduler' 'zram-generator' 'dbus-broker-units'
          'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
@@ -32,7 +32,8 @@ build() {
 package() {
   # Use the existing KDE polkit agent for this E2E candidate. Do not install a
   # second agent's overlapping service/autostart paths into the same target.
-  for component in system dynamic-color dock decoration application-style; do
+  # The standalone Layer Shell dock is retired and disabled in current MeoKDE.
+  for component in system dynamic-color decoration application-style; do
     DESTDIR="$pkgdir" cmake --install "build/$component"
   done
   local source="$srcdir/source"
@@ -67,7 +68,6 @@ package() {
   for entry in kde/kdeglobals kwin/kwinrc plasma/plasmarc plasma/plasma-welcomerc plasma/meo-shellrc; do
     install -Dm644 "$source/defaults/$entry" "$pkgdir/etc/xdg/${entry##*/}"
   done
-  install -Dm644 "$source/data/autostart/org.meo.dock.desktop" "$pkgdir/etc/xdg/autostart/org.meo.dock.desktop"
   # Plasma Login Manager is the primary supported login manager.  SDDM files
   # stay out of the base package so a compatibility adapter can never silently
   # select or configure SDDM on a new Meo installation.

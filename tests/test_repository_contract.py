@@ -88,6 +88,13 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('source/qml/MeoKDE', runtime)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
+    def test_desktop_package_does_not_install_retired_standalone_dock(self):
+        desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        smoke = (ROOT / "ci/smoke-installed.sh").read_text()
+        self.assertNotIn("dynamic-color dock decoration", desktop)
+        self.assertNotIn("org.meo.dock.desktop", desktop)
+        self.assertNotIn("/usr/bin/meo-dock", smoke)
+
     def test_meo_account_oauth_config_is_readable_by_the_user_daemon(self):
         recipe = (ROOT / "packages/meo-account/PKGBUILD").read_text()
         self.assertIn('install -Dm644 "$srcdir/source/desktop/data/broker.conf.example"', recipe)

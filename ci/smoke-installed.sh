@@ -23,8 +23,8 @@ test -s /usr/lib/qt6/qml/MeoUI/components/MeoMaterialShapes.js
 test -s /usr/lib/qt6/qml/MeoUI/showcase/SettingsPreviewSchemes.js
 pacman -Qlq meo-icons | grep '/icons/MeoSymbols/index.theme$' >/dev/null
 pacman -Qlq meo-desktop | grep -E '/(wayland-sessions|xsessions|plasma/look-and-feel)/' >/dev/null
-for path in /usr/bin/meo-dock /usr/lib/qt6/qml/MeoKDE/qmldir \
-  /usr/lib/qt6/qml/Meo/System/libmeosystemplugin.so /etc/xdg/autostart/org.meo.dock.desktop \
+for path in /usr/lib/qt6/qml/MeoKDE/qmldir \
+  /usr/lib/qt6/qml/Meo/System/libmeosystemplugin.so \
   /usr/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do
   test -s "$path"
 done
