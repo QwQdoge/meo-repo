@@ -114,6 +114,16 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("meo-trusted references a key absent from meo.gpg", validator)
         self.assertIn("meo-revoked references a key absent from meo.gpg", validator)
 
+    def test_keyring_installs_and_populates_the_current_archive_authority(self):
+        recipe = (ROOT / "packages/meo-keyring/PKGBUILD").read_text()
+        install_hook = (ROOT / "packages/meo-keyring/meo-keyring.install").read_text()
+        trusted = (ROOT / "packages/meo-keyring/files/meo-trusted").read_text()
+        self.assertIn("install=meo-keyring.install", recipe)
+        self.assertIn("post_install", install_hook)
+        self.assertIn("post_upgrade", install_hook)
+        self.assertIn("pacman-key --populate meo", install_hook)
+        self.assertIn("ACCF58C005D467A0C8633806F302FD51C40616AA:6:", trusted)
+
     def test_static_package_sources_use_real_checksums(self):
         for package in ("meo-channel-stable", "meo-channel-beta", "meo-mirrorlist", "meo-release"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
