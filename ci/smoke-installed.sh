@@ -19,6 +19,8 @@ done
 # Consume the complete listing: grep -q can close a large package listing
 # early, giving pacman SIGPIPE and a false failure under pipefail.
 pacman -Qlq meoui-qml | grep '/MeoUI/qmldir$' >/dev/null
+test -s /usr/lib/qt6/qml/MeoUI/components/MeoMaterialShapes.js
+test -s /usr/lib/qt6/qml/MeoUI/showcase/SettingsPreviewSchemes.js
 pacman -Qlq meo-icons | grep '/icons/MeoSymbols/index.theme$' >/dev/null
 pacman -Qlq meo-desktop | grep -E '/(wayland-sessions|xsessions|plasma/look-and-feel)/' >/dev/null
 for path in /usr/bin/meo-dock /usr/lib/qt6/qml/MeoKDE/qmldir \
