@@ -180,13 +180,14 @@ class RepositoryContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             context = Path(directory)
             (context / "files").mkdir()
-            (context / "PKGBUILD").write_text("sha256sums=('SKIP' 'SKIP' 'SKIP')\n")
+            (context / "PKGBUILD").write_text("sha256sums=('SKIP' 'SKIP' 'SKIP' 'SKIP')\n")
             for name in ("meo.gpg", "meo-trusted", "meo-revoked"):
                 (context / "files" / name).write_bytes(name.encode())
+            (context / "meo-keyring.install").write_text("post_install() { :; }\n")
             render_keyring_recipe(context)
             rendered = (context / "PKGBUILD").read_text()
             self.assertNotIn("SKIP", rendered)
-            self.assertEqual(rendered.count("'"), 6)
+            self.assertEqual(rendered.count("'"), 8)
             for name in ("meo.gpg", "meo-trusted", "meo-revoked"):
                 self.assertEqual((context / name).read_bytes(), name.encode())
 

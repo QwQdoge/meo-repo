@@ -1,0 +1,7 @@
+post_install() {
+  pacman-key --populate meo
+}
+
+post_upgrade() {
+  pacman-key --populate meo
+}

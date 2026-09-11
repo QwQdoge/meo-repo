@@ -8,13 +8,14 @@ import re
 import shutil
 from pathlib import Path
 
-FILES = ("meo.gpg", "meo-trusted", "meo-revoked")
+PUBLIC_FILES = ("meo.gpg", "meo-trusted", "meo-revoked")
+RECIPE_FILES = (*PUBLIC_FILES, "meo-keyring.install")
 
 
 def render(context: Path) -> None:
     hashes = []
-    for name in FILES:
-        path = context / "files" / name
+    for name in RECIPE_FILES:
+        path = context / "files" / name if name in PUBLIC_FILES else context / name
         if not path.is_file() or path.stat().st_size == 0 or path.is_symlink():
             raise ValueError(f"invalid public keyring payload: {name}")
         hashes.append(hashlib.sha256(path.read_bytes()).hexdigest())
@@ -25,7 +26,7 @@ def render(context: Path) -> None:
     if count != 1:
         raise ValueError("meo-keyring recipe has no single-line sha256sums declaration")
     # makepkg resolves local sources by basename beside PKGBUILD, not files/.
-    for name in FILES:
+    for name in PUBLIC_FILES:
         shutil.copyfile(context / "files" / name, context / name)
     recipe_path.write_text(rendered, encoding="utf-8")
 
