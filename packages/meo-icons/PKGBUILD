@@ -1,6 +1,6 @@
 pkgname=meo-icons
 pkgver=0.4.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Meo Symbols Material Design 3 icon theme"
 arch=('any')
 url='https://github.com/QwQdoge/meo-kde'
