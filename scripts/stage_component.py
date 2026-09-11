@@ -78,6 +78,17 @@ def recipe_version(recipe: str) -> str:
     return f"{fields['ver']}-{fields['rel']}"
 
 
+def stage_local_sources(output: Path, names: tuple[str, ...]) -> None:
+    """Populate makepkg's pre-extracted srcdir for reviewed recipe files."""
+    source_dir = output / "src"
+    source_dir.mkdir(exist_ok=True)
+    for name in names:
+        source = output / name
+        if not source.is_file():
+            raise ValueError(f"package recipe source does not exist: {name}")
+        shutil.copyfile(source, source_dir / name)
+
+
 def stage(manifest_path: Path, package: str, output: Path) -> None:
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     component = manifest.get("components", {}).get(package)
@@ -102,6 +113,9 @@ def stage(manifest_path: Path, package: str, output: Path) -> None:
     archive.unlink()
 
     if package == "omnistore-bin":
+        # The component bundle is staged manually and makepkg runs with
+        # --noextract, so local recipe sources must be placed in $srcdir too.
+        stage_local_sources(output, ("org.meo.OmniStore.json", "omnistore.desktop"))
         verifier = output / "src" / "verify_release_exporter_contract.py"
         download(component["verifierUrl"], component["verifierSha256"], verifier)
         verifier.chmod(0o755)

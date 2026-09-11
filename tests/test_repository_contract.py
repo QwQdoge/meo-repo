@@ -12,7 +12,7 @@ ROOT = Path(__file__).parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from overlay import stable_supersedes_beta
 from artifact_manifest import CONTROL_PACKAGES, create as create_artifact_contract, verify as verify_artifact_contract
-from stage_component import safe_extract
+from stage_component import safe_extract, stage_local_sources
 from render_keyring_recipe import render as render_keyring_recipe
 from overlay_cleanup import cleanup_candidates, database_versions
 from verify_manifest_sources import verify as verify_manifest_sources
@@ -168,6 +168,21 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(manifest["redirectUri"], "omnistore://auth/callback")
         self.assertIn("Exec=/usr/bin/omnistore %u", desktop)
         self.assertIn("MimeType=x-scheme-handler/omnistore;", desktop)
+
+    def test_preextracted_build_stages_omnistore_recipe_sources(self):
+        with tempfile.TemporaryDirectory() as directory:
+            context = Path(directory)
+            for name in ("org.meo.OmniStore.json", "omnistore.desktop"):
+                (context / name).write_text(name)
+            stage_local_sources(context, ("org.meo.OmniStore.json", "omnistore.desktop"))
+            self.assertEqual(
+                (context / "src/org.meo.OmniStore.json").read_text(),
+                "org.meo.OmniStore.json",
+            )
+            self.assertEqual(
+                (context / "src/omnistore.desktop").read_text(),
+                "omnistore.desktop",
+            )
 
     def test_stable_artifact_contract_is_complete_and_hash_bound(self):
         manifest_path = ROOT / "manifests/stable/2026.08.json"
