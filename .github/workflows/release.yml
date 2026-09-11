@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Prepare unprivileged Arch builder
         run: |
-          pacman -Syu --noconfirm --needed python curl git sudo namcap
+          pacman -Syu --noconfirm --needed python curl git openssh sudo namcap
           useradd --create-home builder
           printf 'builder ALL=(ALL:ALL) NOPASSWD: /usr/bin/pacman\n' >/etc/sudoers.d/meo-builder
           chmod 0440 /etc/sudoers.d/meo-builder
