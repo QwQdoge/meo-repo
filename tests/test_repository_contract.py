@@ -89,6 +89,13 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("'plasma-workspace'", runtime)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
+        runtime_paths = set(manifest["components"]["meo-kde-runtime"]["sourcePaths"])
+        self.assertEqual(runtime_paths, {
+            "native/system", "native/dynamic-color",
+            "native/third_party/material-color-utilities", "qml/MeoKDE",
+        })
+
     def test_desktop_package_does_not_install_retired_standalone_dock(self):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
         smoke = (ROOT / "ci/smoke-installed.sh").read_text()

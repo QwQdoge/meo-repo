@@ -39,7 +39,7 @@
       "tag": "v0.4.0-beta.3",
       "commit": "98a387118d7bfef3adae7cb484fd5f170bd254af",
       "expectedVersion": "0.4.0beta3-1",
-      "sourcePaths": ["native/system", "qml/MeoKDE"],
+      "sourcePaths": ["native/system", "native/dynamic-color", "native/third_party/material-color-utilities", "qml/MeoKDE"],
       "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/98a387118d7bfef3adae7cb484fd5f170bd254af",
       "sourceSha256": "24d83ce325ecc621b94e9fa951d016ecfbfc69d5b52ea92b63b95db13e6352a1",
       "sourceLayout": "source"
