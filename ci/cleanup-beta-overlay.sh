@@ -16,7 +16,7 @@ done
 
 beta_key="meo-beta/os/x86_64/meo-beta.db.tar.gz"
 beta_count="$(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 --bucket "$R2_BUCKET" \
-  --prefix "$beta_key" --query "length(Contents[?Key=='$beta_key'])" --output text)"
+  --prefix "$beta_key" --query "length(Contents[?Key=='$beta_key'] || \`[]\`)" --output text)"
 [ "$beta_count" != 0 ] || { echo "No beta overlay exists; cleanup is not required"; exit 0; }
 
 work_dir="$(mktemp -d)"

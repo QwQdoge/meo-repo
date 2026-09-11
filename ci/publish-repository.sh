@@ -55,7 +55,7 @@ cp -- "$packages"/*.pkg.tar.* "$work_dir/"
 if [ "$channel" = beta ]; then
   existing_key="$repository/os/x86_64/$repository.db.tar.gz"
   existing_count="$(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 \
-    --bucket "$R2_BUCKET" --prefix "$existing_key" --query 'length(Contents)' --output text)"
+    --bucket "$R2_BUCKET" --prefix "$existing_key" --query 'length(Contents || `[]`)' --output text)"
   if [ "$existing_count" != 0 ]; then
     for metadata in "$repository.db.tar.gz" "$repository.db.tar.gz.sig" \
                     "$repository.files.tar.gz" "$repository.files.tar.gz.sig"; do
@@ -79,7 +79,7 @@ for package in "$work_dir"/*.pkg.tar.*; do
   object_key="$repository/os/x86_64/$filename"
   object="s3://$R2_BUCKET/$object_key"
   existing="$(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 --bucket "$R2_BUCKET" \
-    --prefix "$object_key" --query "length(Contents[?Key=='$object_key'])" --output text)"
+    --prefix "$object_key" --query "length(Contents[?Key=='$object_key'] || \`[]\`)" --output text)"
   if [ "$existing" != 0 ]; then
     remote_package="$work_dir/remote-$filename"
     aws --endpoint-url "$R2_ENDPOINT" s3 cp "$object" "$remote_package" --only-show-errors
