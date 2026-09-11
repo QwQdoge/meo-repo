@@ -86,6 +86,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertNotIn("'meo-desktop'", settings)
         self.assertIn('source/native/system', runtime)
         self.assertIn('source/qml/MeoKDE', runtime)
+        self.assertIn("'plasma-workspace'", runtime)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
     def test_desktop_package_does_not_install_retired_standalone_dock(self):
