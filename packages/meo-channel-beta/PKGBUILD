@@ -1,6 +1,6 @@
 pkgname=meo-channel-beta
 pkgver=1
-pkgrel=1
+pkgrel=2
 pkgdesc="Select the MeoArch beta pacman channel"
 arch=('any')
 license=('MIT')

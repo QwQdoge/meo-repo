@@ -1,6 +1,6 @@
 pkgname=meo-release
 pkgver=2026.08
-pkgrel=2
+pkgrel=3
 pkgdesc="MeoArch release generation and official package catalog"
 arch=('any')
 license=('MIT')

@@ -1,6 +1,6 @@
 pkgname=meo-recommended-meta
 pkgver=2026.08
-pkgrel=1
+pkgrel=2
 pkgdesc="Complete recommended MeoArch desktop integration package"
 arch=('any')
 license=('MIT')

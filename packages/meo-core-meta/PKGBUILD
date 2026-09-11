@@ -1,6 +1,6 @@
 pkgname=meo-core-meta
 pkgver=2026.08
-pkgrel=1
+pkgrel=2
 pkgdesc="MeoArch core desktop integration package"
 arch=('any')
 license=('MIT')
