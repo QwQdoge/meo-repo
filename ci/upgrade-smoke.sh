@@ -10,7 +10,7 @@ artifact_dir="$(realpath -e -- "${2:?artifact directory is required}")"
 package_dir="$artifact_dir/packages"
 [ -d "$package_dir" ] || { echo "Candidate package directory is missing" >&2; exit 2; }
 
-for command_name in pacman pacman-key repo-add chroot stat systemd-tmpfiles; do
+for command_name in pacman pacman-key repo-add chroot stat systemd-tmpfiles bsdtar sha256sum; do
   command -v "$command_name" >/dev/null || { echo "Required upgrade-smoke command is missing: $command_name" >&2; exit 2; }
 done
 
@@ -82,6 +82,17 @@ pacman --root "$test_root" --config "$previous_config" -Syu --needed --noconfirm
 pacman --root "$test_root" -Q meo-kde-runtime >/dev/null
 pacman --root "$test_root" -Q meo-release | grep -F '2026.08-2' >/dev/null
 
+desktop_candidate=("$package_dir"/meo-desktop-*.pkg.tar.zst)
+[ "${#desktop_candidate[@]}" -eq 1 ] && [ -f "${desktop_candidate[0]}" ] || {
+  echo "Stable upgrade smoke requires exactly one meo-desktop package" >&2
+  exit 2
+}
+decoration_plugin=usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so
+candidate_decoration_sha256="$(bsdtar -xOf "${desktop_candidate[0]}" "$decoration_plugin" | sha256sum | awk '{print $1}')"
+# Match legacy source installs that left this path outside pacman's database.
+install -Dm755 /bin/true "$test_root/$decoration_plugin"
+! pacman --root "$test_root" -Qo "/$decoration_plugin" >/dev/null 2>&1
+
 # Reproduce the legacy defect without touching any contents below the two
 # affected top-level directories.
 chown 1000:1000 "$test_root/etc" "$test_root/usr"
@@ -98,6 +109,12 @@ for directory in / /etc /usr /var; do
 done
 pacman --root "$test_root" -Q meo-desktop >/dev/null
 ! pacman --root "$test_root" -Q meo-kde-runtime >/dev/null 2>&1
+test "$(sha256sum "$test_root/$decoration_plugin" | awk '{print $1}')" = "$candidate_decoration_sha256"
+desktop_check="$(pacman --root "$test_root" -Qkk meo-desktop)"
+grep -F '0 altered files' <<<"$desktop_check" >/dev/null || {
+  printf '%s\n' "$desktop_check" >&2
+  exit 3
+}
 
 cp -- "$repo_root/ci/smoke-installed.sh" "$test_root/tmp/meo-smoke-installed.sh"
 cp -- "$repo_root/scripts/artifact_manifest.py" "$test_root/scripts/artifact_manifest.py"

@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=6
+pkgrel=7
 pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -19,6 +19,12 @@ options=('!debug')
 provides=('meo-kde-runtime=0.4.0')
 conflicts=('meo-kde-runtime')
 replaces=('meo-kde-runtime')
+install=meo-desktop.install
+# Temporary one-cycle adoption path for installations that predate pacman
+# ownership of the KDecoration plugin.  If an unowned legacy copy exists,
+# pacman writes the reviewed package payload as .pacnew and the install hook
+# below atomically adopts it during the same transaction.
+backup=('usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so')
 source=()
 sha256sums=()
 

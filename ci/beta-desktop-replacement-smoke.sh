@@ -16,8 +16,10 @@ candidate_package=("$package_dir"/meo-desktop-*.pkg.tar.zst)
 }
 candidate_version="$(bsdtar -xOf "${candidate_package[0]}" .PKGINFO | awk '$1 == "pkgver" && $2 == "=" {print $3; exit}')"
 [ -n "$candidate_version" ] || { echo "Candidate package has no pkgver" >&2; exit 2; }
+decoration_plugin=usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so
+candidate_decoration_sha256="$(bsdtar -xOf "${candidate_package[0]}" "$decoration_plugin" | sha256sum | awk '{print $1}')"
 
-for command_name in pacman pacman-key repo-add bsdtar stat systemd-tmpfiles python3; do
+for command_name in pacman pacman-key repo-add bsdtar stat systemd-tmpfiles python3 sha256sum; do
   command -v "$command_name" >/dev/null || { echo "Required replacement-smoke command is missing: $command_name" >&2; exit 2; }
 done
 
@@ -88,11 +90,23 @@ pacman --root "$test_root" --config "$previous_config" -Syu --needed --noconfirm
 pacman --root "$test_root" -Q meo-kde-runtime >/dev/null
 ! pacman --root "$test_root" -Q meo-desktop >/dev/null 2>&1
 
+# Some pre-package MeoKDE installs copied this plugin directly into /usr.  It
+# is deliberately unowned and differs from the candidate, matching the host
+# failure that pacman must now repair without --overwrite or manual deletion.
+install -Dm755 /bin/true "$test_root/$decoration_plugin"
+! pacman --root "$test_root" -Qo "/$decoration_plugin" >/dev/null 2>&1
+
 pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm
 
 test "$(pacman --root "$test_root" -Q meo-desktop | awk '{print $2}')" = "$candidate_version"
 ! pacman --root "$test_root" -Q meo-kde-runtime >/dev/null 2>&1
 pacman --root "$test_root" -Q meo-channel-beta >/dev/null
+test "$(sha256sum "$test_root/$decoration_plugin" | awk '{print $1}')" = "$candidate_decoration_sha256"
+desktop_check="$(pacman --root "$test_root" -Qkk meo-desktop)"
+grep -F '0 altered files' <<<"$desktop_check" >/dev/null || {
+  printf '%s\n' "$desktop_check" >&2
+  exit 3
+}
 for directory in / /etc /usr /var; do
   test "$(stat -c '%u:%g' "$test_root$directory")" = 0:0 || {
     echo "Beta desktop replacement left unsafe ownership on $directory" >&2

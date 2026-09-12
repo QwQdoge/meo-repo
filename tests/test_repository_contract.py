@@ -100,7 +100,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("'plasma-workspace'", runtime_depends)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.5.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.6.json").read_text())
         runtime_paths = set(manifest["components"]["meo-kde-runtime"]["sourcePaths"])
         self.assertEqual(runtime_paths, {
             "native/system", "native/dynamic-color",
@@ -116,9 +116,14 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_desktop_replaces_the_legacy_runtime_during_sysupgrade(self):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        install_script = (ROOT / "packages/meo-desktop/meo-desktop.install").read_text()
         self.assertIn("provides=('meo-kde-runtime=0.4.0')", desktop)
         self.assertIn("conflicts=('meo-kde-runtime')", desktop)
         self.assertIn("replaces=('meo-kde-runtime')", desktop)
+        self.assertIn("install=meo-desktop.install", desktop)
+        self.assertIn("backup=('usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so')", desktop)
+        self.assertIn('mv -f -- "$candidate" "$_meo_decoration_plugin"', install_script)
+        self.assertNotIn("--overwrite", install_script)
 
     def test_meo_account_oauth_config_is_readable_by_the_user_daemon(self):
         recipe = (ROOT / "packages/meo-account/PKGBUILD").read_text()
@@ -302,7 +307,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(calls, [("QwQdoge/MeoUI", "v1.0.3-beta.3")])
 
     def test_private_account_source_uses_repository_scoped_ssh_transport(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.5.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.6.json").read_text())
         account = manifest["components"]["meo-account"]
         self.assertEqual(account["sourceTransport"], "git-ssh")
         self.assertEqual(
@@ -316,8 +321,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertRegex(workflow, r"pacman -Syu[^\n]+\bopenssh\b")
 
     def test_latest_beta_manifest_pins_every_current_release(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.5.json").read_text())
-        self.assertEqual(manifest["release"], "2026.09-beta.5")
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.6.json").read_text())
+        self.assertEqual(manifest["release"], "2026.09-beta.6")
         self.assertEqual(manifest["profile"], "recommended")
         self.assertEqual(set(manifest["components"]), {
             "meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime",
@@ -336,7 +341,7 @@ class RepositoryContractTests(unittest.TestCase):
             {name: component["tag"] for name, component in manifest["components"].items()},
             expected_tags,
         )
-        self.assertEqual(manifest["components"]["meo-desktop"]["expectedVersion"], "0.4.0-6")
+        self.assertEqual(manifest["components"]["meo-desktop"]["expectedVersion"], "0.4.0-7")
 
     def test_latest_stable_manifest_pins_the_migration_train(self):
         manifest = json.loads((ROOT / "manifests/stable/2026.09.1.json").read_text())
@@ -379,6 +384,9 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('! pacman --root "$test_root" -Q meo-desktop', beta_replacement)
         self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', beta_replacement)
         self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', beta_replacement)
+        self.assertIn('! pacman --root "$test_root" -Qo "/$decoration_plugin"', beta_replacement)
+        self.assertIn("candidate_decoration_sha256", beta_replacement)
+        self.assertIn("-Qkk meo-desktop", beta_replacement)
         self.assertIn('systemd-tmpfiles --root="$test_root" --create --remove', beta_replacement)
         self.assertLess(
             workflow.index('Upgrade previous public system through the unsigned candidate'),
