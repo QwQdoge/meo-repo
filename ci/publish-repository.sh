@@ -34,6 +34,7 @@ python3 "$repo_root/scripts/artifact_manifest.py" verify \
   --contract "$contract" --manifest "$manifest" --packages "$packages"
 contract_channel="$(jq -r .channel "$contract")"
 [ "$contract_channel" = "$channel" ] || { echo "Artifact channel does not match publication channel" >&2; exit 3; }
+contract_candidate="$(jq -r '.candidate // empty' "$contract")"
 
 # The protected job starts with an empty GnuPG home.  Verify and import the
 # reviewed public payload before checking an existing signed beta overlay;
@@ -52,7 +53,7 @@ work_dir="$(mktemp -d)"
 trap 'rm -rf -- "$work_dir"' EXIT
 cp -- "$packages"/*.pkg.tar.* "$work_dir/"
 
-if [ "$channel" = beta ]; then
+if [ -n "$contract_candidate" ]; then
   existing_key="$repository/os/x86_64/$repository.db.tar.gz"
   existing_count="$(aws --endpoint-url "$R2_ENDPOINT" s3api list-objects-v2 \
     --bucket "$R2_BUCKET" --prefix "$existing_key" --query 'length(Contents || `[]`)' --output text)"
@@ -65,8 +66,8 @@ if [ "$channel" = beta ]; then
     gpg --batch --verify "$work_dir/$repository.db.tar.gz.sig" "$work_dir/$repository.db.tar.gz"
     gpg --batch --verify "$work_dir/$repository.files.tar.gz.sig" "$work_dir/$repository.files.tar.gz"
     rm -f -- "$work_dir/$repository.db.tar.gz.sig" "$work_dir/$repository.files.tar.gz.sig"
-  elif [ "${ALLOW_INITIAL_BETA_REPOSITORY:-0}" != 1 ]; then
-    echo "Beta repository does not exist; explicit ALLOW_INITIAL_BETA_REPOSITORY=1 is required" >&2
+  elif [ "$channel" != beta ] || [ "${ALLOW_INITIAL_BETA_REPOSITORY:-0}" != 1 ]; then
+    echo "$repository candidate publication requires an existing signed repository" >&2
     exit 4
   fi
 fi

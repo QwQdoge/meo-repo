@@ -74,15 +74,18 @@ def create(manifest_path: Path, package_dir: Path, output: Path, channel: str, c
                         "sha256": digest(path), "size": path.stat().st_size})
     names = {entry["name"] for entry in entries}
     core = set(manifest["components"])
-    if channel == "stable" and names != core | set(control_packages(manifest)):
-        raise ValueError("Stable artifact must contain the complete release train and control packages")
-    if channel == "beta" and (candidate not in core or names != {candidate}):
-        raise ValueError("Beta artifact must contain exactly the reviewed candidate")
+    if candidate is not None:
+        if candidate not in core or names != {candidate}:
+            raise ValueError("Candidate artifact must contain exactly the reviewed package")
+    elif channel == "stable" and names != core | set(control_packages(manifest)):
+        raise ValueError("Complete Stable artifact must contain the release train and control packages")
+    elif channel == "beta":
+        raise ValueError("Beta publication requires exactly one reviewed candidate")
     payload = {
         "schemaVersion": 1,
         "channel": channel,
         "release": manifest.get("release"),
-        "candidate": candidate if channel == "beta" else None,
+        "candidate": candidate,
         "manifestSha256": digest(manifest_path),
         "packages": entries,
     }
@@ -111,10 +114,14 @@ def verify(contract_path: Path, manifest_path: Path, package_dir: Path) -> None:
     names = {entry["name"] for entry in entries}
     core = set(json.loads(manifest_path.read_text(encoding="utf-8"))["components"])
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if contract["channel"] == "stable" and names != core | set(control_packages(manifest)):
-        raise ValueError("Stable artifact package set is incomplete")
-    if contract["channel"] == "beta" and names != {contract.get("candidate")}:
-        raise ValueError("Beta artifact package set is not sparse")
+    candidate = contract.get("candidate")
+    if candidate is not None:
+        if candidate not in core or names != {candidate}:
+            raise ValueError("Candidate artifact package set is not sparse")
+    elif contract["channel"] == "stable" and names != core | set(control_packages(manifest)):
+        raise ValueError("Complete Stable artifact package set is incomplete")
+    elif contract["channel"] == "beta":
+        raise ValueError("Beta artifact has no reviewed candidate")
 
 
 def main() -> None:

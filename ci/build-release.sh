@@ -8,7 +8,11 @@ output="$(realpath -m -- "${2:?output directory is required}")"
 channel="${3:-stable}"
 candidate="${4:-}"
 case "$channel" in
-  stable) ;;
+  stable)
+    case "$candidate" in ''|meoui-qml|meo-icons|meo-desktop|meo-kde-runtime|meo-account|meo-settings|omnistore-bin) ;; *)
+      echo "Invalid Stable candidate" >&2; exit 2;;
+    esac
+    ;;
   beta)
     case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-kde-runtime|meo-account|meo-settings|omnistore-bin) ;; *)
       echo "Beta build requires one reviewed core package candidate" >&2; exit 2;;
@@ -25,8 +29,8 @@ cp -- /etc/makepkg.conf "$output/makepkg.conf"
 printf '\nOPTIONS+=(\x27!debug\x27)\n' >>"$output/makepkg.conf"
 
 python3 "$repo_root/scripts/validate_manifest.py" "$manifest"
-if [ "$channel" = beta ]; then
-  # A sparse Beta run verifies the immutable source it actually consumes.
+if [ -n "$candidate" ]; then
+  # A sparse candidate run verifies the immutable source it actually consumes.
   # This keeps unrelated private components from weakening or blocking a
   # public candidate build; each candidate is verified by its own run.
   python3 "$repo_root/scripts/verify_manifest_sources.py" "$manifest" --component "$candidate"
@@ -55,7 +59,9 @@ build_context() {
   done
 }
 
-if [ "$channel" = stable ]; then
+if [ -n "$candidate" ]; then
+  core_packages=("$candidate")
+elif [ "$channel" = stable ]; then
   core_output="$(python3 - "$manifest" <<'PY'
 import json, sys
 manifest = json.load(open(sys.argv[1]))
@@ -64,8 +70,6 @@ print(*(name for name in order if name in manifest['components']), sep='\n')
 PY
 )"
   mapfile -t core_packages <<<"$core_output"
-else
-  core_packages=("$candidate")
 fi
 for package in "${core_packages[@]}"; do
   context="$output/contexts/$package"
@@ -76,7 +80,7 @@ for package in "${core_packages[@]}"; do
   sudo pacman -U --noconfirm "$output/packages/$package-"*.pkg.tar.*
 done
 
-if [ "$channel" = stable ]; then
+if [ "$channel" = stable ] && [ -z "$candidate" ]; then
   control_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
 import json, sys
 from artifact_manifest import control_packages
@@ -99,7 +103,7 @@ fi
 
 artifact_arguments=(create --manifest "$manifest" --packages "$output/packages"
   --output "$output/artifacts.json" --channel "$channel")
-[ "$channel" = beta ] && artifact_arguments+=(--candidate "$candidate")
+[ -n "$candidate" ] && artifact_arguments+=(--candidate "$candidate")
 python3 "$repo_root/scripts/artifact_manifest.py" "${artifact_arguments[@]}"
 python3 "$repo_root/scripts/artifact_manifest.py" verify \
   --contract "$output/artifacts.json" --manifest "$manifest" --packages "$output/packages"

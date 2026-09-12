@@ -4,16 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: Stable builds the manifest's complete profile; Beta builds one sparse-overlay candidate.
+        description: Stable builds a complete train unless candidate is set; Beta always builds one sparse candidate.
         required: true
         type: choice
         options: [stable, beta]
       manifest:
         description: Reviewed immutable manifest path.
         required: true
-        default: manifests/stable/2026.09.1.json
-      beta_candidate:
-        description: Required only for Beta (one reviewed package name).
+        default: manifests/stable/2026.09.2.json
+      candidate:
+        description: Required for Beta; optional for an atomic Stable package hotfix.
         required: false
         type: string
 
@@ -42,7 +42,7 @@ jobs:
           sudo -u builder python scripts/validate_manifest.py "$RELEASE_MANIFEST"
           sudo -u builder python -m unittest discover -s tests -v
       - name: Install read-only private Account source credential
-        if: inputs.channel == 'beta' && inputs.beta_candidate == 'meo-account'
+        if: inputs.candidate == 'meo-account'
         env:
           MEO_ACCOUNT_DEPLOY_KEY: ${{ secrets.MEO_ACCOUNT_DEPLOY_KEY }}
         run: |
@@ -53,33 +53,35 @@ jobs:
             install -m600 -o builder -g builder /dev/stdin /home/builder/.ssh/id_ed25519
           ssh-keyscan github.com | \
             install -m600 -o builder -g builder /dev/stdin /home/builder/.ssh/known_hosts
-      - name: Resolve Beta candidate against current signed overlay and Stable fallback
-        if: inputs.channel == 'beta'
-        run: ci/configure-build-repositories.sh
+      - name: Resolve candidate against its current signed repositories
+        if: inputs.candidate != ''
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: ci/configure-build-repositories.sh "$RELEASE_CHANNEL"
       - name: Build unsigned packages
         env:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
-          RELEASE_BETA_CANDIDATE: ${{ inputs.beta_candidate }}
-          MEO_ACCOUNT_SOURCE_SSH: ${{ inputs.channel == 'beta' && inputs.beta_candidate == 'meo-account' && '1' || '0' }}
+          RELEASE_CANDIDATE: ${{ inputs.candidate }}
+          MEO_ACCOUNT_SOURCE_SSH: ${{ inputs.candidate == 'meo-account' && '1' || '0' }}
         run: |
           sudo --preserve-env=MEO_ACCOUNT_SOURCE_SSH -u builder ci/build-release.sh \
             "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output" \
-            "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"
+            "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE"
       - name: Run package metadata checks
         run: bash ci/check-package-metadata.sh build-output/packages
       - name: Upgrade previous public system through the unsigned candidate
-        if: inputs.channel == 'stable'
+        if: inputs.channel == 'stable' && (inputs.candidate == '' || inputs.candidate == 'meo-desktop')
         env:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
         run: ci/upgrade-smoke.sh "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output"
       - name: Replace the previous public Beta desktop runtime through the unsigned candidate
-        if: inputs.channel == 'beta' && inputs.beta_candidate == 'meo-desktop'
+        if: inputs.channel == 'beta' && inputs.candidate == 'meo-desktop'
         env:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
         run: ci/beta-desktop-replacement-smoke.sh "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output"
       - name: Run installed Stable train smoke
-        if: inputs.channel == 'stable'
+        if: inputs.channel == 'stable' && inputs.candidate == ''
         env:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
         run: ci/smoke-installed.sh "$RELEASE_MANIFEST"
@@ -155,8 +157,8 @@ jobs:
       - name: Install from the signed remote repository
         env:
           RELEASE_CHANNEL: ${{ inputs.channel }}
-          RELEASE_BETA_CANDIDATE: ${{ inputs.beta_candidate }}
+          RELEASE_CANDIDATE: ${{ inputs.candidate }}
           RELEASE_MANIFEST: ${{ inputs.manifest }}
         run: |
           pacman -Syu --noconfirm --needed python curl
-          ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE" "$RELEASE_MANIFEST"
+          ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE" "$RELEASE_MANIFEST"

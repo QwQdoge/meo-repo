@@ -230,6 +230,25 @@ class RepositoryContractTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 verify_artifact_contract(contract, manifest_path, packages)
 
+    def test_stable_candidate_artifact_is_atomic_and_hash_bound(self):
+        manifest_path = ROOT / "manifests/stable/2026.09.2.json"
+        manifest = json.loads(manifest_path.read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packages = root / "packages"
+            packages.mkdir()
+            version = manifest["components"]["meo-desktop"]["expectedVersion"]
+            package = packages / f"meo-desktop-{version}-x86_64.pkg.tar.zst"
+            package.write_bytes(b"desktop-hotfix")
+            contract = root / "artifacts.json"
+            create_artifact_contract(
+                manifest_path, packages, contract, "stable", "meo-desktop"
+            )
+            verify_artifact_contract(contract, manifest_path, packages)
+            payload = json.loads(contract.read_text())
+            self.assertEqual(payload["candidate"], "meo-desktop")
+            self.assertEqual({item["name"] for item in payload["packages"]}, {"meo-desktop"})
+
     def test_source_extractor_rejects_archive_traversal(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -315,7 +334,7 @@ class RepositoryContractTests(unittest.TestCase):
             f"ssh://git@github.com/{account['repository']}.git",
         )
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
-        self.assertIn("inputs.beta_candidate == 'meo-account'", workflow)
+        self.assertIn("inputs.candidate == 'meo-account'", workflow)
         self.assertIn("secrets.MEO_ACCOUNT_DEPLOY_KEY", workflow)
         self.assertIn("--preserve-env=MEO_ACCOUNT_SOURCE_SSH", workflow)
         self.assertRegex(workflow, r"pacman -Syu[^\n]+\bopenssh\b")
@@ -344,15 +363,15 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(manifest["components"]["meo-desktop"]["expectedVersion"], "0.4.0-7")
 
     def test_latest_stable_manifest_pins_the_migration_train(self):
-        manifest = json.loads((ROOT / "manifests/stable/2026.09.1.json").read_text())
-        self.assertEqual(manifest["release"], "2026.09.1")
+        manifest = json.loads((ROOT / "manifests/stable/2026.09.2.json").read_text())
+        self.assertEqual(manifest["release"], "2026.09.2")
         self.assertEqual(manifest["profile"], "minimal")
         self.assertEqual(
             {name: component["expectedVersion"] for name, component in manifest["components"].items()},
-            {"meoui-qml": "1.0.3-4", "meo-icons": "0.4.0-3", "meo-desktop": "0.4.0-6"},
+            {"meoui-qml": "1.0.3-4", "meo-icons": "0.4.0-3", "meo-desktop": "0.4.0-7"},
         )
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
-        self.assertIn("default: manifests/stable/2026.09.1.json", workflow)
+        self.assertIn("default: manifests/stable/2026.09.2.json", workflow)
 
     def test_remote_settings_smoke_covers_stale_user_qml_imports(self):
         smoke = (ROOT / "ci/remote-smoke.sh").read_text()
@@ -372,18 +391,20 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('systemd-tmpfiles --create --remove', remote)
         self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', upgrade)
         self.assertIn('GPGDir = $test_root/etc/pacman.d/gnupg', upgrade)
+        self.assertIn('release_candidate=("$package_dir"/meo-release-', upgrade)
         self.assertIn('chown 1000:1000 "$test_root/etc" "$test_root/usr"', upgrade)
         self.assertIn('for directory in / /etc /usr /var', upgrade)
         self.assertIn('systemd-tmpfiles --root="$test_root" --create --remove', upgrade)
         self.assertIn('scripts/artifact_manifest.py" "$test_root/scripts/artifact_manifest.py', upgrade)
-        self.assertIn('meo/meo-release meo/meo-core-meta meo-settings', upgrade)
-        self.assertIn('/tmp/meo-release-manifest.json meo-channel-beta', upgrade)
-        self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', upgrade)
+        self.assertIn('meo/meo-release meo/meo-core-meta', upgrade)
+        self.assertIn('meo-kde-runtime-0.4.0beta3-1-x86_64.pkg.tar.zst', upgrade)
+        self.assertIn('/tmp/meo-release-manifest.json meo-channel-stable', upgrade)
+        self.assertIn('! pacman --root "$test_root" -Qq | grep -Fx meo-kde-runtime', upgrade)
         beta_replacement = (ROOT / "ci/beta-desktop-replacement-smoke.sh").read_text()
         self.assertIn('meo/meo-release meo-settings', beta_replacement)
         self.assertIn('! pacman --root "$test_root" -Q meo-desktop', beta_replacement)
         self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', beta_replacement)
-        self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', beta_replacement)
+        self.assertIn('! pacman --root "$test_root" -Qq | grep -Fx meo-kde-runtime', beta_replacement)
         self.assertIn('! pacman --root "$test_root" -Qo "/$decoration_plugin"', beta_replacement)
         self.assertIn("candidate_decoration_sha256", beta_replacement)
         self.assertIn("-Qkk meo-desktop", beta_replacement)

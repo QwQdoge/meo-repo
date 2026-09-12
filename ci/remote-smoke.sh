@@ -19,14 +19,18 @@ cp -- /etc/pacman.conf "$config"
 case "$channel" in
   stable)
     repositories=$'[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
-    package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
+    if [ -n "$candidate" ]; then
+      packages=("$candidate")
+    else
+      package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
 import json,sys
 from artifact_manifest import control_packages
 manifest=json.load(open(sys.argv[1], encoding="utf-8"))
 print(*manifest['components'], *(name for name in control_packages(manifest) if name != 'meo-channel-beta'), sep="\n")
 PY
-)"
-    mapfile -t packages <<<"$package_output"
+      )"
+      mapfile -t packages <<<"$package_output"
+    fi
     channel_package=meo-channel-stable
     ;;
   beta)

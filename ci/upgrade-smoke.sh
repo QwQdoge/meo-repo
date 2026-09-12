@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Reproduce the supported update path before signing: install the previous
-# public Beta/Stable state, switch to the unsigned candidate repository, then
+# public Stable state, switch to the unsigned candidate repository, then
 # perform one full pacman -Syu transaction and run migration/runtime checks.
 set -euo pipefail
 
@@ -54,10 +54,6 @@ EOF
   fi
   cat >>"$path" <<'EOF'
 
-[meo-beta]
-SigLevel = Required TrustedOnly
-Server = https://packages.meoarch.org/meo-beta/os/x86_64
-
 [meo]
 SigLevel = Required TrustedOnly
 Server = https://packages.meoarch.org/meo/os/x86_64
@@ -74,13 +70,18 @@ pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" --populate archlinux
 pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" \
   --populate-from "$repo_root/packages/meo-keyring/files" --populate meo
 
-# Beta 4 is the newest public pre-candidate state and installs the legacy
-# meo-kde-runtime dependency that meo-desktop must replace during sysupgrade.
+# Install the complete current public Stable baseline first.  Then reproduce a
+# pre-package MeoKDE machine by removing only the desktop package record/files
+# and installing the immutable legacy runtime package.  The retained core meta
+# package ensures the one candidate sysupgrade must restore meo-desktop.
 pacman --root "$test_root" --config "$previous_config" -Syu --needed --noconfirm \
-  base python meo/meo-keyring meo/meo-mirrorlist meo/meo-channel-beta \
-  meo/meo-release meo/meo-core-meta meo-settings
-pacman --root "$test_root" -Q meo-kde-runtime >/dev/null
-pacman --root "$test_root" -Q meo-release | grep -F '2026.08-2' >/dev/null
+  base python meo/meo-keyring meo/meo-mirrorlist meo/meo-channel-stable \
+  meo/meo-release meo/meo-core-meta
+pacman --root "$test_root" -Q meo-desktop >/dev/null
+pacman --root "$test_root" -Rdd --noconfirm meo-desktop
+pacman --root "$test_root" --config "$previous_config" -Udd --noconfirm \
+  https://packages.meoarch.org/meo-beta/os/x86_64/meo-kde-runtime-0.4.0beta3-1-x86_64.pkg.tar.zst
+pacman --root "$test_root" -Qq | grep -Fx meo-kde-runtime >/dev/null
 
 desktop_candidate=("$package_dir"/meo-desktop-*.pkg.tar.zst)
 [ "${#desktop_candidate[@]}" -eq 1 ] && [ -f "${desktop_candidate[0]}" ] || {
@@ -93,11 +94,19 @@ candidate_decoration_sha256="$(bsdtar -xOf "${desktop_candidate[0]}" "$decoratio
 install -Dm755 /bin/true "$test_root/$decoration_plugin"
 ! pacman --root "$test_root" -Qo "/$decoration_plugin" >/dev/null 2>&1
 
-# Reproduce the legacy defect without touching any contents below the two
-# affected top-level directories.
-chown 1000:1000 "$test_root/etc" "$test_root/usr"
-test "$(stat -c '%u:%g' "$test_root/etc")" = 1000:1000
-test "$(stat -c '%u:%g' "$test_root/usr")" = 1000:1000
+# Reproduce the ownership defect only when this train actually upgrades
+# meo-release; sparse package hotfixes must not pretend that an unchanged
+# release package reran its post-upgrade migration.
+release_candidate=("$package_dir"/meo-release-*.pkg.tar.zst)
+if [ "${#release_candidate[@]}" -eq 1 ] && [ -f "${release_candidate[0]}" ]; then
+  candidate_release_version="$(bsdtar -xOf "${release_candidate[0]}" .PKGINFO | awk '$1 == "pkgver" && $2 == "=" {print $3; exit}')"
+  installed_release_version="$(pacman --root "$test_root" -Q meo-release | awk '{print $2}')"
+  if [ "$candidate_release_version" != "$installed_release_version" ]; then
+    chown 1000:1000 "$test_root/etc" "$test_root/usr"
+    test "$(stat -c '%u:%g' "$test_root/etc")" = 1000:1000
+    test "$(stat -c '%u:%g' "$test_root/usr")" = 1000:1000
+  fi
+fi
 
 pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm
 
@@ -108,7 +117,7 @@ for directory in / /etc /usr /var; do
   }
 done
 pacman --root "$test_root" -Q meo-desktop >/dev/null
-! pacman --root "$test_root" -Q meo-kde-runtime >/dev/null 2>&1
+! pacman --root "$test_root" -Qq | grep -Fx meo-kde-runtime >/dev/null
 test "$(sha256sum "$test_root/$decoration_plugin" | awk '{print $1}')" = "$candidate_decoration_sha256"
 desktop_check="$(pacman --root "$test_root" -Qkk meo-desktop)"
 grep -F '0 altered files' <<<"$desktop_check" >/dev/null || {
@@ -124,5 +133,5 @@ cp -- "$manifest" "$test_root/tmp/meo-release-manifest.json"
 # the remote smoke below exercises the normal live-root command separately.
 systemd-tmpfiles --root="$test_root" --create --remove
 chroot "$test_root" bash /tmp/meo-smoke-installed.sh \
-  /tmp/meo-release-manifest.json meo-channel-beta
+  /tmp/meo-release-manifest.json meo-channel-stable
 echo "PASS: previous public MeoArch state upgraded through pacman -Syu"

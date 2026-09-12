@@ -99,7 +99,7 @@ install -Dm755 /bin/true "$test_root/$decoration_plugin"
 pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm
 
 test "$(pacman --root "$test_root" -Q meo-desktop | awk '{print $2}')" = "$candidate_version"
-! pacman --root "$test_root" -Q meo-kde-runtime >/dev/null 2>&1
+! pacman --root "$test_root" -Qq | grep -Fx meo-kde-runtime >/dev/null
 pacman --root "$test_root" -Q meo-channel-beta >/dev/null
 test "$(sha256sum "$test_root/$decoration_plugin" | awk '{print $1}')" = "$candidate_decoration_sha256"
 desktop_check="$(pacman --root "$test_root" -Qkk meo-desktop)"
