@@ -22,14 +22,45 @@ class MinimalReleaseTests(unittest.TestCase):
             command = root / "namcap"
             command.write_text('#!/bin/sh\nprintf "%s\\n" "$TEST_REPORT"\nexit "$TEST_STATUS"\n')
             command.chmod(0o755)
+            archive = root / "bsdtar"
+            archive.write_text('#!/bin/sh\nprintf "%s\\n" "$TEST_BSDTAR_REPORT"\nexit "$TEST_BSDTAR_STATUS"\n')
+            archive.chmod(0o755)
             for report, status, valid in (("candidate E: missing dependency", 0, False),
                                           ("candidate W: redundant dependency", 0, True),
                                           ("", 1, False)):
                 with self.subTest(report=report, status=status):
                     result = subprocess.run(["bash", ROOT / "ci/check-package-metadata.sh", root],
                                             env=dict(os.environ, PATH=f"{root}:{os.environ['PATH']}",
-                                                     TEST_REPORT=report, TEST_STATUS=str(status)), capture_output=True)
+                                                     TEST_REPORT=report, TEST_STATUS=str(status),
+                                                     TEST_BSDTAR_REPORT="-rw-r--r-- 0 0 0 1 fixture",
+                                                     TEST_BSDTAR_STATUS="0"), capture_output=True)
                     self.assertEqual(result.returncode == 0, valid, result.stderr)
+
+    def test_non_root_package_ownership_blocks_signing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "candidate.pkg.tar.zst").touch()
+            namcap = root / "namcap"
+            namcap.write_text("#!/bin/sh\nexit 0\n")
+            namcap.chmod(0o755)
+            bsdtar = root / "bsdtar"
+            bsdtar.write_text('#!/bin/sh\nprintf "%s\\n" "$TEST_BSDTAR_REPORT"\n')
+            bsdtar.chmod(0o755)
+            for report, valid in (
+                ("-rw-r--r-- 0 0 0 1 usr/share/root-owned", True),
+                ("drwxr-xr-x 0 1000 1000 0 usr/", False),
+                ("-rw-r--r-- 0 0 1000 1 etc/group-owned", False),
+            ):
+                with self.subTest(report=report):
+                    result = subprocess.run(
+                        ["bash", ROOT / "ci/check-package-metadata.sh", root],
+                        env=dict(os.environ, PATH=f"{root}:{os.environ['PATH']}",
+                                 TEST_BSDTAR_REPORT=report),
+                        capture_output=True, text=True,
+                    )
+                    self.assertEqual(result.returncode == 0, valid, result.stderr)
+                    if not valid:
+                        self.assertIn("non-root ownership", result.stderr)
 
     def test_minimal_control_packages_ship_declared_mit_license(self):
         for package in control_packages(self.manifest()):
