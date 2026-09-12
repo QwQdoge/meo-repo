@@ -61,6 +61,16 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(ark["installer"]["package"], "ark")
         self.assertIn("application-catalog.json", recipe)
 
+    def test_meo_release_repairs_only_legacy_top_level_system_ownership(self):
+        recipe = (ROOT / "packages/meo-release/PKGBUILD").read_text()
+        migration = (ROOT / "packages/meo-release/meo-release.install").read_text()
+        self.assertIn("install=meo-release.install", recipe)
+        self.assertIn("post_install", migration)
+        self.assertIn("post_upgrade", migration)
+        self.assertIn("for directory in /etc /usr", migration)
+        self.assertIn("chown root:root", migration)
+        self.assertNotRegex(migration, r"chown\s+(?:-[^ ]*R|--recursive)")
+
     def test_omnistore_package_requires_the_system_alpm_helper(self):
         recipe = (ROOT / "packages/omnistore-bin/PKGBUILD").read_text()
         self.assertIn("'pyalpm'", recipe)

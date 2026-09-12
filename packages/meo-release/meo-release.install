@@ -1,0 +1,22 @@
+# Temporary migration for MeoArch systems affected by legacy top-level
+# ownership corruption. Keep this for two release cycles, then remove it so a
+# future packaging regression cannot be hidden indefinitely.
+repair_meo_system_permissions() {
+  local directory owner
+  for directory in /etc /usr; do
+    [ -d "$directory" ] || continue
+    owner="$(stat -c '%u:%g' "$directory" 2>/dev/null)" || continue
+    if [ "$owner" != 0:0 ]; then
+      echo "MeoArch: repairing ownership of $directory ($owner -> 0:0)"
+      chown root:root "$directory"
+    fi
+  done
+}
+
+post_install() {
+  repair_meo_system_permissions
+}
+
+post_upgrade() {
+  repair_meo_system_permissions
+}
