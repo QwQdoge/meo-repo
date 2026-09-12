@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Reproduce the supported update path before signing: install the previous
+# public Beta/Stable state, switch to the unsigned candidate repository, then
+# perform one full pacman -Syu transaction and run migration/runtime checks.
+set -euo pipefail
+
+repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+manifest="$(realpath -e -- "${1:?reviewed manifest is required}")"
+artifact_dir="$(realpath -e -- "${2:?artifact directory is required}")"
+package_dir="$artifact_dir/packages"
+[ -d "$package_dir" ] || { echo "Candidate package directory is missing" >&2; exit 2; }
+
+for command_name in pacman pacman-key repo-add chroot stat systemd-tmpfiles; do
+  command -v "$command_name" >/dev/null || { echo "Required upgrade-smoke command is missing: $command_name" >&2; exit 2; }
+done
+
+work_dir="$(mktemp -d)"
+test_root="$work_dir/root"
+candidate_repo="$work_dir/candidate"
+trap 'rm -rf -- "$work_dir"' EXIT
+install -d "$test_root/etc/pacman.d/gnupg" "$candidate_repo"
+
+cp -- "$package_dir"/*.pkg.tar.zst "$candidate_repo/"
+repo-add "$candidate_repo/meo-candidate.db.tar.gz" "$candidate_repo"/*.pkg.tar.zst >/dev/null
+
+write_config() {
+  local path="$1"
+  local include_candidate="$2"
+  cat >"$path" <<'EOF'
+[options]
+Architecture = auto
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+ParallelDownloads = 5
+
+[core]
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+
+[extra]
+Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
+EOF
+  if [ "$include_candidate" = 1 ]; then
+    cat >>"$path" <<EOF
+
+[meo-candidate]
+SigLevel = Never
+Server = file://$candidate_repo
+EOF
+  fi
+  cat >>"$path" <<'EOF'
+
+[meo-beta]
+SigLevel = Required TrustedOnly
+Server = https://packages.meoarch.org/meo-beta/os/x86_64
+
+[meo]
+SigLevel = Required TrustedOnly
+Server = https://packages.meoarch.org/meo/os/x86_64
+EOF
+}
+
+previous_config="$work_dir/previous.conf"
+candidate_config="$work_dir/candidate.conf"
+write_config "$previous_config" 0
+write_config "$candidate_config" 1
+
+pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" --init
+pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" --populate archlinux
+pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" \
+  --populate-from "$repo_root/packages/meo-keyring/files" --populate meo
+
+# Beta 4 is the newest public pre-candidate state and installs the legacy
+# meo-kde-runtime dependency that meo-desktop must replace during sysupgrade.
+pacman --root "$test_root" --config "$previous_config" -Syu --needed --noconfirm \
+  base python meo/meo-keyring meo/meo-mirrorlist meo/meo-channel-beta \
+  meo/meo-release meo-settings
+pacman --root "$test_root" -Q meo-kde-runtime >/dev/null
+pacman --root "$test_root" -Q meo-release | grep -F '2026.08-2' >/dev/null
+
+# Reproduce the legacy defect without touching any contents below the two
+# affected top-level directories.
+chown 1000:1000 "$test_root/etc" "$test_root/usr"
+test "$(stat -c '%u:%g' "$test_root/etc")" = 1000:1000
+test "$(stat -c '%u:%g' "$test_root/usr")" = 1000:1000
+
+pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm
+
+for directory in / /etc /usr /var; do
+  test "$(stat -c '%u:%g' "$test_root$directory")" = 0:0 || {
+    echo "Candidate upgrade left unsafe ownership on $directory" >&2
+    exit 3
+  }
+done
+pacman --root "$test_root" -Q meo-desktop >/dev/null
+! pacman --root "$test_root" -Q meo-kde-runtime >/dev/null 2>&1
+
+cp -- "$repo_root/ci/smoke-installed.sh" "$test_root/tmp/meo-smoke-installed.sh"
+cp -- "$manifest" "$test_root/tmp/meo-release-manifest.json"
+chroot "$test_root" systemd-tmpfiles --create --remove
+chroot "$test_root" bash /tmp/meo-smoke-installed.sh /tmp/meo-release-manifest.json
+echo "PASS: previous public MeoArch state upgraded through pacman -Syu"

@@ -68,6 +68,11 @@ jobs:
             "$RELEASE_CHANNEL" "$RELEASE_BETA_CANDIDATE"
       - name: Run package metadata checks
         run: bash ci/check-package-metadata.sh build-output/packages
+      - name: Upgrade previous public system through the unsigned candidate
+        if: inputs.channel == 'stable'
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: ci/upgrade-smoke.sh "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output"
       - name: Run installed Stable train smoke
         if: inputs.channel == 'stable'
         env:

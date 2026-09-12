@@ -38,7 +38,8 @@ PY
   *) echo "Invalid channel" >&2; exit 2 ;;
 esac
 printf '\n%s\n' "$repositories" >>"$config"
-pacman --config "$config" -Syy --noconfirm
+pacman --config "$config" -Syu --needed --noconfirm \
+  meo/meo-keyring meo/meo-mirrorlist "meo/$channel_package" meo/meo-release "${packages[@]}"
 bash "$repo_root/ci/check-repository-order.sh" "$config" "$channel"
 if [ "$channel" = beta ]; then
   ! pacman --config "$config" -Si meo-beta/meo-release >/dev/null 2>&1 || {
@@ -48,14 +49,19 @@ if [ "$channel" = beta ]; then
     echo "Stable fallback does not provide meo-release" >&2; exit 3;
   }
 fi
-pacman --config "$config" -S --needed --noconfirm \
-  meo/meo-keyring meo/meo-mirrorlist "meo/$channel_package" meo/meo-release "${packages[@]}"
 # Verify the installed, package-owned channel configuration too, not only
 # the temporary bootstrap configuration used for the first transaction.
 test -s /etc/pacman.d/meo-channel.conf
 printf '\nInclude = /etc/pacman.d/meo-channel.conf\n' >>/etc/pacman.conf
 bash "$repo_root/ci/check-repository-order.sh" /etc/pacman.conf "$channel"
-pacman -Sy --noconfirm
+pacman -Syu --noconfirm
+for directory in / /etc /usr /var; do
+  test "$(stat -c '%u:%g' "$directory")" = 0:0 || {
+    echo "Remote installation left unsafe ownership on $directory" >&2
+    exit 3
+  }
+done
+systemd-tmpfiles --create --remove
 if [ "$candidate" = meo-settings ]; then
   stale_qml_root="$(mktemp -d)"
   trap 'rm -f -- "$config"; rm -rf -- "$stale_qml_root"' EXIT

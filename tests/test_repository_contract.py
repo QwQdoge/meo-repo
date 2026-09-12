@@ -337,6 +337,25 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('QML2_IMPORT_PATH="$stale_qml_root"', smoke)
         self.assertIn('timeout 120 meo-settings --smoke', smoke)
 
+    def test_release_smokes_use_full_sysupgrade_and_tmpfiles(self):
+        remote = (ROOT / "ci/remote-smoke.sh").read_text()
+        upgrade = (ROOT / "ci/upgrade-smoke.sh").read_text()
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        self.assertNotIn(' -Sy --noconfirm', remote)
+        self.assertNotIn(' -Syy --noconfirm', remote)
+        self.assertNotIn(' -S --needed --noconfirm', remote)
+        self.assertGreaterEqual(remote.count('-Syu'), 2)
+        self.assertIn('systemd-tmpfiles --create --remove', remote)
+        self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', upgrade)
+        self.assertIn('chown 1000:1000 "$test_root/etc" "$test_root/usr"', upgrade)
+        self.assertIn('for directory in / /etc /usr /var', upgrade)
+        self.assertIn('systemd-tmpfiles --create --remove', upgrade)
+        self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', upgrade)
+        self.assertLess(
+            workflow.index('Upgrade previous public system through the unsigned candidate'),
+            workflow.index('uses: actions/upload-artifact'),
+        )
+
     def test_publication_preflights_all_immutable_objects_before_upload(self):
         script = (ROOT / "ci/publish-repository.sh").read_text()
         marker = script.index("Preflight every immutable package object")
