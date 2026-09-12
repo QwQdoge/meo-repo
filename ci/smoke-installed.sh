@@ -5,11 +5,17 @@ set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 manifest="${1:?reviewed manifest is required}"
-package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
+channel_package="${2:-meo-channel-stable}"
+case "$channel_package" in
+  meo-channel-stable|meo-channel-beta) ;;
+  *) echo "Unsupported installed channel package: $channel_package" >&2; exit 2 ;;
+esac
+package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" "$channel_package" <<'PY'
 import json, sys
 from artifact_manifest import control_packages
 manifest = json.load(open(sys.argv[1]))
-print(*manifest['components'], *(name for name in control_packages(manifest) if name != 'meo-channel-beta'), sep='\n')
+controls = [name for name in control_packages(manifest) if not name.startswith('meo-channel-')]
+print(*manifest['components'], *controls, sys.argv[2], sep='\n')
 PY
 )"
 mapfile -t packages <<<"$package_output"

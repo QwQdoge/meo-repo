@@ -369,6 +369,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('for directory in / /etc /usr /var', upgrade)
         self.assertIn('systemd-tmpfiles --root="$test_root" --create --remove', upgrade)
         self.assertIn('scripts/artifact_manifest.py" "$test_root/scripts/artifact_manifest.py', upgrade)
+        self.assertIn('meo/meo-release meo/meo-core-meta meo-settings', upgrade)
+        self.assertIn('/tmp/meo-release-manifest.json meo-channel-beta', upgrade)
         self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', upgrade)
         self.assertLess(
             workflow.index('Upgrade previous public system through the unsigned candidate'),

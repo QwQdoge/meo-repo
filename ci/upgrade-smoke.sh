@@ -78,7 +78,7 @@ pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" \
 # meo-kde-runtime dependency that meo-desktop must replace during sysupgrade.
 pacman --root "$test_root" --config "$previous_config" -Syu --needed --noconfirm \
   base python meo/meo-keyring meo/meo-mirrorlist meo/meo-channel-beta \
-  meo/meo-release meo-settings
+  meo/meo-release meo/meo-core-meta meo-settings
 pacman --root "$test_root" -Q meo-kde-runtime >/dev/null
 pacman --root "$test_root" -Q meo-release | grep -F '2026.08-2' >/dev/null
 
@@ -106,5 +106,6 @@ cp -- "$manifest" "$test_root/tmp/meo-release-manifest.json"
 # tmpfiles to it through systemd-tmpfiles' supported offline-root interface;
 # the remote smoke below exercises the normal live-root command separately.
 systemd-tmpfiles --root="$test_root" --create --remove
-chroot "$test_root" bash /tmp/meo-smoke-installed.sh /tmp/meo-release-manifest.json
+chroot "$test_root" bash /tmp/meo-smoke-installed.sh \
+  /tmp/meo-release-manifest.json meo-channel-beta
 echo "PASS: previous public MeoArch state upgraded through pacman -Syu"
