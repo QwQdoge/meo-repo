@@ -100,7 +100,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("'plasma-workspace'", runtime_depends)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.4.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.5.json").read_text())
         runtime_paths = set(manifest["components"]["meo-kde-runtime"]["sourcePaths"])
         self.assertEqual(runtime_paths, {
             "native/system", "native/dynamic-color",
@@ -302,7 +302,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(calls, [("QwQdoge/MeoUI", "v1.0.3-beta.3")])
 
     def test_private_account_source_uses_repository_scoped_ssh_transport(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.4.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.5.json").read_text())
         account = manifest["components"]["meo-account"]
         self.assertEqual(account["sourceTransport"], "git-ssh")
         self.assertEqual(
@@ -316,7 +316,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertRegex(workflow, r"pacman -Syu[^\n]+\bopenssh\b")
 
     def test_latest_beta_manifest_pins_every_current_release(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.4.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.5.json").read_text())
+        self.assertEqual(manifest["release"], "2026.09-beta.5")
         self.assertEqual(manifest["profile"], "recommended")
         self.assertEqual(set(manifest["components"]), {
             "meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime",
@@ -335,6 +336,7 @@ class RepositoryContractTests(unittest.TestCase):
             {name: component["tag"] for name, component in manifest["components"].items()},
             expected_tags,
         )
+        self.assertEqual(manifest["components"]["meo-desktop"]["expectedVersion"], "0.4.0-6")
 
     def test_latest_stable_manifest_pins_the_migration_train(self):
         manifest = json.loads((ROOT / "manifests/stable/2026.09.1.json").read_text())
@@ -372,8 +374,18 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('meo/meo-release meo/meo-core-meta meo-settings', upgrade)
         self.assertIn('/tmp/meo-release-manifest.json meo-channel-beta', upgrade)
         self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', upgrade)
+        beta_replacement = (ROOT / "ci/beta-desktop-replacement-smoke.sh").read_text()
+        self.assertIn('meo/meo-release meo-settings', beta_replacement)
+        self.assertIn('! pacman --root "$test_root" -Q meo-desktop', beta_replacement)
+        self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', beta_replacement)
+        self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', beta_replacement)
+        self.assertIn('systemd-tmpfiles --root="$test_root" --create --remove', beta_replacement)
         self.assertLess(
             workflow.index('Upgrade previous public system through the unsigned candidate'),
+            workflow.index('uses: actions/upload-artifact'),
+        )
+        self.assertLess(
+            workflow.index('Replace the previous public Beta desktop runtime through the unsigned candidate'),
             workflow.index('uses: actions/upload-artifact'),
         )
 

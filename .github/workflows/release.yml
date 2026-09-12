@@ -73,6 +73,11 @@ jobs:
         env:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
         run: ci/upgrade-smoke.sh "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output"
+      - name: Replace the previous public Beta desktop runtime through the unsigned candidate
+        if: inputs.channel == 'beta' && inputs.beta_candidate == 'meo-desktop'
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: ci/beta-desktop-replacement-smoke.sh "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output"
       - name: Run installed Stable train smoke
         if: inputs.channel == 'stable'
         env:
