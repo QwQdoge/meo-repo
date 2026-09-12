@@ -27,12 +27,15 @@ repo-add "$candidate_repo/meo-candidate.db.tar.gz" "$candidate_repo"/*.pkg.tar.z
 write_config() {
   local path="$1"
   local include_candidate="$2"
-  cat >"$path" <<'EOF'
+  cat >"$path" <<EOF
 [options]
 Architecture = auto
 SigLevel = Required DatabaseOptional
 LocalFileSigLevel = Optional
 ParallelDownloads = 5
+GPGDir = $test_root/etc/pacman.d/gnupg
+EOF
+  cat >>"$path" <<'EOF'
 
 [core]
 Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch
