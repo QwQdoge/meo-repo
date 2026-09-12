@@ -4,7 +4,7 @@
 `MEOARCH_IMPLEMENTATION_HANDOFF.md`、`ARCH_RELEASE_CHECKLIST.md` 和
 `RELEASES.md`。复制到 Arch 工作站时只需要复制本文件。
 
-更新时间：2026-08-28。
+更新时间：2026-09-12。
 
 ## 1. 不可改变的架构边界
 
@@ -53,14 +53,15 @@ meo-release
 - Stable manifest 固定 tag、40 位 commit、expected package version、source SHA-256 和 compatibility generation。
 - `meo-account` 是正式核心包；Settings 强依赖它，OmniStore 安装自己的客户端 manifest 并可选接入系统账号。
 - `meo-release` 同时安装 package catalog 与 application catalog；三类 meta 包分别覆盖核心桌面、Meo 应用和推荐全集。
-- Stable train 构建所有核心包，任一失败则整个 train 不进入发布。
-- Beta workflow 只接受一个明确 candidate，保留稀疏 overlay。
+- Stable 完整 train 构建所有核心包；紧急单包修复使用原子 Stable candidate，先验证现有签名 DB，再只合并一个新对象，禁止重建或覆盖未变化的 immutable 包。
+- Beta workflow 只接受一个明确 candidate，保留稀疏 overlay；高优先级 Beta 必须先发布 runtime replacement，不能假设 Stable fallback 会胜出。
 - 构建、签名/发布分 job；受保护 job 会重新校验 artifact hash 及包内 `.PKGINFO` 的 name/version/arch。
+- 签名前逐个检查最终包的 numeric UID/GID 必须为 `0:0`，并在 isolated root 从上一公开状态执行一次完整 candidate `pacman -Syu`、tmpfiles 和 installed smoke。
 - 包和签名先上传并远程确认，再更新、签名和上传 DB/files DB。
-- Stable 发布后使用 pacman `vercmp` 清理已被 Stable 追平的 Beta overlay。
-- Stable 发布也会修改 Beta DB，因此发布使用全局不取消 concurrency lock。
+- Stable 与 Beta publication 共用全局不取消 concurrency lock；一个频道的发布不顺带改写另一个频道。
+- 发布后由 fresh Arch runner 从真实签名仓库执行完整 `pacman -Syu`。若只有这个 smoke harness 出错，修复后使用只读 `repository-smoke.yml` 复验，绝不重传已经发布的 immutable object。
 - `SigLevel = Required TrustedOnly` 属于 channel package-owned 配置。
-- host-independent release contract tests 当前为 16 项。
+- host-independent release contract tests 当前为 53 项。
 
 ### Installer / ISO
 
@@ -115,7 +116,7 @@ Updates 页面保持只读：
 | 优先级 | 仓库/区域 | 真实状态 | 需要完成 |
 | --- | --- | --- | --- |
 | Done | meo-repo trust root | 已提交可导入的公开 keyring payload，protected Environment 只持有可撤销签名子钥；自动 populate 与远端签名验证已通过 | 保持 master secret 离线并按轮换流程维护 |
-| Done | Beta 4 component release inputs | `2026.09-beta.4.json` 固定全部当前组件，其中 Meo Settings Beta 4 修复旧用户 QML import 覆盖 | 每个稀疏 Beta candidate 必须独立跑完整发布与远端安装 smoke，包括污染过的用户 QML 路径 |
+| Done | Beta 6 / Stable 2 release inputs | `2026.09-beta.6.json` 与 `2026.09.2.json` 固定当前组件；`meo-desktop 0.4.0-7` 修复旧 runtime 与无主 decoration 文件迁移 | 临时 backup/adoption hook 只保留 1–2 个 package cycle；每个 candidate 继续跑完整升级与远端安装 smoke |
 | Done | OmniStore Stable rollback | hash-bound 下载、local-package transaction、Pacman repository helper 与 release exporter 已进入最新 bundle | 真实用户降级仍需按第 9 节保留人工数据验收 |
 | P0 | Installer target payload | 安装计划会安装 pacman 包，但 `apply-target-customizations.sh` 仍从 Live runtime 复制 MeoUI/MeoKDE 运行时到目标 | 首个签名 Stable repo 可用后删除目标源码/runtime copy，目标只验证已安装包；Live ISO staging 可继续消费已验证源码 |
 | P0 | Installer bootstrap | `installer/bootstrap/` 只有说明，没有已评审公钥 material | 放入与 `meo-keyring` 同源且 hash 固定的公开 bootstrap 文件 |
@@ -137,7 +138,8 @@ Updates 页面保持只读：
 不要强行创建旧 placeholder tag。对计划进入首个 train 的 commit 做评审 tag，并记录完整
 40 位 commit ID。
 
-当前 Beta 4 train 使用 `manifests/beta/2026.09-beta.4.json`。不要再回退到
+当前 Beta train 使用 `manifests/beta/2026.09-beta.6.json`，Stable 使用
+`manifests/stable/2026.09.2.json`。不要再回退到
 旧 E2E source tag、Beta 1 package version 或 OmniStore `v0.1.2` bundle。
 Meo Account 的 owning repository 是 private；公共 candidate 可独立验证和发布。
 Account candidate 使用仅授权读取该单一私有仓库的 Deploy Key，经 SSH 拉取固定
@@ -231,7 +233,15 @@ Stable dispatch：
 ```text
 channel=stable
 manifest=manifests/stable/<release>.json
-beta_candidate=<empty>
+candidate=<empty>
+```
+
+Stable 原子单包 hotfix：
+
+```text
+channel=stable
+manifest=manifests/stable/<release>.json
+candidate=<精确一个评审包名>
 ```
 
 Beta dispatch：
@@ -239,13 +249,16 @@ Beta dispatch：
 ```text
 channel=beta
 manifest=<包含 candidate 身份的评审 manifest>
-beta_candidate=<精确一个评审包名>
+candidate=<精确一个评审包名>
 ```
 
 流水线顺序：
 
 ```text
-unprivileged build/test/namcap/install smoke
+unprivileged build/test/namcap
+→ reject any final archive member whose numeric UID or GID is nonzero
+→ previous-public isolated root + unsigned candidate pacman -Syu
+→ verify /, /etc, /usr, /var ownership + package replacement + tmpfiles + installed smoke
 → hash-bound unsigned artifact
 → protected job 重新验证 hash 和 package metadata
 → preflight every immutable object name/content before the first upload
@@ -257,6 +270,24 @@ unprivileged build/test/namcap/install smoke
 → exact URL cache purge
 → remote signed pacman smoke
 ```
+
+如果发布后才发现 remote smoke 自身的依赖或断言遗漏，先确认 package、签名和 DB 已经
+成功写入，再修复 smoke 并 dispatch `repository-smoke.yml`。禁止为了重跑验证而重新构建、
+重签或覆盖同名 immutable package object。
+
+### 旧系统 `exists in filesystem` 迁移
+
+遇到 pacman 文件冲突时，必须先用精确 ownership 查询确认路径是否归包所有，比较现场
+文件和候选包 payload 的 SHA-256，并枚举候选包全部路径交集。不能默认使用
+`--overwrite`，也不能要求用户先删除文件。
+
+对已经确认的一次性无主旧文件，可以临时把精确路径列为 package `backup`：pacman 先把
+经过校验的 payload 写成 `.pacnew`，install/upgrade hook 再在同一事务内原子接管。门禁
+必须验证最终 SHA 与候选 archive 一致、`pacman -Qo` 归属正确、`pacman -Qkk` 为
+`0 altered files`、没有残留 `.pacnew`。该迁移只保留 1–2 个 package cycle。
+
+验证旧包是否真正移除时使用 `pacman -Qq | grep -Fx <name>`；不能使用
+`pacman -Q <name>`，因为某些 pacman 构建会返回声明了 `provides=<name>` 的新包。
 
 Stable 后由 `ci/cleanup-beta-overlay.sh` 验证两个 DB 签名、用 `vercmp` 比较并只删除
 Stable 已追平的同名 Beta entry。
