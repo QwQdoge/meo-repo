@@ -100,6 +100,9 @@ pacman --root "$test_root" -Q meo-desktop >/dev/null
 
 cp -- "$repo_root/ci/smoke-installed.sh" "$test_root/tmp/meo-smoke-installed.sh"
 cp -- "$manifest" "$test_root/tmp/meo-release-manifest.json"
-chroot "$test_root" systemd-tmpfiles --create --remove
+# The isolated pacman root intentionally has no mounted /proc or /sys. Apply
+# tmpfiles to it through systemd-tmpfiles' supported offline-root interface;
+# the remote smoke below exercises the normal live-root command separately.
+systemd-tmpfiles --root="$test_root" --create --remove
 chroot "$test_root" bash /tmp/meo-smoke-installed.sh /tmp/meo-release-manifest.json
 echo "PASS: previous public MeoArch state upgraded through pacman -Syu"

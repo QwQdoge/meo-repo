@@ -367,7 +367,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('GPGDir = $test_root/etc/pacman.d/gnupg', upgrade)
         self.assertIn('chown 1000:1000 "$test_root/etc" "$test_root/usr"', upgrade)
         self.assertIn('for directory in / /etc /usr /var', upgrade)
-        self.assertIn('systemd-tmpfiles --create --remove', upgrade)
+        self.assertIn('systemd-tmpfiles --root="$test_root" --create --remove', upgrade)
         self.assertIn('! pacman --root "$test_root" -Q meo-kde-runtime', upgrade)
         self.assertLess(
             workflow.index('Upgrade previous public system through the unsigned candidate'),
