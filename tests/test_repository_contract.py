@@ -380,6 +380,15 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('QML2_IMPORT_PATH="$stale_qml_root"', smoke)
         self.assertIn('timeout 120 meo-settings --smoke', smoke)
 
+    def test_published_repository_can_be_reverified_without_republishing(self):
+        smoke = (ROOT / "ci/remote-smoke.sh").read_text()
+        workflow = (ROOT / ".github/workflows/repository-smoke.yml").read_text()
+        self.assertIn('packages=("$candidate" "meo/meo-core-meta")', smoke)
+        self.assertIn("name: MeoArch published repository smoke", workflow)
+        self.assertIn('ci/remote-smoke.sh "$RELEASE_CHANNEL"', workflow)
+        self.assertNotIn("environment: release", workflow)
+        self.assertNotRegex(workflow, r"secrets\.")
+
     def test_release_smokes_use_full_sysupgrade_and_tmpfiles(self):
         remote = (ROOT / "ci/remote-smoke.sh").read_text()
         upgrade = (ROOT / "ci/upgrade-smoke.sh").read_text()

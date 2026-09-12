@@ -20,7 +20,10 @@ case "$channel" in
   stable)
     repositories=$'[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
     if [ -n "$candidate" ]; then
-      packages=("$candidate")
+      # A sparse publication updates one artifact, but acceptance still
+      # installs the Stable core meta package so the complete supported
+      # package graph and installed-payload smoke are exercised.
+      packages=("$candidate" "meo/meo-core-meta")
     else
       package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
 import json,sys

@@ -1,0 +1,38 @@
+name: MeoArch published repository smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Published repository channel to verify.
+        required: true
+        type: choice
+        options: [stable, beta]
+      manifest:
+        description: Reviewed manifest describing the published versions.
+        required: true
+        default: manifests/stable/2026.09.2.json
+      candidate:
+        description: Sparse candidate package, when verifying a hotfix publication.
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  remote-pacman-smoke:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install from the signed remote repository
+        env:
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_CANDIDATE: ${{ inputs.candidate }}
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: |
+          pacman -Syu --noconfirm --needed python curl
+          ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE" "$RELEASE_MANIFEST"
