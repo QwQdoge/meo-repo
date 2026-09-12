@@ -56,4 +56,16 @@ test -s /etc/pacman.d/meo-channel.conf
 printf '\nInclude = /etc/pacman.d/meo-channel.conf\n' >>/etc/pacman.conf
 bash "$repo_root/ci/check-repository-order.sh" /etc/pacman.conf "$channel"
 pacman -Sy --noconfirm
+if [ "$candidate" = meo-settings ]; then
+  stale_qml_root="$(mktemp -d)"
+  trap 'rm -f -- "$config"; rm -rf -- "$stale_qml_root"' EXIT
+  mkdir -p "$stale_qml_root/MeoUI"
+  printf 'module MeoUI\n' >"$stale_qml_root/MeoUI/qmldir"
+  QML_IMPORT_PATH="$stale_qml_root" QML2_IMPORT_PATH="$stale_qml_root" \
+    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_FORCE_STDERR_LOGGING=1 \
+    timeout 120 meo-settings --smoke
+  QML_IMPORT_PATH="$stale_qml_root" QML2_IMPORT_PATH="$stale_qml_root" \
+    QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_FORCE_STDERR_LOGGING=1 \
+    timeout 30 meo-welcome --show --smoke
+fi
 [ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"

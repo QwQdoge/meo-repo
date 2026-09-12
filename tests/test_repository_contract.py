@@ -90,7 +90,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("'plasma-workspace'", runtime_depends)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.4.json").read_text())
         runtime_paths = set(manifest["components"]["meo-kde-runtime"]["sourcePaths"])
         self.assertEqual(runtime_paths, {
             "native/system", "native/dynamic-color",
@@ -286,7 +286,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(calls, [("QwQdoge/MeoUI", "v1.0.3-beta.3")])
 
     def test_private_account_source_uses_repository_scoped_ssh_transport(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.4.json").read_text())
         account = manifest["components"]["meo-account"]
         self.assertEqual(account["sourceTransport"], "git-ssh")
         self.assertEqual(
@@ -300,7 +300,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertRegex(workflow, r"pacman -Syu[^\n]+\bopenssh\b")
 
     def test_latest_beta_manifest_pins_every_current_release(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.3.json").read_text())
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.4.json").read_text())
         self.assertEqual(manifest["profile"], "recommended")
         self.assertEqual(set(manifest["components"]), {
             "meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime",
@@ -312,13 +312,20 @@ class RepositoryContractTests(unittest.TestCase):
             "meo-desktop": "v0.4.0-beta.3",
             "meo-kde-runtime": "v0.4.0-beta.3",
             "meo-account": "v0.1.0-beta.3",
-            "meo-settings": "v0.2.0-beta.3",
+            "meo-settings": "v0.2.0-beta.4",
             "omnistore-bin": "v0.1.4-beta.3",
         }
         self.assertEqual(
             {name: component["tag"] for name, component in manifest["components"].items()},
             expected_tags,
         )
+
+    def test_remote_settings_smoke_covers_stale_user_qml_imports(self):
+        smoke = (ROOT / "ci/remote-smoke.sh").read_text()
+        self.assertIn('if [ "$candidate" = meo-settings ]', smoke)
+        self.assertIn('QML_IMPORT_PATH="$stale_qml_root"', smoke)
+        self.assertIn('QML2_IMPORT_PATH="$stale_qml_root"', smoke)
+        self.assertIn('timeout 120 meo-settings --smoke', smoke)
 
     def test_publication_preflights_all_immutable_objects_before_upload(self):
         script = (ROOT / "ci/publish-repository.sh").read_text()

@@ -115,7 +115,7 @@ Updates 页面保持只读：
 | 优先级 | 仓库/区域 | 真实状态 | 需要完成 |
 | --- | --- | --- | --- |
 | Done | meo-repo trust root | 已提交可导入的公开 keyring payload，protected Environment 只持有可撤销签名子钥；自动 populate 与远端签名验证已通过 | 保持 master secret 离线并按轮换流程维护 |
-| Done | Beta 3 component release inputs | `2026.09-beta.3.json` 固定 MeoUI、MeoKDE、Meo Account、Meo Settings 与 OmniStore 的最新评审 tag、commit、package version、URL 和 SHA-256 | 每个稀疏 Beta candidate 必须独立跑完整发布与远端安装 smoke |
+| Done | Beta 4 component release inputs | `2026.09-beta.4.json` 固定全部当前组件，其中 Meo Settings Beta 4 修复旧用户 QML import 覆盖 | 每个稀疏 Beta candidate 必须独立跑完整发布与远端安装 smoke，包括污染过的用户 QML 路径 |
 | Done | OmniStore Stable rollback | hash-bound 下载、local-package transaction、Pacman repository helper 与 release exporter 已进入最新 bundle | 真实用户降级仍需按第 9 节保留人工数据验收 |
 | P0 | Installer target payload | 安装计划会安装 pacman 包，但 `apply-target-customizations.sh` 仍从 Live runtime 复制 MeoUI/MeoKDE 运行时到目标 | 首个签名 Stable repo 可用后删除目标源码/runtime copy，目标只验证已安装包；Live ISO staging 可继续消费已验证源码 |
 | P0 | Installer bootstrap | `installer/bootstrap/` 只有说明，没有已评审公钥 material | 放入与 `meo-keyring` 同源且 hash 固定的公开 bootstrap 文件 |
@@ -137,7 +137,7 @@ Updates 页面保持只读：
 不要强行创建旧 placeholder tag。对计划进入首个 train 的 commit 做评审 tag，并记录完整
 40 位 commit ID。
 
-当前 Beta 3 train 使用 `manifests/beta/2026.09-beta.3.json`。不要再回退到
+当前 Beta 4 train 使用 `manifests/beta/2026.09-beta.4.json`。不要再回退到
 旧 E2E source tag、Beta 1 package version 或 OmniStore `v0.1.2` bundle。
 Meo Account 的 owning repository 是 private；公共 candidate 可独立验证和发布。
 Account candidate 使用仅授权读取该单一私有仓库的 Deploy Key，经 SSH 拉取固定
