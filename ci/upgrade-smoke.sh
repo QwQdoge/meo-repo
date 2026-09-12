@@ -18,7 +18,8 @@ work_dir="$(mktemp -d)"
 test_root="$work_dir/root"
 candidate_repo="$work_dir/candidate"
 trap 'rm -rf -- "$work_dir"' EXIT
-install -d "$test_root/etc/pacman.d/gnupg" "$candidate_repo"
+install -d "$test_root/etc/pacman.d/gnupg" "$test_root/var/lib/pacman" \
+  "$test_root/var/cache/pacman/pkg" "$test_root/var/log" "$candidate_repo"
 
 cp -- "$package_dir"/*.pkg.tar.zst "$candidate_repo/"
 repo-add "$candidate_repo/meo-candidate.db.tar.gz" "$candidate_repo"/*.pkg.tar.zst >/dev/null
