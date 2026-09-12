@@ -114,6 +114,12 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertNotIn("org.meo.dock.desktop", desktop)
         self.assertNotIn("/usr/bin/meo-dock", smoke)
 
+    def test_desktop_replaces_the_legacy_runtime_during_sysupgrade(self):
+        desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        self.assertIn("provides=('meo-kde-runtime=0.4.0')", desktop)
+        self.assertIn("conflicts=('meo-kde-runtime')", desktop)
+        self.assertIn("replaces=('meo-kde-runtime')", desktop)
+
     def test_meo_account_oauth_config_is_readable_by_the_user_daemon(self):
         recipe = (ROOT / "packages/meo-account/PKGBUILD").read_text()
         self.assertIn('install -Dm644 "$srcdir/source/desktop/data/broker.conf.example"', recipe)
@@ -329,6 +335,17 @@ class RepositoryContractTests(unittest.TestCase):
             {name: component["tag"] for name, component in manifest["components"].items()},
             expected_tags,
         )
+
+    def test_latest_stable_manifest_pins_the_migration_train(self):
+        manifest = json.loads((ROOT / "manifests/stable/2026.09.1.json").read_text())
+        self.assertEqual(manifest["release"], "2026.09.1")
+        self.assertEqual(manifest["profile"], "minimal")
+        self.assertEqual(
+            {name: component["expectedVersion"] for name, component in manifest["components"].items()},
+            {"meoui-qml": "1.0.3-4", "meo-icons": "0.4.0-3", "meo-desktop": "0.4.0-6"},
+        )
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        self.assertIn("default: manifests/stable/2026.09.1.json", workflow)
 
     def test_remote_settings_smoke_covers_stale_user_qml_imports(self):
         smoke = (ROOT / "ci/remote-smoke.sh").read_text()

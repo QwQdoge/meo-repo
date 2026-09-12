@@ -27,6 +27,8 @@ The current complete prerelease train is pinned in
 [`manifests/beta/2026.09-beta.4.json`](manifests/beta/2026.09-beta.4.json); it
 records every component's owning GitHub repository, immutable release tag,
 commit, package version, source URL, and SHA-256.
+The current Stable system-migration train is pinned in
+[`manifests/stable/2026.09.1.json`](manifests/stable/2026.09.1.json).
 
 ## Package-source boundary
 

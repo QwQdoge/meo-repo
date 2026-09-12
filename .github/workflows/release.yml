@@ -11,7 +11,7 @@ on:
       manifest:
         description: Reviewed immutable manifest path.
         required: true
-        default: manifests/stable/2026.09-e2e01.json
+        default: manifests/stable/2026.09.1.json
       beta_candidate:
         description: Required only for Beta (one reviewed package name).
         required: false
