@@ -19,7 +19,8 @@ test_root="$work_dir/root"
 candidate_repo="$work_dir/candidate"
 trap 'rm -rf -- "$work_dir"' EXIT
 install -d "$test_root/etc/pacman.d/gnupg" "$test_root/var/lib/pacman" \
-  "$test_root/var/cache/pacman/pkg" "$test_root/var/log" "$candidate_repo"
+  "$test_root/var/cache/pacman/pkg" "$test_root/var/log" \
+  "$test_root/scripts" "$candidate_repo"
 
 cp -- "$package_dir"/*.pkg.tar.zst "$candidate_repo/"
 repo-add "$candidate_repo/meo-candidate.db.tar.gz" "$candidate_repo"/*.pkg.tar.zst >/dev/null
@@ -99,6 +100,7 @@ pacman --root "$test_root" -Q meo-desktop >/dev/null
 ! pacman --root "$test_root" -Q meo-kde-runtime >/dev/null 2>&1
 
 cp -- "$repo_root/ci/smoke-installed.sh" "$test_root/tmp/meo-smoke-installed.sh"
+cp -- "$repo_root/scripts/artifact_manifest.py" "$test_root/scripts/artifact_manifest.py"
 cp -- "$manifest" "$test_root/tmp/meo-release-manifest.json"
 # The isolated pacman root intentionally has no mounted /proc or /sys. Apply
 # tmpfiles to it through systemd-tmpfiles' supported offline-root interface;
