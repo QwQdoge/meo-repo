@@ -73,7 +73,9 @@ class MinimalReleaseTests(unittest.TestCase):
         for package in ("meoui-qml", "meo-desktop"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
             self.assertIn("options=('!debug'", recipe)
-        self.assertIn("'staticlibs'", (ROOT / "packages/meoui-qml/PKGBUILD").read_text())
+        meoui_recipe = (ROOT / "packages/meoui-qml/PKGBUILD").read_text()
+        self.assertIn("'staticlibs'", meoui_recipe)
+        self.assertIn("'qt6-shadertools'", meoui_recipe)
         build_script = (ROOT / "ci/build-release.sh").read_text()
         self.assertIn('makepkg --config "$output/makepkg.conf" --syncdeps', build_script)
         self.assertIn('makepkg --config "$output/makepkg.conf" --packagelist', build_script)

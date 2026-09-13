@@ -7,7 +7,7 @@ arch=('x86_64')
 url='https://github.com/QwQdoge/MeoUI'
 license=('MIT')
 depends=('qt6-declarative' 'hicolor-icon-theme')
-makedepends=('cmake' 'ninja' 'qt6-tools')
+makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools')
 # The reviewed minimal train does not publish implicit split debug packages.
 # MeoKDE's application style links the exported meoui_tokens CMake target.
 options=('!debug' 'staticlibs')
