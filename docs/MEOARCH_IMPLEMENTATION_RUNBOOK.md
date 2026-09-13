@@ -55,6 +55,7 @@ meo-release
 - `meo-release` 同时安装 package catalog 与 application catalog；三类 meta 包分别覆盖核心桌面、Meo 应用和推荐全集。
 - Stable 完整 train 构建所有核心包；紧急单包修复使用原子 Stable candidate，先验证现有签名 DB，再只合并一个新对象，禁止重建或覆盖未变化的 immutable 包。
 - Beta workflow 只接受一个明确 candidate，保留稀疏 overlay；高优先级 Beta 必须先发布 runtime replacement，不能假设 Stable fallback 会胜出。
+- 稀疏 candidate manifest 必须记录固定的 `sourceDateEpoch`；release build 以它设置 `SOURCE_DATE_EPOCH`，因此 runner 的时钟不影响最终包字节。
 - 构建、签名/发布分 job；受保护 job 会重新校验 artifact hash 及包内 `.PKGINFO` 的 name/version/arch。
 - 签名前逐个检查最终包的 numeric UID/GID 必须为 `0:0`，并在 isolated root 从上一公开状态执行一次完整 candidate `pacman -Syu`、tmpfiles 和 installed smoke。
 - 包和签名先上传并远程确认，再更新、签名和上传 DB/files DB。

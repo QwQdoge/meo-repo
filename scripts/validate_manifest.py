@@ -50,6 +50,13 @@ def main(path: str) -> None:
             fail(f"{name} sourceUrl must use HTTPS or the reviewed private git-ssh transport")
         if not SHA256.fullmatch(str(component.get("sourceSha256", ""))):
             fail(f"{name} sourceSha256 must be a pinned SHA-256")
+        source_date_epoch = component.get("sourceDateEpoch")
+        if source_date_epoch is not None and (
+            isinstance(source_date_epoch, bool)
+            or not isinstance(source_date_epoch, int)
+            or source_date_epoch <= 0
+        ):
+            fail(f"{name} sourceDateEpoch must be a positive integer when set")
         layout = component.get("sourceLayout", "source")
         if layout not in {"source", "release-bundle"}:
             fail(f"{name} sourceLayout is unsupported")

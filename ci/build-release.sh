@@ -39,18 +39,46 @@ else
 fi
 python3 "$repo_root/scripts/validate_keyring_payload.py" "$repo_root/packages/meo-keyring/files"
 
+source_date_epoch=""
+if [ -n "$candidate" ]; then
+  # A sparse release must be reproducible from an immutable timestamp recorded
+  # alongside the exact source checksum. Do not inherit the build runner clock.
+  source_date_epoch="$(python3 - "$manifest" "$candidate" <<'PY'
+import json
+import sys
+
+manifest = json.load(open(sys.argv[1], encoding="utf-8"))
+component = manifest["components"][sys.argv[2]]
+epoch = component.get("sourceDateEpoch")
+if isinstance(epoch, bool) or not isinstance(epoch, int) or epoch <= 0:
+    raise SystemExit(
+        f"{sys.argv[2]} sparse candidate requires a positive sourceDateEpoch"
+    )
+print(epoch)
+PY
+)"
+fi
+
+run_makepkg() {
+  if [ -n "$source_date_epoch" ]; then
+    SOURCE_DATE_EPOCH="$source_date_epoch" makepkg "$@"
+  else
+    makepkg "$@"
+  fi
+}
+
 build_context() {
   local package="$1"
   local context="$2"
   shift 2
   (
     cd "$context"
-    makepkg --config "$output/makepkg.conf" --syncdeps --noconfirm --needed "$@"
+    run_makepkg --config "$output/makepkg.conf" --syncdeps --noconfirm --needed "$@"
   )
   local built=()
   while IFS= read -r package_file; do built+=("$package_file"); done < <(
     cd "$context"
-    makepkg --config "$output/makepkg.conf" --packagelist
+    run_makepkg --config "$output/makepkg.conf" --packagelist
   )
   [ "${#built[@]}" -gt 0 ] || { echo "No package produced for $package" >&2; exit 3; }
   for package_file in "${built[@]}"; do

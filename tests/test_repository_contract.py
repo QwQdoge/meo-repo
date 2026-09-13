@@ -136,6 +136,28 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("pinned 40-character SHA", result.stderr)
 
+    def test_manifest_source_date_epoch_is_positive_when_declared(self):
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.6.json").read_text())
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "manifest.json"
+            manifest["components"]["meoui-qml"]["sourceDateEpoch"] = 1
+            path.write_text(json.dumps(manifest))
+            result = subprocess.run(
+                [sys.executable, ROOT / "scripts/validate_manifest.py", path],
+                capture_output=True,
+                text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest["components"]["meoui-qml"]["sourceDateEpoch"] = True
+            path.write_text(json.dumps(manifest))
+            result = subprocess.run(
+                [sys.executable, ROOT / "scripts/validate_manifest.py", path],
+                capture_output=True,
+                text=True,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("sourceDateEpoch must be a positive integer", result.stderr)
+
     def test_overlay_cleanup_only_when_stable_wins(self):
         self.assertTrue(stable_supersedes_beta("1.7.0-1", "1.7.0beta1-1", 1))
         self.assertFalse(stable_supersedes_beta("1.6.1-1", "1.7.0beta1-1", -1))

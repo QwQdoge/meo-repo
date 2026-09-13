@@ -77,6 +77,8 @@ class MinimalReleaseTests(unittest.TestCase):
         build_script = (ROOT / "ci/build-release.sh").read_text()
         self.assertIn('makepkg --config "$output/makepkg.conf" --syncdeps', build_script)
         self.assertIn('makepkg --config "$output/makepkg.conf" --packagelist', build_script)
+        self.assertIn('SOURCE_DATE_EPOCH="$source_date_epoch" makepkg', build_script)
+        self.assertIn('sparse candidate requires a positive sourceDateEpoch', build_script)
 
     def test_desktop_recipe_uses_plasma_login_manager_without_sddm_payload(self):
         recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
