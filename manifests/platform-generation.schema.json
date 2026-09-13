@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://meoarch.org/schemas/platform-generation/v1",
+  "title": "Meo platform generation manifest",
+  "description": "One complete, hash-bound compatibility train for the Meo desktop session core.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "platformGeneration",
+    "architecture",
+    "train",
+    "entryPackage",
+    "sessionPackages",
+    "preservedPackages",
+    "replacedPackages",
+    "platformRoots",
+    "dependencyClosure",
+    "upgradePolicy"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "platformGeneration": {
+      "type": "string",
+      "pattern": "^meo-plasma-[0-9]+\\.[0-9]+$"
+    },
+    "architecture": {"const": "x86_64"},
+    "train": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel", "id"],
+      "properties": {
+        "channel": {"enum": ["beta", "stable"]},
+        "id": {"type": "string", "pattern": "^[0-9]{4}\\.[0-9]{2}(?:-beta\\.[0-9]+)?$"}
+      }
+    },
+    "entryPackage": {"const": "meo-core-meta"},
+    "sessionPackages": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/packageArtifact"}
+    },
+    "preservedPackages": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[A-Za-z0-9@._+:-]+$"}
+    },
+    "replacedPackages": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/replacement"}
+    },
+    "platformRoots": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/packageArtifact"}
+    },
+    "dependencyClosure": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/closureArtifact"}
+    },
+    "upgradePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["atomicCoreUpdate", "allowIgnorePkg", "allowPartialCoreUpgrade"],
+      "properties": {
+        "atomicCoreUpdate": {"const": true},
+        "allowIgnorePkg": {"const": false},
+        "allowPartialCoreUpgrade": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "packageArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "origin", "sourceUrl", "archiveSha256"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z0-9@._+:-]+$"},
+        "version": {"type": "string", "pattern": "^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$"},
+        "origin": {"enum": ["meo", "arch-snapshot"]},
+        "sourceUrl": {"type": "string", "pattern": "^https://"},
+        "archiveSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "closureArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "version", "origin", "sourceUrl", "archiveSha256", "depends"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z0-9@._+:-]+$"},
+        "version": {"type": "string", "pattern": "^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$"},
+        "origin": {"enum": ["meo", "arch-snapshot"]},
+        "sourceUrl": {"type": "string", "pattern": "^https://"},
+        "archiveSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "depends": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Za-z0-9@._+:-]+$"}
+        }
+      }
+    },
+    "replacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "replacedBy"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z0-9@._+:-]+$"},
+        "replacedBy": {"type": "string", "pattern": "^[A-Za-z0-9@._+:-]+$"}
+      }
+    }
+  }
+}
