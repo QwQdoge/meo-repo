@@ -11,8 +11,20 @@ makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools')
 # The reviewed minimal train does not publish implicit split debug packages.
 # MeoKDE's application style links the exported meoui_tokens CMake target.
 options=('!debug' 'staticlibs')
-source=()
-sha256sums=()
+source=(
+  'THIRD_PARTY_NOTICES.md::https://raw.githubusercontent.com/QwQdoge/MeoUI/bacc948fbdd33987685f1c0c1ba006a527198461/THIRD_PARTY_NOTICES.md'
+  'Apache-2.0.txt::https://raw.githubusercontent.com/QwQdoge/MeoUI/bacc948fbdd33987685f1c0c1ba006a527198461/assets/licenses/Apache-2.0.txt'
+  'DankMaterialShell-MIT.txt::https://raw.githubusercontent.com/QwQdoge/MeoUI/bacc948fbdd33987685f1c0c1ba006a527198461/assets/licenses/DankMaterialShell-MIT.txt'
+  'OFL-Roboto.txt::https://raw.githubusercontent.com/QwQdoge/MeoUI/bacc948fbdd33987685f1c0c1ba006a527198461/assets/fonts/OFL-Roboto.txt'
+  'OFL-Comfortaa.txt::https://raw.githubusercontent.com/QwQdoge/MeoUI/bacc948fbdd33987685f1c0c1ba006a527198461/assets/fonts/OFL-Comfortaa.txt'
+)
+sha256sums=(
+  'bae31abb0203173b858e65976a319cbcee3cc44fe04e854adf5167417937c772'
+  'cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30'
+  '4cee96286c5b7da9763a4694868bb1853b33bb1558821e0c609ad2eabd426bfa'
+  'ee94f8704aa81e9a3bf4271e8320e99d975a3ee08ea45a088b494b918476ec12'
+  '25bddd6b7f7e5973b6ada98fd6c9b9f01d947948a935e5f80480eda24ddcd515'
+)
 
 build() {
   cmake -B build -S "$srcdir/source" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr -DMEOUI_BUILD_SHOWCASE=OFF
@@ -30,11 +42,11 @@ package() {
     "$pkgdir/usr/lib/qt6/qml/MeoUI/showcase/SettingsPreviewSchemes.js"
   install -Dm644 "$srcdir/source/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   for notice in THIRD_PARTY_NOTICES.md \
-                assets/licenses/Apache-2.0.txt \
-                assets/licenses/DankMaterialShell-MIT.txt \
-                assets/fonts/OFL-Roboto.txt \
-                assets/fonts/OFL-Comfortaa.txt; do
-    install -Dm644 "$srcdir/source/$notice" \
-      "$pkgdir/usr/share/licenses/$pkgname/${notice##*/}"
+                Apache-2.0.txt \
+                DankMaterialShell-MIT.txt \
+                OFL-Roboto.txt \
+                OFL-Comfortaa.txt; do
+    install -Dm644 "$srcdir/$notice" \
+      "$pkgdir/usr/share/licenses/$pkgname/$notice"
   done
 }
