@@ -1,11 +1,11 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=7
+pkgrel=9
 pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
-license=('GPL-3.0-or-later')
-depends=('meoui-qml>=1.0.3' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
+license=('GPL-3.0-or-later' 'GPL-2.0-or-later' 'MIT' 'Apache-2.0' 'OFL-1.1')
+depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
          'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
          'konsole' 'plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
@@ -61,6 +61,20 @@ package() {
   done
   install -m644 "$source"/themes/color-schemes/*.colors "$pkgdir/usr/share/color-schemes/"
   install -m644 "$source"/assets/fonts/*.ttf "$pkgdir/usr/share/fonts/meo/"
+  install -Dm644 "$source/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "$source/THIRD_PARTY_NOTICES.md" \
+    "$pkgdir/usr/share/licenses/$pkgname/THIRD_PARTY_NOTICES.md"
+  install -Dm644 "$source/assets/fonts/OFL-Roboto.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/OFL-Roboto.txt"
+  install -Dm644 "$source/assets/fonts/OFL-Comfortaa.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/OFL-Comfortaa.txt"
+  install -Dm644 "$source/assets/licenses/Material-Symbols-Apache-2.0.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/Material-Symbols-Apache-2.0.txt"
+  install -Dm644 "$source/native/third_party/material-color-utilities/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/Material-Color-Utilities-Apache-2.0.txt"
+  install -Dm644 "$source/assets/licenses/DankMaterialShell-MIT.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/DankMaterialShell-MIT.txt"
   install -Dm644 "$source/assets/wallpapers/installer_background.png" "$pkgdir/usr/share/wallpapers/MeoArch/installer_background.png"
   install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/pixmaps/meoarch-logo.svg"
   install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/meoarch-logo.svg"

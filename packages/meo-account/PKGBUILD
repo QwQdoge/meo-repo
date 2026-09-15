@@ -1,11 +1,11 @@
 pkgname=meo-account
 pkgver=0.1.0
-pkgrel=4
+pkgrel=5
 pkgdesc="MeoArch system account broker and authentication dialog"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-account'
 license=('GPL-3.0-or-later')
-depends=('qt6-base' 'qt6-declarative' 'kwallet' 'meoui-qml')
+depends=('qt6-base' 'qt6-declarative' 'kwallet' 'meoui-qml>=1.0.4beta1')
 makedepends=('cmake' 'ninja')
 backup=('etc/meo-account/broker.conf')
 source=()

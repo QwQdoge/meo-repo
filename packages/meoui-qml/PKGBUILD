@@ -1,11 +1,11 @@
 # Rendered by the protected release job with source tag/commit/checksum from a manifest.
 pkgname=meoui-qml
 pkgver=1.0.4beta1
-pkgrel=1
+pkgrel=2
 pkgdesc="MeoUI Qt Quick Material Design 3 component library"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoUI'
-license=('MIT')
+license=('MIT' 'Apache-2.0' 'OFL-1.1')
 depends=('qt6-declarative' 'hicolor-icon-theme')
 makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools')
 # The reviewed minimal train does not publish implicit split debug packages.
@@ -29,4 +29,12 @@ package() {
   install -Dm644 "$srcdir/source/showcase/SettingsPreviewSchemes.js" \
     "$pkgdir/usr/lib/qt6/qml/MeoUI/showcase/SettingsPreviewSchemes.js"
   install -Dm644 "$srcdir/source/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  for notice in THIRD_PARTY_NOTICES.md \
+                assets/licenses/Apache-2.0.txt \
+                assets/licenses/DankMaterialShell-MIT.txt \
+                assets/fonts/OFL-Roboto.txt \
+                assets/fonts/OFL-Comfortaa.txt; do
+    install -Dm644 "$srcdir/source/$notice" \
+      "$pkgdir/usr/share/licenses/$pkgname/${notice##*/}"
+  done
 }

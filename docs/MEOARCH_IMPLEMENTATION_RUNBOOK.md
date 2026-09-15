@@ -139,9 +139,20 @@ Updates 页面保持只读：
 不要强行创建旧 placeholder tag。对计划进入首个 train 的 commit 做评审 tag，并记录完整
 40 位 commit ID。
 
-当前 Beta train 使用 `manifests/beta/2026.09-beta.6.json`，Stable 使用
+当前 Beta train 使用 `manifests/beta/2026.09-beta.7.json`，Stable 使用
 `manifests/stable/2026.09.2.json`。不要再回退到
 旧 E2E source tag、Beta 1 package version 或 OmniStore `v0.1.2` bundle。
+Beta 7 manifest 是冻结的历史输入；后续未发布集成工作统一以 Beta 8 为目标。
+只有所有纳入组件都具备不可变 tag、commit、包版本、来源 URL 和已验证 checksum 后，
+才创建 Beta 8 manifest。
+Beta 8 是稳定化 train：只接收兼容性、无障碍、失败状态、打包和验证修复，
+以首个 Stable train 的验收标准为目标，推迟无关功能扩张。
+每个稀疏 `sourcePaths` 还必须包含对应包会安装的法律材料。对
+`meo-desktop` 至少包括根 `LICENSE`、`THIRD_PARTY_NOTICES.md`、
+`assets/licenses`、`assets/fonts` 和
+`native/third_party/material-color-utilities/LICENSE`；缺少这些路径时，包配方
+应失败，不得生成只带项目主许可证的候选包。完整源码与 release-bundle
+组件同样必须在暂存后检查 `/usr/share/licenses/<pkgname>/` 的实际内容。
 Meo Account 的 owning repository 是 private；公共 candidate 可独立验证和发布。
 Account candidate 使用仅授权读取该单一私有仓库的 Deploy Key，经 SSH 拉取固定
 commit 后生成确定性 tar，并再次核对 SHA-256；禁止把个人 GitHub token、私有源码

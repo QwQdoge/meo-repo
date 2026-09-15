@@ -211,7 +211,9 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(manifest["redirectUri"], "omnistore://auth/callback")
         self.assertIn("Exec=/usr/bin/omnistore %u", desktop)
         self.assertIn("MimeType=x-scheme-handler/omnistore;", desktop)
-        self.assertIn("license=('GPL-3.0-or-later')", recipe)
+        self.assertIn("license=('GPL-3.0-only')", recipe)
+        self.assertIn('release_bundle/LICENSE', recipe)
+        self.assertIn('usr/share/licenses/$pkgname/LICENSE', recipe)
         self.assertIn("patchelf --remove-rpath", recipe)
         self.assertNotIn("/opt/omnistore", recipe)
 
@@ -362,15 +364,15 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertRegex(workflow, r"pacman -Syu[^\n]+\bopenssh\b")
 
     def test_latest_beta_manifest_pins_every_current_release(self):
-        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.6.json").read_text())
-        self.assertEqual(manifest["release"], "2026.09-beta.6")
+        manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.7.json").read_text())
+        self.assertEqual(manifest["release"], "2026.09-beta.7")
         self.assertEqual(manifest["profile"], "recommended")
         self.assertEqual(set(manifest["components"]), {
             "meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime",
             "meo-account", "meo-settings", "omnistore-bin",
         })
         expected_tags = {
-            "meoui-qml": "v1.0.3-beta.3",
+            "meoui-qml": "v1.0.4-beta.1",
             "meo-icons": "v0.4.0-beta.3",
             "meo-desktop": "v0.4.0-beta.3",
             "meo-kde-runtime": "v0.4.0-beta.3",
@@ -382,7 +384,23 @@ class RepositoryContractTests(unittest.TestCase):
             {name: component["tag"] for name, component in manifest["components"].items()},
             expected_tags,
         )
-        self.assertEqual(manifest["components"]["meo-desktop"]["expectedVersion"], "0.4.0-7")
+        self.assertEqual(
+            {name: manifest["components"][name]["expectedVersion"] for name in (
+                "meoui-qml", "meo-desktop", "meo-kde-runtime", "meo-account", "meo-settings",
+            )},
+            {
+                "meoui-qml": "1.0.4beta1-1",
+                "meo-desktop": "0.4.0-7",
+                "meo-kde-runtime": "0.4.0beta3-1",
+                "meo-account": "0.1.0-4",
+                "meo-settings": "0.2.0beta4-1",
+            },
+        )
+
+    def test_meoui_consumers_require_the_latest_beta_runtime(self):
+        for package in ("meo-kde-runtime", "meo-desktop", "meo-settings", "meo-account"):
+            recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
+            self.assertIn("meoui-qml>=1.0.4beta1", recipe, package)
 
     def test_latest_stable_manifest_pins_the_migration_train(self):
         manifest = json.loads((ROOT / "manifests/stable/2026.09.2.json").read_text())

@@ -6,6 +6,14 @@ tracked repository payload used by MeoArch package publication workflows.
 Component implementation source stays in its owning project and must not be
 vendored here as a shortcut.
 
+## License
+
+The original package recipes, manifests, validation helpers, and repository
+automation in this repository are licensed under the MIT License; see
+[LICENSE](LICENSE). This license does not relicense packaged components,
+vendored upstream material, public keys, or generated package payloads. Those
+retain their own licenses and terms.
+
 ## What is in this repository
 
 | Path | Purpose |
@@ -24,9 +32,15 @@ reports, architecture drafts, screenshots, or build logs to the root.
 The single copyable cross-repository implementation and Arch release runbook is
 [`docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md`](docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md).
 The current complete prerelease train is pinned in
-[`manifests/beta/2026.09-beta.6.json`](manifests/beta/2026.09-beta.6.json); it
+[`manifests/beta/2026.09-beta.7.json`](manifests/beta/2026.09-beta.7.json); it
 records every component's owning GitHub repository, immutable release tag,
 commit, package version, source URL, and SHA-256.
+Unpublished integration work after that frozen train targets Beta 8. A Beta 8
+manifest is created only after every included component has an immutable tag,
+commit, package version, source URL, and verified checksum.
+Beta 8 is a stabilization train: compatibility, accessibility, failure-state,
+packaging, and verification fixes are accepted with the first Stable train as
+the acceptance target; unrelated feature expansion is deferred.
 The current Stable system-migration train is pinned in
 [`manifests/stable/2026.09.2.json`](manifests/stable/2026.09.2.json).
 

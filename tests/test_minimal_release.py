@@ -82,6 +82,47 @@ class MinimalReleaseTests(unittest.TestCase):
         self.assertIn('SOURCE_DATE_EPOCH="$source_date_epoch" makepkg', build_script)
         self.assertIn('sparse candidate requires a positive sourceDateEpoch', build_script)
 
+    def test_runtime_packages_ship_complete_license_sets(self):
+        meoui = (ROOT / "packages/meoui-qml/PKGBUILD").read_text()
+        self.assertIn("license=('MIT' 'Apache-2.0' 'OFL-1.1')", meoui)
+        for required in (
+            "THIRD_PARTY_NOTICES.md",
+            "Apache-2.0.txt",
+            "DankMaterialShell-MIT.txt",
+            "OFL-Roboto.txt",
+            "OFL-Comfortaa.txt",
+        ):
+            self.assertIn(required, meoui)
+
+        desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        for declared in (
+            "GPL-3.0-or-later",
+            "GPL-2.0-or-later",
+            "MIT",
+            "Apache-2.0",
+            "OFL-1.1",
+        ):
+            self.assertIn(declared, desktop)
+        for required in (
+            "THIRD_PARTY_NOTICES.md",
+            "Material-Symbols-Apache-2.0.txt",
+            "Material-Color-Utilities-Apache-2.0.txt",
+            "DankMaterialShell-MIT.txt",
+            "OFL-Roboto.txt",
+            "OFL-Comfortaa.txt",
+        ):
+            self.assertIn(required, desktop)
+
+        runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
+        self.assertIn("GPL-2.0-or-later", runtime)
+        self.assertIn("Apache-2.0", runtime)
+        self.assertIn("DankMaterialShell-MIT.txt", runtime)
+        self.assertIn("Material-Color-Utilities-Apache-2.0.txt", runtime)
+
+        settings = (ROOT / "packages/meo-settings/PKGBUILD").read_text()
+        self.assertIn("source/LICENSE", settings)
+        self.assertIn("usr/share/licenses/$pkgname/LICENSE", settings)
+
     def test_desktop_recipe_uses_plasma_login_manager_without_sddm_payload(self):
         recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
         self.assertIn("'plasma-login-manager'", recipe)
