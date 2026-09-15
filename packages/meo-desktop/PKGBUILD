@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=9
+pkgrel=10
 pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -63,6 +63,8 @@ package() {
   install -m644 "$source"/assets/fonts/*.ttf "$pkgdir/usr/share/fonts/meo/"
   install -Dm644 "$source/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 "$source/assets/licenses/GPL-2.0-or-later.txt" \
+    "$pkgdir/usr/share/licenses/$pkgname/GPL-2.0-or-later.txt"
   install -Dm644 "$source/THIRD_PARTY_NOTICES.md" \
     "$pkgdir/usr/share/licenses/$pkgname/THIRD_PARTY_NOTICES.md"
   install -Dm644 "$source/assets/fonts/OFL-Roboto.txt" \

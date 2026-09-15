@@ -105,6 +105,7 @@ class MinimalReleaseTests(unittest.TestCase):
             self.assertIn(declared, desktop)
         for required in (
             "THIRD_PARTY_NOTICES.md",
+            "GPL-2.0-or-later.txt",
             "Material-Symbols-Apache-2.0.txt",
             "Material-Color-Utilities-Apache-2.0.txt",
             "DankMaterialShell-MIT.txt",
@@ -116,6 +117,7 @@ class MinimalReleaseTests(unittest.TestCase):
         runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
         self.assertIn("GPL-2.0-or-later", runtime)
         self.assertIn("Apache-2.0", runtime)
+        self.assertIn("GPL-2.0-or-later.txt", runtime)
         self.assertIn("DankMaterialShell-MIT.txt", runtime)
         self.assertIn("Material-Color-Utilities-Apache-2.0.txt", runtime)
 
