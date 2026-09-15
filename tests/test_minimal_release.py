@@ -93,6 +93,15 @@ class MinimalReleaseTests(unittest.TestCase):
             "OFL-Comfortaa.txt",
         ):
             self.assertIn(required, meoui)
+        license_dir = ROOT / "packages/meoui-qml/licenses"
+        for required in (
+            "Apache-2.0.txt",
+            "DankMaterialShell-MIT.txt",
+            "OFL-Roboto.txt",
+            "OFL-Comfortaa.txt",
+        ):
+            self.assertTrue((license_dir / required).is_file(), required)
+        self.assertIn('"$startdir/licenses/$notice"', meoui)
 
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
         for declared in (
