@@ -1,6 +1,6 @@
 pkgname=meo-kde-runtime
 pkgver=0.4.0beta3
-pkgrel=4
+pkgrel=5
 pkgdesc="Minimal Meo KDE runtime bridge for Meo applications"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -28,6 +28,9 @@ build() {
 
 package() {
   DESTDIR="$pkgdir" cmake --install build
+  install -d "$pkgdir/usr/lib/systemd/user/default.target.wants"
+  ln -s ../meo-weather-refresh.timer \
+    "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-weather-refresh.timer"
   install -d "$pkgdir/usr/lib/qt6/qml/MeoKDE"
   cp -a "$srcdir/source/qml/MeoKDE/." \
     "$pkgdir/usr/lib/qt6/qml/MeoKDE/"

@@ -1,0 +1,26 @@
+pkgname=meo-icon-studio
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="MeoArch per-application icon renderer and reviewed identity source sheet"
+arch=('any')
+url='https://github.com/QwQdoge/meo-kde'
+license=('GPL-3.0-or-later')
+depends=('meo-icons>=0.4.0' 'hicolor-icon-theme' 'python-pillow' 'pyside6' 'qt6-svg')
+# A pre-package Studio was installed by a bounded developer bootstrap on a
+# small number of systems. The matching install hook adopts only that exact
+# legacy path through pacman's .pacnew flow; remove both after this one-cycle
+# migration has reached supported upgrades.
+backup=('usr/bin/meo-app-icon-studio')
+install=meo-icon-studio.install
+source=()
+sha256sums=()
+
+package() {
+  install -Dm755 "$srcdir/source/tools/icons/app_icon_studio.py" \
+    "$pkgdir/usr/bin/meo-app-icon-studio"
+  install -d "$pkgdir/usr/share/meo-icon-studio/application-identities"
+  cp -a "$srcdir/source/assets/icons/application-identities/." \
+    "$pkgdir/usr/share/meo-icon-studio/application-identities/"
+  install -Dm644 "$srcdir/source/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

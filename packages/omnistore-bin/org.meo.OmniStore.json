@@ -4,5 +4,6 @@
   "oauthClientId": "registered-omnistore-oauth-client-id",
   "redirectUri": "omnistore://auth/callback",
   "executables": ["/usr/lib/omnistore/frontend"],
-  "scopes": ["openid", "profile", "email"]
+  "scopes": ["openid", "profile", "email"],
+  "capabilities": ["local_ai"]
 }

@@ -1,0 +1,33 @@
+pkgname=plasma-login-manager
+pkgver=6.7.5
+pkgrel=1
+pkgdesc="MeoArch's narrowly branded Plasma Login Manager fork"
+arch=('x86_64')
+url='https://github.com/QwQdoge/meo-login-manager'
+license=('GPL-2.0-or-later')
+depends=('glibc' 'kauth' 'kcmutils' 'kconfig' 'kcoreaddons' 'kdbusaddons'
+         'ki18n' 'kio' 'kirigami' 'kpackage' 'kservice' 'kwindowsystem'
+         'layer-shell-qt' 'libkscreen' 'libplasma' 'libstdc++' 'libxau' 'pam'
+         'plasma-workspace' 'qt6-5compat' 'qt6-base' 'qt6-declarative' 'sh'
+         'systemd-libs')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools')
+options=('!debug')
+source=()
+sha256sums=()
+
+# The protected renderer supplies the reviewed meo/6.7 checkout as
+# $srcdir/source.  This recipe deliberately keeps PAM, systemd and service
+# ownership in the upstream-compatible project rather than recreating them.
+build() {
+  cmake -S "$srcdir/source" -B build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DINSTALL_PAM_CONFIGURATION=ON
+  cmake --build build --parallel
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "$srcdir/source/LICENSE" \
+    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}

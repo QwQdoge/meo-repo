@@ -93,6 +93,7 @@ class RepositoryContractTests(unittest.TestCase):
         settings = (ROOT / "packages/meo-settings/PKGBUILD").read_text()
         runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
         self.assertIn("'meo-kde-runtime>=0.4.0beta3'", settings)
+        self.assertIn("'meo-icon-studio>=0.1.0'", settings)
         self.assertNotIn("'meo-desktop'", settings)
         self.assertIn('source/native/system', runtime)
         self.assertIn('source/qml/MeoKDE', runtime)
@@ -107,12 +108,41 @@ class RepositoryContractTests(unittest.TestCase):
             "native/third_party/material-color-utilities", "qml/MeoKDE",
         })
 
+    def test_icon_studio_has_one_package_owner_and_reviewed_runtime_inputs(self):
+        studio = (ROOT / "packages/meo-icon-studio/PKGBUILD").read_text()
+        hook = (ROOT / "packages/meo-icon-studio/meo-icon-studio.install").read_text()
+        icons = (ROOT / "packages/meo-icons/PKGBUILD").read_text()
+        catalog = json.loads((ROOT / "manifests/package-catalog.json").read_text())
+        self.assertIn("pkgname=meo-icon-studio", studio)
+        self.assertIn('"$srcdir/source/tools/icons/app_icon_studio.py"', studio)
+        self.assertIn("assets/icons/application-identities", studio)
+        self.assertIn('"$pkgdir/usr/bin/meo-app-icon-studio"', studio)
+        self.assertIn("/usr/share/meo-icon-studio/application-identities", studio)
+        self.assertIn("'python-pillow'", studio)
+        self.assertIn("'pyside6'", studio)
+        self.assertIn("'qt6-svg'", studio)
+        self.assertNotIn("meo-app-icon-studio", icons)
+        self.assertIn("backup=('usr/bin/meo-app-icon-studio')", studio)
+        self.assertIn("pacman -Qo", hook)
+        self.assertIn(".pacnew", hook)
+        self.assertNotIn("--overwrite", hook)
+        self.assertEqual(catalog["packages"]["meo-icon-studio"]["requires"], ["meo-icons"])
+        self.assertIn("meo-icon-studio", catalog["packages"]["meo-settings"]["requires"])
+
     def test_desktop_package_does_not_install_retired_standalone_dock(self):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
         smoke = (ROOT / "ci/smoke-installed.sh").read_text()
         self.assertNotIn("dynamic-color dock decoration", desktop)
         self.assertNotIn("org.meo.dock.desktop", desktop)
         self.assertNotIn("/usr/bin/meo-dock", smoke)
+
+    def test_kde_runtime_package_carries_the_weather_cache_producer(self):
+        runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
+        desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        self.assertIn('source/native/system', runtime)
+        self.assertIn('cmake --install build', runtime)
+        self.assertIn('meo-weather-refresh.timer', runtime)
+        self.assertIn('meo-weather-refresh.timer', desktop)
 
     def test_desktop_replaces_the_legacy_runtime_during_sysupgrade(self):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
@@ -209,6 +239,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("org.meo.OmniStore.json", recipe)
         self.assertEqual(manifest["executables"], ["/usr/lib/omnistore/frontend"])
         self.assertEqual(manifest["redirectUri"], "omnistore://auth/callback")
+        self.assertEqual(manifest["capabilities"], ["local_ai"])
         self.assertIn("Exec=/usr/bin/omnistore %u", desktop)
         self.assertIn("MimeType=x-scheme-handler/omnistore;", desktop)
         self.assertIn("license=('GPL-3.0-only')", recipe)

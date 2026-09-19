@@ -2,7 +2,7 @@
 # the immutable manifest.  The verifier is fetched from that exact source tag.
 pkgname=omnistore-bin
 pkgver=0.1.4beta3
-pkgrel=2
+pkgrel=3
 pkgdesc="OmniStore package management application"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'
@@ -17,7 +17,7 @@ conflicts=('omnistore' 'omnistore-git')
 makedepends=('patchelf')
 source=('org.meo.OmniStore.json'
         'omnistore.desktop')
-sha256sums=('e5265abe3df69aa6525c0351af21a143cc24b09c0cb037b3b061382e65410b9a'
+sha256sums=('33469846134a52b3acbf2450a4d4ff72f4dd304eb8c9a5cd0bfb64a70d21a576'
             '7cefb27397315c09d4f0efbea8c94dfa184420e7a6131902f7665f7280bdf621')
 
 prepare() {

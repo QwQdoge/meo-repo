@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=10
+pkgrel=11
 pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -109,6 +109,7 @@ package() {
   sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
   install -d "$pkgdir/usr/lib/systemd/user/default.target.wants" "$pkgdir/etc/fonts/conf.d"
   ln -s ../meo-dynamic-colors.path "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path"
+  ln -s ../meo-weather-refresh.timer "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-weather-refresh.timer"
   install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
   ln -s ../conf.avail/50-meo-fonts.conf "$pkgdir/etc/fonts/conf.d/50-meo-fonts.conf"
 }
