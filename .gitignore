@@ -1,2 +1,28 @@
 __pycache__/
 *.py[cod]
+
+# Local secrets and machine-specific state
+.env
+.env.*
+!.env.example
+!.env.sample
+credentials*.json
+secrets*.json
+*.key
+*.p12
+*.pfx
+.netrc
+.npmrc
+.pypirc
+
+# Editor / OS / temporary noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
