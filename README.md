@@ -62,12 +62,12 @@ credentials in this repository or in a validation archive.
 | --- | --- |
 | Package source, manifests, tests, and checked-in repository payload | Their existing owning directory in this repository. |
 | Contract tied to package/release code | docs/. |
-| Plans, audits, decisions, agent journals, and historical reports | /home/shekong/Documents/Obsidian Vault/MeoArch/Projects/meo-repo/ |
-| Reproducible build work | /home/shekong/Projects/outputs/meo-repo/build/ |
-| Install/repository handoff material | /home/shekong/Projects/outputs/meo-repo/install/ |
-| Validation evidence | /home/shekong/Projects/outputs/meo-repo/validation/<UTC-run-id>/ |
-| Candidate packages and publication bundles | /home/shekong/Projects/outputs/meo-repo/packages/ |
-| Disposable generated work | /home/shekong/Projects/outputs/meo-repo/tmp/ |
+| Plans, audits, decisions, agent journals, and historical reports | $MEO_DOCS_ROOT/Projects/meo-repo/ |
+| Reproducible build work | $MEO_OUTPUT_ROOT/meo-repo/build/ |
+| Install/repository handoff material | $MEO_OUTPUT_ROOT/meo-repo/install/ |
+| Validation evidence | $MEO_OUTPUT_ROOT/meo-repo/validation/<UTC-run-id>/ |
+| Candidate packages and publication bundles | $MEO_OUTPUT_ROOT/meo-repo/packages/ |
+| Disposable generated work | $MEO_OUTPUT_ROOT/meo-repo/tmp/ |
 
 Use a UTC run identifier in the form YYYY-MM-DDTHHMMSSZ-short-label, such as
 2026-08-26T143015Z-keyring-check. Use the
