@@ -9,12 +9,12 @@ channel="${3:-stable}"
 candidate="${4:-}"
 case "$channel" in
   stable)
-    case "$candidate" in ''|meoui-qml|meo-icons|meo-desktop|meo-kde-runtime|meo-account|meo-settings|omnistore-bin) ;; *)
+    case "$candidate" in ''|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin) ;; *)
       echo "Invalid Stable candidate" >&2; exit 2;;
     esac
     ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-desktop|meo-kde-runtime|meo-account|meo-settings|omnistore-bin) ;; *)
+    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin) ;; *)
       echo "Beta build requires one reviewed core package candidate" >&2; exit 2;;
     esac
     ;;

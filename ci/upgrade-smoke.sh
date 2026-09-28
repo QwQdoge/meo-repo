@@ -118,6 +118,21 @@ for directory in / /etc /usr /var; do
 done
 pacman --root "$test_root" -Q meo-desktop >/dev/null
 ! pacman --root "$test_root" -Qq | grep -Fx meo-kde-runtime >/dev/null
+has_meo_login_manager="$(python3 -c 'import json,sys; print("true" if "meo-plasma-login-manager" in json.load(open(sys.argv[1])).get("components", {}) else "false")' "$manifest")"
+if [ "$has_meo_login_manager" = true ]; then
+  pacman --root "$test_root" -Q meo-plasma-login-manager >/dev/null
+  ! pacman --root "$test_root" -Q plasma-login-manager >/dev/null 2>&1
+  login_owner="$(pacman --root "$test_root" -Qo /usr/bin/plasmalogin)"
+  case "$login_owner" in
+    "/usr/bin/plasmalogin is owned by meo-plasma-login-manager "*) ;;
+    *) echo "Upgrade did not transfer plasmalogin ownership to the Meo package" >&2; exit 3 ;;
+  esac
+  login_check="$(pacman --root "$test_root" -Qkk meo-plasma-login-manager)"
+  grep -F '0 altered files' <<<"$login_check" >/dev/null || {
+    printf '%s\n' "$login_check" >&2
+    exit 3
+  }
+fi
 test "$(sha256sum "$test_root/$decoration_plugin" | awk '{print $1}')" = "$candidate_decoration_sha256"
 desktop_check="$(pacman --root "$test_root" -Qkk meo-desktop)"
 grep -F '0 altered files' <<<"$desktop_check" >/dev/null || {

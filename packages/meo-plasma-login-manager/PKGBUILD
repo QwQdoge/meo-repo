@@ -1,7 +1,7 @@
-pkgname=plasma-login-manager
+pkgname=meo-plasma-login-manager
 pkgver=6.7.5
 pkgrel=1
-pkgdesc="MeoArch's narrowly branded Plasma Login Manager fork"
+pkgdesc="MeoArch Plasma Login Manager fork"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'
 license=('GPL-2.0-or-later')
@@ -12,6 +12,9 @@ depends=('glibc' 'kauth' 'kcmutils' 'kconfig' 'kcoreaddons' 'kdbusaddons'
          'systemd-libs')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools')
 options=('!debug')
+provides=('plasma-login-manager=6.7.5')
+conflicts=('plasma-login-manager')
+replaces=('plasma-login-manager')
 source=()
 sha256sums=()
 

@@ -1,21 +1,124 @@
 {
   "schemaVersion": 1,
-  "generation": "2026.08",
+  "generation": "2026.09",
   "architecture": "x86_64",
   "repositoryBaseUrl": "https://packages.meoarch.org",
-  "repositoryNames": {"stable": "meo", "beta": "meo-beta"},
-  "bootstrapPackages": ["meo-keyring", "meo-mirrorlist"],
-  "channelPackages": {"stable": "meo-channel-stable", "beta": "meo-channel-beta"},
+  "repositoryNames": {
+    "stable": "meo",
+    "beta": "meo-beta"
+  },
+  "bootstrapPackages": [
+    "meo-keyring",
+    "meo-mirrorlist"
+  ],
+  "channelPackages": {
+    "stable": "meo-channel-stable",
+    "beta": "meo-channel-beta"
+  },
   "packages": {
-    "meoui-qml": {"requiredBy": ["desktop"], "profiles": ["recommended", "minimal"]},
-    "meo-icons": {"requiredBy": ["desktop"], "profiles": ["recommended", "minimal"]},
-    "meo-desktop": {"requires": ["meoui-qml", "meo-icons"], "profiles": ["recommended", "minimal"]},
-    "meo-account": {"requires": ["meoui-qml"], "profiles": ["recommended"]},
-    "meo-icon-studio": {"requires": ["meo-icons"], "profiles": ["recommended"]},
-    "meo-settings": {"requires": ["meo-account", "meo-icon-studio", "meoui-qml", "meo-desktop"], "profiles": ["recommended"]},
-    "omnistore-bin": {"requires": ["meo-account"], "profiles": ["recommended"]},
-    "meo-core-meta": {"requires": ["meo-desktop"], "profiles": ["recommended", "minimal"], "kind": "meta"},
-    "meo-apps-meta": {"requires": ["meo-account", "meo-settings", "omnistore-bin"], "profiles": ["recommended"], "kind": "meta"},
-    "meo-recommended-meta": {"requires": ["meo-core-meta", "meo-apps-meta"], "profiles": ["recommended"], "kind": "meta"}
+    "meoui-qml": {
+      "requiredBy": [
+        "desktop"
+      ],
+      "profiles": [
+        "recommended",
+        "minimal"
+      ]
+    },
+    "meo-icons": {
+      "requiredBy": [
+        "desktop"
+      ],
+      "profiles": [
+        "recommended",
+        "minimal"
+      ]
+    },
+    "meo-plasma-login-manager": {
+      "requiredBy": [
+        "desktop"
+      ],
+      "profiles": [
+        "recommended",
+        "minimal"
+      ]
+    },
+    "meo-desktop": {
+      "requires": [
+        "meoui-qml",
+        "meo-icons",
+        "meo-plasma-login-manager"
+      ],
+      "profiles": [
+        "recommended",
+        "minimal"
+      ]
+    },
+    "meo-account": {
+      "requires": [
+        "meoui-qml"
+      ],
+      "profiles": [
+        "recommended"
+      ]
+    },
+    "meo-icon-studio": {
+      "requires": [
+        "meo-icons"
+      ],
+      "profiles": [
+        "recommended"
+      ]
+    },
+    "meo-settings": {
+      "requires": [
+        "meo-account",
+        "meo-icon-studio",
+        "meoui-qml",
+        "meo-desktop"
+      ],
+      "profiles": [
+        "recommended"
+      ]
+    },
+    "omnistore-bin": {
+      "requires": [
+        "meo-account"
+      ],
+      "profiles": [
+        "recommended"
+      ]
+    },
+    "meo-core-meta": {
+      "requires": [
+        "meo-desktop"
+      ],
+      "profiles": [
+        "recommended",
+        "minimal"
+      ],
+      "kind": "meta"
+    },
+    "meo-apps-meta": {
+      "requires": [
+        "meo-account",
+        "meo-settings",
+        "omnistore-bin"
+      ],
+      "profiles": [
+        "recommended"
+      ],
+      "kind": "meta"
+    },
+    "meo-recommended-meta": {
+      "requires": [
+        "meo-core-meta",
+        "meo-apps-meta"
+      ],
+      "profiles": [
+        "recommended"
+      ],
+      "kind": "meta"
+    }
   }
 }

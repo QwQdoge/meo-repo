@@ -437,6 +437,65 @@ class RepositoryContractTests(unittest.TestCase):
             },
         )
 
+    def test_release_generation_matches_generation_control_package_versions(self):
+        catalog = json.loads((ROOT / "manifests/package-catalog.json").read_text())
+        generation = catalog["generation"]
+        for name in ("meo-release", "meo-core-meta", "meo-apps-meta", "meo-recommended-meta"):
+            recipe = (ROOT / "packages" / name / "PKGBUILD").read_text()
+            version = re.search(r"^pkgver=([^\s#]+)$", recipe, re.MULTILINE)
+            self.assertIsNotNone(version, name)
+            self.assertEqual(version.group(1).strip("'\\\""), generation, name)
+
+    def test_next_train_does_not_reuse_any_published_stable_core_version(self):
+        published = {}
+        for path in sorted((ROOT / "manifests/stable").glob("*.json")):
+            manifest = json.loads(path.read_text())
+            for name, component in manifest.get("components", {}).items():
+                published.setdefault(name, set()).add(component["expectedVersion"])
+
+        for name, versions in published.items():
+            recipe_path = ROOT / "packages" / name / "PKGBUILD"
+            if not recipe_path.exists():
+                continue
+            recipe = recipe_path.read_text()
+            version = re.search(r"^pkgver=([^\s#]+)$", recipe, re.MULTILINE)
+            release = re.search(r"^pkgrel=([^\s#]+)$", recipe, re.MULTILINE)
+            self.assertIsNotNone(version, name)
+            self.assertIsNotNone(release, name)
+            current = (
+                version.group(1).strip("'\\\"")
+                + "-"
+                + release.group(1).strip("'\\\"")
+            )
+            self.assertNotIn(
+                current,
+                versions,
+                f"{name} would reuse an already-published Stable package filename",
+            )
+
+    def test_next_train_components_are_first_class_release_packages(self):
+        login = (ROOT / "packages/meo-plasma-login-manager/PKGBUILD").read_text()
+        desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
+        build = (ROOT / "ci/build-release.sh").read_text()
+        smoke = (ROOT / "ci/remote-smoke.sh").read_text()
+        catalog = json.loads((ROOT / "manifests/package-catalog.json").read_text())
+        validator = (ROOT / "scripts/validate_manifest.py").read_text()
+
+        self.assertIn("pkgname=meo-plasma-login-manager", login)
+        self.assertIn("provides=('plasma-login-manager=6.7.5')", login)
+        self.assertIn("conflicts=('plasma-login-manager')", login)
+        self.assertIn("replaces=('plasma-login-manager')", login)
+        self.assertIn("'meo-plasma-login-manager'", desktop)
+        self.assertNotIn("'konsole' 'plasma-login-manager'", desktop)
+        self.assertIn("meo-plasma-login-manager|meo-desktop", build)
+        self.assertIn("meo-icon-studio|meo-settings", build)
+        self.assertIn("meo-plasma-login-manager|meo-desktop", smoke)
+        self.assertIn("meo-icon-studio|meo-settings", smoke)
+        self.assertIn("meo-plasma-login-manager", catalog["packages"])
+        self.assertIn("meo-plasma-login-manager", catalog["packages"]["meo-desktop"]["requires"])
+        self.assertIn('NEXT_COMPONENTS = {"meo-icon-studio", "meo-plasma-login-manager"}', validator)
+        self.assertFalse((ROOT / "packages/plasma-login-manager/PKGBUILD").exists())
+
     def test_meoui_consumers_require_the_latest_beta_runtime(self):
         for package in ("meo-kde-runtime", "meo-desktop", "meo-settings", "meo-account"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
