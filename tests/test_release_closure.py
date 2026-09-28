@@ -44,7 +44,7 @@ class ReleaseClosureTests(unittest.TestCase):
         }
         return manifest, catalog
 
-    def test_full_release_requires_the_complete_catalog_closure(self):
+    def test_full_release_requires_the_exact_catalog_closure(self):
         with tempfile.TemporaryDirectory() as directory:
             recipes = Path(directory)
             manifest, catalog = self.fixture(recipes)
@@ -52,6 +52,22 @@ class ReleaseClosureTests(unittest.TestCase):
             del manifest["components"]["helper"]
             with self.assertRaisesRegex(ValueError, "helper"):
                 closure.validate(manifest, catalog, recipes)
+            manifest, catalog = self.fixture(recipes)
+            manifest["components"]["unrelated"] = {"expectedVersion": "9.9-9"}
+            with self.assertRaisesRegex(ValueError, "outside the package catalog closure"):
+                closure.validate(manifest, catalog, recipes)
+
+    def test_full_train_build_order_comes_from_catalog_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            recipes = Path(directory)
+            manifest, catalog = self.fixture(recipes)
+            self.assertEqual(
+                closure.component_build_order(catalog, "recommended"),
+                ["helper", "core"],
+            )
+            build = (ROOT / "ci/build-release.sh").read_text()
+            self.assertIn("--print-build-order", build)
+            self.assertNotIn("order = ('meoui-qml'", build)
 
     def test_full_release_rejects_generation_and_recipe_drift(self):
         with tempfile.TemporaryDirectory() as directory:
