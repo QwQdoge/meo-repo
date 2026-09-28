@@ -9,9 +9,9 @@ on:
         type: choice
         options: [stable, beta]
       manifest:
-        description: Reviewed immutable manifest path.
+        description: Reviewed immutable manifest path for this exact release attempt; no historical manifest is selected automatically.
         required: true
-        default: manifests/stable/2026.09.3.json
+        type: string
       candidate:
         description: Required for Beta; optional for an atomic Stable package hotfix.
         required: false
@@ -42,8 +42,25 @@ jobs:
         run: |
           sudo -u builder python scripts/validate_manifest.py "$RELEASE_MANIFEST" --channel "$RELEASE_CHANNEL"
           sudo -u builder python -m unittest discover -s tests -v
+      - name: Resolve private source requirements
+        id: source-requirements
+        env:
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+          RELEASE_CANDIDATE: ${{ inputs.candidate }}
+        run: |
+          needs_account="$(python - <<'PY'
+          import json
+          import os
+          manifest = json.load(open(os.environ["RELEASE_MANIFEST"], encoding="utf-8"))
+          candidate = os.environ.get("RELEASE_CANDIDATE", "")
+          print("true" if candidate == "meo-account"
+                or (not candidate and "meo-account" in manifest.get("components", {}))
+                else "false")
+          PY
+          )"
+          printf 'needs_account=%s\n' "$needs_account" >>"$GITHUB_OUTPUT"
       - name: Install read-only private Account source credential
-        if: inputs.candidate == 'meo-account'
+        if: steps.source-requirements.outputs.needs_account == 'true'
         env:
           MEO_ACCOUNT_DEPLOY_KEY: ${{ secrets.MEO_ACCOUNT_DEPLOY_KEY }}
         run: |
@@ -64,11 +81,14 @@ jobs:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
           RELEASE_CANDIDATE: ${{ inputs.candidate }}
-          MEO_ACCOUNT_SOURCE_SSH: ${{ inputs.candidate == 'meo-account' && '1' || '0' }}
+          MEO_ACCOUNT_SOURCE_SSH: ${{ steps.source-requirements.outputs.needs_account == 'true' && '1' || '0' }}
         run: |
           sudo --preserve-env=MEO_ACCOUNT_SOURCE_SSH -u builder ci/build-release.sh \
             "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output" \
             "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE"
+      - name: Remove private Account source credential
+        if: always() && steps.source-requirements.outputs.needs_account == 'true'
+        run: rm -rf -- /home/builder/.ssh
       - name: Run package metadata checks
         run: bash ci/check-package-metadata.sh build-output/packages
       - name: Upgrade previous public system through the unsigned candidate

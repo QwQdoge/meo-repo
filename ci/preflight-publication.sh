@@ -14,6 +14,10 @@ contract="$artifact_dir/artifacts.json"
 packages="$artifact_dir/packages"
 python3 "$repo_root/scripts/artifact_manifest.py" verify \
   --contract "$contract" --manifest "$manifest" --packages "$packages"
+contract_candidate="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("candidate") or "")' "$contract")"
+closure_args=("$manifest")
+[ -n "$contract_candidate" ] && closure_args+=(--candidate "$contract_candidate")
+python3 "$repo_root/scripts/validate_release_closure.py" "${closure_args[@]}"
 python3 "$repo_root/scripts/verify_package_metadata.py" \
   --contract "$contract" --packages "$packages"
 contract_channel="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["channel"])' "$contract")"

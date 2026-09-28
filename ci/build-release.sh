@@ -29,6 +29,9 @@ cp -- /etc/makepkg.conf "$output/makepkg.conf"
 printf '\nOPTIONS+=(\x27!debug\x27)\n' >>"$output/makepkg.conf"
 
 python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel"
+closure_args=("$manifest")
+[ -n "$candidate" ] && closure_args+=(--candidate "$candidate")
+python3 "$repo_root/scripts/validate_release_closure.py" "${closure_args[@]}"
 if [ -n "$candidate" ]; then
   # A sparse candidate run verifies the immutable source it actually consumes.
   # This keeps unrelated private components from weakening or blocking a
@@ -90,14 +93,13 @@ build_context() {
 if [ -n "$candidate" ]; then
   core_packages=("$candidate")
 elif [ "$channel" = stable ]; then
-  core_output="$(python3 - "$manifest" <<'PY'
-import json, sys
-manifest = json.load(open(sys.argv[1]))
-order = ('meoui-qml', 'meo-icons', 'meo-desktop', 'meo-account', 'meo-settings', 'omnistore-bin')
-print(*(name for name in order if name in manifest['components']), sep='\n')
-PY
-)"
-  mapfile -t core_packages <<<"$core_output"
+  mapfile -t core_packages < <(
+    python3 "$repo_root/scripts/validate_release_closure.py"       "$manifest" --print-build-order
+  )
+  [ "${#core_packages[@]}" -gt 0 ] || {
+    echo "Stable package closure produced no buildable components" >&2
+    exit 3
+  }
 fi
 for package in "${core_packages[@]}"; do
   context="$output/contexts/$package"
