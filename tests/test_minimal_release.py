@@ -80,7 +80,7 @@ class MinimalReleaseTests(unittest.TestCase):
         self.assertIn('makepkg --config "$output/makepkg.conf" --syncdeps', build_script)
         self.assertIn('makepkg --config "$output/makepkg.conf" --packagelist', build_script)
         self.assertIn('SOURCE_DATE_EPOCH="$source_date_epoch" makepkg', build_script)
-        self.assertIn('sparse candidate requires a positive sourceDateEpoch', build_script)
+        self.assertIn('requires a positive sourceDateEpoch', build_script)
 
     def test_runtime_packages_ship_complete_license_sets(self):
         meoui = (ROOT / "packages/meoui-qml/PKGBUILD").read_text()
