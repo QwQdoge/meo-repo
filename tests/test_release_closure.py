@@ -113,6 +113,12 @@ class ReleaseClosureTests(unittest.TestCase):
             "MEO_ACCOUNT_SOURCE_SSH: ${{ steps.source-requirements.outputs.needs_account == 'true' && '1' || '0' }}",
             workflow,
         )
+        self.assertIn("if: always() && steps.source-requirements.outputs.needs_account == 'true'", workflow)
+        self.assertIn("rm -rf -- /home/builder/.ssh", workflow)
+        self.assertLess(
+            workflow.index("Remove private Account source credential"),
+            workflow.index("Run package metadata checks"),
+        )
         self.assertNotIn("if: inputs.candidate == 'meo-account'", workflow)
 
     def test_workflow_requires_explicit_manifest_and_preflights_closure_twice(self):
