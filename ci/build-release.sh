@@ -29,6 +29,9 @@ cp -- /etc/makepkg.conf "$output/makepkg.conf"
 printf '\nOPTIONS+=(\x27!debug\x27)\n' >>"$output/makepkg.conf"
 
 python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel"
+closure_args=("$manifest")
+[ -n "$candidate" ] && closure_args+=(--candidate "$candidate")
+python3 "$repo_root/scripts/validate_release_closure.py" "${closure_args[@]}"
 if [ -n "$candidate" ]; then
   # A sparse candidate run verifies the immutable source it actually consumes.
   # This keeps unrelated private components from weakening or blocking a
