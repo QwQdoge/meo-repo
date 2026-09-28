@@ -38,8 +38,8 @@ class ReleaseClosureTests(unittest.TestCase):
             "generation": "next",
             "profile": "recommended",
             "components": {
-                "core": {"expectedVersion": "1.0-2"},
-                "helper": {"expectedVersion": "2.0-1"},
+                "core": {"expectedVersion": "1.0-2", "sourceDateEpoch": 100},
+                "helper": {"expectedVersion": "2.0-1", "sourceDateEpoch": 200},
             },
         }
         return manifest, catalog
@@ -80,6 +80,27 @@ class ReleaseClosureTests(unittest.TestCase):
             manifest["components"]["core"]["expectedVersion"] = "1.0-1"
             with self.assertRaisesRegex(ValueError, "recipe is 1.0-2"):
                 closure.validate(manifest, catalog, recipes)
+
+    def test_every_core_component_requires_a_positive_source_date_epoch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            recipes = Path(directory)
+            manifest, catalog = self.fixture(recipes)
+            del manifest["components"]["helper"]["sourceDateEpoch"]
+            with self.assertRaisesRegex(ValueError, "helper requires a positive sourceDateEpoch"):
+                closure.validate(manifest, catalog, recipes)
+
+            manifest, catalog = self.fixture(recipes)
+            manifest["components"]["core"]["sourceDateEpoch"] = 0
+            with self.assertRaisesRegex(ValueError, "core requires a positive sourceDateEpoch"):
+                closure.validate(manifest, catalog, recipes, candidate="core")
+
+    def test_build_applies_component_epochs_and_clears_them_before_controls(self):
+        build = (ROOT / "ci/build-release.sh").read_text()
+        self.assertIn("component_source_date_epoch()", build)
+        self.assertIn('source_date_epoch="$(component_source_date_epoch "$package")"', build)
+        self.assertIn('SOURCE_DATE_EPOCH="$source_date_epoch" makepkg', build)
+        stable = build.split('if [ "$channel" = stable ] && [ -z "$candidate" ]; then', 1)[1]
+        self.assertIn('source_date_epoch=""', stable)
 
     def test_sparse_candidate_checks_only_the_package_being_built(self):
         with tempfile.TemporaryDirectory() as directory:
