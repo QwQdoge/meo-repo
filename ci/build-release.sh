@@ -90,6 +90,76 @@ build_context() {
   done
 }
 
+
+control_verify_home="$output/control-verify-gnupg"
+reused_control_dir="$output/reused-controls"
+install -d -m700 "$control_verify_home" "$reused_control_dir"
+GNUPGHOME="$control_verify_home" gpg --batch --import   "$repo_root/packages/meo-keyring/files/meo.gpg" >/dev/null 2>&1
+
+control_package_filename() {
+  local context="$1"
+  local files=()
+  while IFS= read -r package_file; do files+=("$package_file"); done < <(
+    cd "$context"
+    run_makepkg --config "$output/makepkg.conf" --packagelist
+  )
+  [ "${#files[@]}" -eq 1 ] || {
+    echo "Control package must produce exactly one package file: $context" >&2
+    return 3
+  }
+  basename -- "${files[0]}"
+}
+
+reuse_or_build_control() {
+  local package="$1"
+  local context="$2"
+  local filename remote_url local_package local_signature http_code expected_version actual_identity
+
+  filename="$(control_package_filename "$context")"
+  remote_url="https://packages.meoarch.org/meo/os/x86_64/$filename"
+  local_package="$reused_control_dir/$filename"
+  local_signature="$local_package.sig"
+
+  if ! http_code="$(curl --silent --show-error --location       --output "$local_package" --write-out '%{http_code}' "$remote_url")"; then
+    echo "Failed to check the existing signed control package: $filename" >&2
+    return 4
+  fi
+
+  case "$http_code" in
+    200)
+      curl --fail --silent --show-error --location         "$remote_url.sig" --output "$local_signature" || {
+          echo "Existing control package is missing a valid detached signature: $filename" >&2
+          return 4
+        }
+      GNUPGHOME="$control_verify_home" gpg --batch --verify         "$local_signature" "$local_package" >/dev/null 2>&1 || {
+          echo "Existing control package signature verification failed: $filename" >&2
+          return 4
+        }
+      expected_version="$(PYTHONPATH="$repo_root/scripts" python3 - "$package" <<'PY'
+import sys
+from artifact_manifest import literal_recipe_version
+print(literal_recipe_version(sys.argv[1]))
+PY
+)"
+      actual_identity="$(LC_ALL=C pacman -Qp "$local_package")"
+      [ "$actual_identity" = "$package $expected_version" ] || {
+        echo "Existing control package identity does not match its reviewed recipe: $filename" >&2
+        return 4
+      }
+      cp -- "$local_package" "$output/packages/"
+      echo "Reusing already-published signed control package: $filename"
+      ;;
+    404)
+      rm -f -- "$local_package" "$local_signature"
+      build_context "$package" "$context"
+      ;;
+    *)
+      echo "Unexpected HTTP status while checking control package $filename: $http_code" >&2
+      return 4
+      ;;
+  esac
+}
+
 if [ -n "$candidate" ]; then
   core_packages=("$candidate")
 elif [ "$channel" = stable ]; then
@@ -124,7 +194,7 @@ PY
     if [ "$package" = meo-keyring ]; then
       python3 "$repo_root/scripts/render_keyring_recipe.py" "$context"
     fi
-    build_context "$package" "$context"
+    reuse_or_build_control "$package" "$context"
     if [ "$package" != meo-channel-beta ]; then
       sudo pacman -U --noconfirm "$output/packages/$package-"*.pkg.tar.*
     fi
