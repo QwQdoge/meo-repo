@@ -93,14 +93,13 @@ build_context() {
 if [ -n "$candidate" ]; then
   core_packages=("$candidate")
 elif [ "$channel" = stable ]; then
-  core_output="$(python3 - "$manifest" <<'PY'
-import json, sys
-manifest = json.load(open(sys.argv[1]))
-order = ('meoui-qml', 'meo-icons', 'meo-desktop', 'meo-account', 'meo-settings', 'omnistore-bin')
-print(*(name for name in order if name in manifest['components']), sep='\n')
-PY
-)"
-  mapfile -t core_packages <<<"$core_output"
+  mapfile -t core_packages < <(
+    python3 "$repo_root/scripts/validate_release_closure.py"       "$manifest" --print-build-order
+  )
+  [ "${#core_packages[@]}" -gt 0 ] || {
+    echo "Stable package closure produced no buildable components" >&2
+    exit 3
+  }
 fi
 for package in "${core_packages[@]}"; do
   context="$output/contexts/$package"
