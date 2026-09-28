@@ -104,6 +104,9 @@ def validate(
         actual = recipe_version(candidate, recipe_root)
         if expected != actual:
             fail(f"{candidate} recipe is {actual}, manifest expects {expected}")
+        epoch = component.get("sourceDateEpoch")
+        if isinstance(epoch, bool) or not isinstance(epoch, int) or epoch <= 0:
+            fail(f"{candidate} requires a positive sourceDateEpoch")
         return
 
     profile = str(manifest.get("profile", "recommended"))
@@ -133,6 +136,9 @@ def validate(
         actual = recipe_version(name, recipe_root)
         if expected != actual:
             fail(f"{name} recipe is {actual}, manifest expects {expected}")
+        epoch = component.get("sourceDateEpoch")
+        if isinstance(epoch, bool) or not isinstance(epoch, int) or epoch <= 0:
+            fail(f"{name} requires a positive sourceDateEpoch")
 
 
 def main() -> None:

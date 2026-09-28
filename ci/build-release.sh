@@ -43,10 +43,9 @@ fi
 python3 "$repo_root/scripts/validate_keyring_payload.py" "$repo_root/packages/meo-keyring/files"
 
 source_date_epoch=""
-if [ -n "$candidate" ]; then
-  # A sparse release must be reproducible from an immutable timestamp recorded
-  # alongside the exact source checksum. Do not inherit the build runner clock.
-  source_date_epoch="$(python3 - "$manifest" "$candidate" <<'PY'
+
+component_source_date_epoch() {
+  python3 - "$manifest" "$1" <<'PY'
 import json
 import sys
 
@@ -54,13 +53,10 @@ manifest = json.load(open(sys.argv[1], encoding="utf-8"))
 component = manifest["components"][sys.argv[2]]
 epoch = component.get("sourceDateEpoch")
 if isinstance(epoch, bool) or not isinstance(epoch, int) or epoch <= 0:
-    raise SystemExit(
-        f"{sys.argv[2]} sparse candidate requires a positive sourceDateEpoch"
-    )
+    raise SystemExit(f"{sys.argv[2]} requires a positive sourceDateEpoch")
 print(epoch)
 PY
-)"
-fi
+}
 
 run_makepkg() {
   if [ -n "$source_date_epoch" ]; then
@@ -167,6 +163,7 @@ elif [ "$channel" = stable ]; then
   }
 fi
 for package in "${core_packages[@]}"; do
+  source_date_epoch="$(component_source_date_epoch "$package")"
   context="$output/contexts/$package"
   python3 "$repo_root/scripts/stage_component.py" "$manifest" "$package" "$context"
   build_context "$package" "$context" --noextract
@@ -176,6 +173,10 @@ for package in "${core_packages[@]}"; do
 done
 
 if [ "$channel" = stable ] && [ -z "$candidate" ]; then
+  # Control packages are either reused byte-for-byte from the signed Stable
+  # repository or built from their own static recipes. Never leak the final
+  # core component's deterministic timestamp into those package builds.
+  source_date_epoch=""
   control_verify_home="$output/control-verify-gnupg"
   reused_control_dir="$output/reused-controls"
   install -d -m700 "$control_verify_home" "$reused_control_dir"
