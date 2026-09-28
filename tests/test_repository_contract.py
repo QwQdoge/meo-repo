@@ -440,7 +440,7 @@ class RepositoryContractTests(unittest.TestCase):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
             self.assertIn("meoui-qml>=1.0.4beta1", recipe, package)
 
-    def test_latest_stable_manifest_is_the_default_release_train(self):
+    def test_latest_published_stable_manifest_is_smoke_only_not_a_release_default(self):
         manifest = json.loads((ROOT / "manifests/stable/2026.09.3.json").read_text())
         self.assertEqual(manifest["release"], "2026.09.3")
         self.assertEqual(manifest["profile"], "recommended")
@@ -457,7 +457,8 @@ class RepositoryContractTests(unittest.TestCase):
         )
         release_workflow = (ROOT / ".github/workflows/release.yml").read_text()
         smoke_workflow = (ROOT / ".github/workflows/repository-smoke.yml").read_text()
-        self.assertIn("default: manifests/stable/2026.09.3.json", release_workflow)
+        manifest_input = release_workflow.split("manifest:", 1)[1].split("candidate:", 1)[0]
+        self.assertNotIn("default:", manifest_input)
         self.assertIn("default: manifests/stable/2026.09.3.json", smoke_workflow)
 
     def test_release_channel_rejects_manifest_from_the_other_channel(self):
