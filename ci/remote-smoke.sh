@@ -6,15 +6,36 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 channel="${1:?stable or beta is required}"
 candidate="${2:-}"
 manifest="${3:?reviewed manifest is required}"
+temporary_keyring_paths=()
+cleanup_keyring_bootstrap() {
+  local path
+  for path in "${temporary_keyring_paths[@]}"; do
+    rm -f -- "$path"
+  done
+  temporary_keyring_paths=()
+}
 for file in meo.gpg meo-trusted meo-revoked; do
-  [ -s "$repo_root/packages/meo-keyring/files/$file" ] || { echo "Missing public keyring file: $file" >&2; exit 2; }
+  source_file="$repo_root/packages/meo-keyring/files/$file"
+  destination="/usr/share/pacman/keyrings/$file"
+  [ -s "$source_file" ] || { echo "Missing public keyring file: $file" >&2; exit 2; }
+  if [ -e "$destination" ] || [ -L "$destination" ]; then
+    echo "Refusing pre-existing Meo keyring bootstrap path: $destination" >&2
+    exit 2
+  fi
+done
+trap 'cleanup_keyring_bootstrap' EXIT
+for file in meo.gpg meo-trusted meo-revoked; do
+  destination="/usr/share/pacman/keyrings/$file"
+  install -Dm644 "$repo_root/packages/meo-keyring/files/$file" "$destination"
+  temporary_keyring_paths+=("$destination")
 done
 pacman-key --init
-pacman-key --populate archlinux
-pacman-key --populate-from "$repo_root/packages/meo-keyring/files" --populate meo
+pacman-key --populate archlinux meo
+# The package transaction below installs meo-keyring and must own these paths.
+cleanup_keyring_bootstrap
 
 config="$(mktemp)"
-trap 'rm -f -- "$config"' EXIT
+trap 'cleanup_keyring_bootstrap; rm -f -- "$config"' EXIT
 cp -- /etc/pacman.conf "$config"
 case "$channel" in
   stable)
@@ -71,7 +92,7 @@ done
 systemd-tmpfiles --create --remove
 if [ "$candidate" = meo-settings ]; then
   stale_qml_root="$(mktemp -d)"
-  trap 'rm -f -- "$config"; rm -rf -- "$stale_qml_root"' EXIT
+  trap 'cleanup_keyring_bootstrap; rm -f -- "$config"; rm -rf -- "$stale_qml_root"' EXIT
   mkdir -p "$stale_qml_root/MeoUI"
   printf 'module MeoUI\n' >"$stale_qml_root/MeoUI/qmldir"
   QML_IMPORT_PATH="$stale_qml_root" QML2_IMPORT_PATH="$stale_qml_root" \
