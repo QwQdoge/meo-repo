@@ -440,16 +440,52 @@ class RepositoryContractTests(unittest.TestCase):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
             self.assertIn("meoui-qml>=1.0.4beta1", recipe, package)
 
-    def test_latest_stable_manifest_pins_the_migration_train(self):
-        manifest = json.loads((ROOT / "manifests/stable/2026.09.2.json").read_text())
-        self.assertEqual(manifest["release"], "2026.09.2")
-        self.assertEqual(manifest["profile"], "minimal")
+    def test_latest_stable_manifest_is_the_default_release_train(self):
+        manifest = json.loads((ROOT / "manifests/stable/2026.09.3.json").read_text())
+        self.assertEqual(manifest["release"], "2026.09.3")
+        self.assertEqual(manifest["profile"], "recommended")
         self.assertEqual(
             {name: component["expectedVersion"] for name, component in manifest["components"].items()},
-            {"meoui-qml": "1.0.3-4", "meo-icons": "0.4.0-3", "meo-desktop": "0.4.0-7"},
+            {
+                "meoui-qml": "1.0.4beta1-2",
+                "meo-icons": "0.4.0-3",
+                "meo-desktop": "0.4.0-7",
+                "meo-account": "0.1.0-5",
+                "meo-settings": "0.2.0beta4-1",
+                "omnistore-bin": "0.1.4beta3-1",
+            },
         )
-        workflow = (ROOT / ".github/workflows/release.yml").read_text()
-        self.assertIn("default: manifests/stable/2026.09.2.json", workflow)
+        release_workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        smoke_workflow = (ROOT / ".github/workflows/repository-smoke.yml").read_text()
+        self.assertIn("default: manifests/stable/2026.09.3.json", release_workflow)
+        self.assertIn("default: manifests/stable/2026.09.3.json", smoke_workflow)
+
+    def test_release_channel_rejects_manifest_from_the_other_channel(self):
+        validator = ROOT / "scripts/validate_manifest.py"
+        stable_manifest = ROOT / "manifests/stable/2026.09.3.json"
+        beta_manifest = ROOT / "manifests/beta/2026.09-beta.7.json"
+
+        stable_ok = subprocess.run(
+            [sys.executable, validator, stable_manifest, "--channel", "stable"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(stable_ok.returncode, 0, stable_ok.stderr)
+
+        wrong_channel = subprocess.run(
+            [sys.executable, validator, stable_manifest, "--channel", "beta"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(wrong_channel.returncode, 0)
+        self.assertIn("manifests/beta/", wrong_channel.stderr)
+
+        beta_ok = subprocess.run(
+            [sys.executable, validator, beta_manifest, "--channel", "beta"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(beta_ok.returncode, 0, beta_ok.stderr)
 
     def test_remote_settings_smoke_covers_stale_user_qml_imports(self):
         smoke = (ROOT / "ci/remote-smoke.sh").read_text()

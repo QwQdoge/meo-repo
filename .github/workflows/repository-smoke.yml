@@ -11,7 +11,7 @@ on:
       manifest:
         description: Reviewed manifest describing the published versions.
         required: true
-        default: manifests/stable/2026.09.2.json
+        default: manifests/stable/2026.09.3.json
       candidate:
         description: Sparse candidate package, when verifying a hotfix publication.
         required: false

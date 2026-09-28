@@ -9,6 +9,7 @@ manifest="$(realpath -e -- "${1:?manifest path is required}")"
 artifact_dir="$(realpath -e -- "${2:?artifact directory is required}")"
 channel="${3:?stable or beta channel is required}"
 case "$channel" in stable) repository=meo ;; beta) repository=meo-beta ;; *) echo "Invalid channel" >&2; exit 2 ;; esac
+python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel"
 
 : "${MEO_SIGNING_KEY_FINGERPRINT:?protected signing fingerprint is required}"
 : "${R2_ENDPOINT:?R2 S3 endpoint is required}"

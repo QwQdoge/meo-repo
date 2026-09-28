@@ -6,6 +6,7 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 channel="${1:?stable or beta is required}"
 candidate="${2:-}"
 manifest="${3:?reviewed manifest is required}"
+python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel"
 temporary_keyring_paths=()
 cleanup_keyring_bootstrap() {
   local path

@@ -11,7 +11,7 @@ on:
       manifest:
         description: Reviewed immutable manifest path.
         required: true
-        default: manifests/stable/2026.09.2.json
+        default: manifests/stable/2026.09.3.json
       candidate:
         description: Required for Beta; optional for an atomic Stable package hotfix.
         required: false
@@ -38,8 +38,9 @@ jobs:
       - name: Validate release contracts
         env:
           RELEASE_MANIFEST: ${{ inputs.manifest }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
         run: |
-          sudo -u builder python scripts/validate_manifest.py "$RELEASE_MANIFEST"
+          sudo -u builder python scripts/validate_manifest.py "$RELEASE_MANIFEST" --channel "$RELEASE_CHANNEL"
           sudo -u builder python -m unittest discover -s tests -v
       - name: Install read-only private Account source credential
         if: inputs.candidate == 'meo-account'
