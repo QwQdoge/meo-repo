@@ -9,9 +9,9 @@ on:
         type: choice
         options: [stable, beta]
       manifest:
-        description: Reviewed immutable manifest path.
+        description: Reviewed immutable manifest path for this exact release attempt; no historical manifest is selected automatically.
         required: true
-        default: manifests/stable/2026.09.3.json
+        type: string
       candidate:
         description: Required for Beta; optional for an atomic Stable package hotfix.
         required: false
