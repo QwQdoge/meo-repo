@@ -93,6 +93,9 @@ def validate(
     missing = sorted(required_components - set(components))
     if missing:
         fail("release manifest does not cover package catalog closure: " + ", ".join(missing))
+    extra = sorted(set(components) - required_components)
+    if extra:
+        fail("release manifest contains components outside the package catalog closure: " + ", ".join(extra))
 
     for name, component in sorted(components.items()):
         expected = str(component.get("expectedVersion", ""))
