@@ -55,6 +55,37 @@ def profile_closure(catalog: dict, profile: str) -> set[str]:
     return selected
 
 
+def component_build_order(catalog: dict, profile: str) -> list[str]:
+    packages = catalog.get("packages")
+    if not isinstance(packages, dict):
+        fail("package catalog has no package map")
+    selected = profile_closure(catalog, profile)
+    components = {
+        name for name in selected
+        if packages[name].get("kind") != "meta"
+    }
+    ordered: list[str] = []
+    visiting: set[str] = set()
+    visited: set[str] = set()
+
+    def visit(name: str) -> None:
+        if name in visited:
+            return
+        if name in visiting:
+            fail(f"package catalog dependency cycle reaches {name}")
+        visiting.add(name)
+        for dependency in sorted(packages[name].get("requires", [])):
+            if dependency in components:
+                visit(dependency)
+        visiting.remove(name)
+        visited.add(name)
+        ordered.append(name)
+
+    for name in sorted(components):
+        visit(name)
+    return ordered
+
+
 def validate(
     manifest: dict,
     catalog: dict,
@@ -109,13 +140,20 @@ def main() -> None:
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--catalog", type=Path, default=ROOT / "manifests/package-catalog.json")
     parser.add_argument("--candidate")
+    parser.add_argument("--print-build-order", action="store_true")
     args = parser.parse_args()
     try:
-        validate(
-            json.loads(args.manifest.read_text(encoding="utf-8")),
-            json.loads(args.catalog.read_text(encoding="utf-8")),
-            candidate=args.candidate or None,
-        )
+        manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
+        catalog = json.loads(args.catalog.read_text(encoding="utf-8"))
+        validate(manifest, catalog, candidate=args.candidate or None)
+        if args.print_build_order:
+            if args.candidate:
+                print(args.candidate)
+            else:
+                print(*component_build_order(
+                    catalog, str(manifest.get("profile", "recommended"))
+                ), sep="\n")
+            return
     except (OSError, json.JSONDecodeError, ValueError) as error:
         raise SystemExit(f"release closure validation failed: {error}") from error
     print("release closure validation passed")
