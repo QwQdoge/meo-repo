@@ -544,6 +544,23 @@ class RepositoryContractTests(unittest.TestCase):
             workflow.index('uses: actions/upload-artifact'),
         )
 
+    def test_full_stable_reuses_only_verified_signed_control_packages(self):
+        build = (ROOT / "ci/build-release.sh").read_text()
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+
+        self.assertIn('if [ "$channel" = stable ] && [ -z "$candidate" ]; then', build)
+        self.assertIn("reuse_or_build_control()", build)
+        self.assertIn("https://packages.meoarch.org/meo/os/x86_64/$filename", build)
+        self.assertIn('case "$http_code" in', build)
+        self.assertIn("200)", build)
+        self.assertIn("404)", build)
+        self.assertIn('"$remote_url.sig"', build)
+        self.assertIn('gpg --batch --verify', build)
+        self.assertIn('pacman -Qp "$local_package"', build)
+        self.assertIn('reuse_or_build_control "$package" "$context"', build)
+        self.assertIn("Unexpected HTTP status while checking control package", build)
+        self.assertIn("gnupg", workflow)
+
     def test_publication_preflights_all_immutable_objects_before_upload(self):
         script = (ROOT / "ci/publish-repository.sh").read_text()
         marker = script.index("Preflight every immutable package object")
