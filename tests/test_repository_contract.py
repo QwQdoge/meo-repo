@@ -203,6 +203,13 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("meo-trusted references a key absent from meo.gpg", validator)
         self.assertIn("meo-revoked references a key absent from meo.gpg", validator)
 
+    def test_remote_smoke_uses_supported_keyring_population(self):
+        smoke = (ROOT / "ci/remote-smoke.sh").read_text()
+        self.assertNotIn("--populate-from", smoke)
+        self.assertIn("pacman-key --populate archlinux meo", smoke)
+        self.assertIn('destination="/usr/share/pacman/keyrings/$file"', smoke)
+        self.assertIn("cleanup_keyring_bootstrap", smoke)
+
     def test_keyring_installs_and_populates_the_current_archive_authority(self):
         recipe = (ROOT / "packages/meo-keyring/PKGBUILD").read_text()
         install_hook = (ROOT / "packages/meo-keyring/meo-keyring.install").read_text()
