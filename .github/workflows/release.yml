@@ -86,6 +86,9 @@ jobs:
           sudo --preserve-env=MEO_ACCOUNT_SOURCE_SSH -u builder ci/build-release.sh \
             "$RELEASE_MANIFEST" "$GITHUB_WORKSPACE/build-output" \
             "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE"
+      - name: Remove private Account source credential
+        if: always() && steps.source-requirements.outputs.needs_account == 'true'
+        run: rm -rf -- /home/builder/.ssh
       - name: Run package metadata checks
         run: bash ci/check-package-metadata.sh build-output/packages
       - name: Upgrade previous public system through the unsigned candidate
