@@ -91,11 +91,6 @@ build_context() {
 }
 
 
-control_verify_home="$output/control-verify-gnupg"
-reused_control_dir="$output/reused-controls"
-install -d -m700 "$control_verify_home" "$reused_control_dir"
-GNUPGHOME="$control_verify_home" gpg --batch --import   "$repo_root/packages/meo-keyring/files/meo.gpg" >/dev/null 2>&1
-
 control_package_filename() {
   local context="$1"
   local files=()
@@ -181,6 +176,11 @@ for package in "${core_packages[@]}"; do
 done
 
 if [ "$channel" = stable ] && [ -z "$candidate" ]; then
+  control_verify_home="$output/control-verify-gnupg"
+  reused_control_dir="$output/reused-controls"
+  install -d -m700 "$control_verify_home" "$reused_control_dir"
+  GNUPGHOME="$control_verify_home" gpg --batch --import "$repo_root/packages/meo-keyring/files/meo.gpg" >/dev/null 2>&1
+
   control_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" <<'PY'
 import json, sys
 from artifact_manifest import control_packages
