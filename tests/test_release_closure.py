@@ -88,6 +88,17 @@ class ReleaseClosureTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("release closure validation failed", result.stderr)
 
+    def test_full_train_gets_private_account_source_only_when_required(self):
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+        self.assertIn("id: source-requirements", workflow)
+        self.assertIn('not candidate and "meo-account" in manifest.get("components", {})', workflow)
+        self.assertIn("steps.source-requirements.outputs.needs_account == 'true'", workflow)
+        self.assertIn(
+            "MEO_ACCOUNT_SOURCE_SSH: ${{ steps.source-requirements.outputs.needs_account == 'true' && '1' || '0' }}",
+            workflow,
+        )
+        self.assertNotIn("if: inputs.candidate == 'meo-account'", workflow)
+
     def test_workflow_requires_explicit_manifest_and_preflights_closure_twice(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
         build = (ROOT / "ci/build-release.sh").read_text()
