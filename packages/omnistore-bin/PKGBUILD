@@ -9,7 +9,8 @@ url='https://github.com/QwQdoge/OmniStore'
 license=('GPL-3.0-only')
 depends=('gtk3' 'libdbusmenu-gtk3' 'libayatana-appindicator' 'ksshaskpass'
          'libsecret' 'pacman-contrib' 'python' 'pyalpm')
-optdepends=('meo-release: shared MeoArch application catalog and channel integration'
+optdepends=('meoui-qml: preferred native Qt/QML frontend on MeoArch'
+             'meo-release: shared MeoArch application catalog and channel integration'
              'meo-account: use the MeoArch system account'
              'flatpak: install applications from Flatpak remotes')
 provides=('omnistore')
@@ -48,6 +49,14 @@ package() {
     "$pkgdir/usr/lib/omnistore/meo-repository-helper.py"
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore" <<'EOF'
 #!/bin/sh
+set -eu
+# New release bundles can carry the MeoUI-native frontend. Keep old immutable
+# bundles runnable: NativeUI is preferred only when both its binary and the
+# shared MeoUI QML module are actually installed.
+if [ -x /usr/lib/omnistore/omnistore-native ] \
+   && [ -f /usr/lib/qt6/qml/MeoUI/qmldir ]; then
+  exec /usr/lib/omnistore/omnistore-native "$@"
+fi
 exec /usr/lib/omnistore/frontend "$@"
 EOF
   install -Dm755 /dev/stdin "$pkgdir/usr/bin/omnistore-apps-export" <<'EOF'
