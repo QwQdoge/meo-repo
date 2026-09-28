@@ -396,7 +396,9 @@ class RepositoryContractTests(unittest.TestCase):
             f"ssh://git@github.com/{account['repository']}.git",
         )
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
-        self.assertIn("inputs.candidate == 'meo-account'", workflow)
+        self.assertIn('candidate == "meo-account"', workflow)
+        self.assertIn('"meo-account" in manifest.get("components", {})', workflow)
+        self.assertIn("steps.source-requirements.outputs.needs_account == 'true'", workflow)
         self.assertIn("secrets.MEO_ACCOUNT_DEPLOY_KEY", workflow)
         self.assertIn("--preserve-env=MEO_ACCOUNT_SOURCE_SSH", workflow)
         self.assertRegex(workflow, r"pacman -Syu[^\n]+\bopenssh\b")
