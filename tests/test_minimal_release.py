@@ -134,9 +134,10 @@ class MinimalReleaseTests(unittest.TestCase):
         self.assertIn("source/LICENSE", settings)
         self.assertIn("usr/share/licenses/$pkgname/LICENSE", settings)
 
-    def test_desktop_recipe_uses_plasma_login_manager_without_sddm_payload(self):
+    def test_desktop_recipe_uses_meo_login_manager_without_sddm_payload(self):
         recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
-        self.assertIn("'plasma-login-manager'", recipe)
+        self.assertIn("'meo-plasma-login-manager'", recipe)
+        self.assertNotIn("'konsole' 'plasma-login-manager'", recipe)
         self.assertNotIn("sddm.conf.d", recipe)
         self.assertNotIn("usr/share/sddm", recipe)
 

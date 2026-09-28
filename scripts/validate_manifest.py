@@ -9,6 +9,7 @@ from pathlib import Path
 REQUIRED = {"meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime", "meo-account", "meo-settings", "omnistore-bin"}
 MINIMAL = {"meoui-qml", "meo-icons", "meo-desktop"}
 LEGACY_RECOMMENDED = REQUIRED - {"meo-kde-runtime"}
+NEXT_COMPONENTS = {"meo-icon-studio", "meo-plasma-login-manager"}
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 VERSION = re.compile(r"^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -34,9 +35,23 @@ def main(path: str, channel: str | None = None) -> None:
     if profile not in {"minimal", "recommended"}:
         fail("unsupported release profile")
     selected = set(components) if isinstance(components, dict) else set()
-    valid_sets = {frozenset(MINIMAL)} if profile == "minimal" else {
-        frozenset(REQUIRED), frozenset(LEGACY_RECOMMENDED),
-    }
+    if profile == "minimal":
+        valid_sets = {
+            frozenset(MINIMAL),
+            frozenset(MINIMAL | {"meo-plasma-login-manager"}),
+        }
+    else:
+        next_variants = (
+            set(),
+            {"meo-icon-studio"},
+            {"meo-plasma-login-manager"},
+            set(NEXT_COMPONENTS),
+        )
+        valid_sets = {
+            frozenset(base | extra)
+            for base in (REQUIRED, LEGACY_RECOMMENDED)
+            for extra in next_variants
+        }
     if not isinstance(components, dict) or frozenset(selected) not in valid_sets:
         fail("components must be exactly the selected Meo release profile")
     for name, component in components.items():

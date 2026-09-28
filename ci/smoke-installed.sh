@@ -34,6 +34,20 @@ for path in /usr/lib/qt6/qml/MeoKDE/qmldir \
   /usr/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do
   test -s "$path"
 done
+has_meo_login_manager="$(python3 -c 'import json,sys; print("true" if "meo-plasma-login-manager" in json.load(open(sys.argv[1])).get("components", {}) else "false")' "$manifest")"
+if [ "$has_meo_login_manager" = true ]; then
+  pacman -Q meo-plasma-login-manager >/dev/null
+  ! pacman -Q plasma-login-manager >/dev/null 2>&1
+  test -x /usr/bin/plasmalogin
+  test -s /usr/lib/systemd/system/plasmalogin.service
+  login_owner="$(pacman -Qo /usr/bin/plasmalogin)"
+  case "$login_owner" in
+    "/usr/bin/plasmalogin is owned by meo-plasma-login-manager "*) ;;
+    *) echo "Installed plasmalogin is not owned by meo-plasma-login-manager" >&2; exit 3 ;;
+  esac
+else
+  pacman -Q plasma-login-manager >/dev/null
+fi
 profile="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("profile", "recommended"))' "$manifest")"
 [ "$profile" != minimal ] || { echo "PASS: installed minimal Meo package payload"; exit 0; }
 command -v meo-settings >/dev/null
