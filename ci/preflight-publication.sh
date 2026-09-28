@@ -8,6 +8,7 @@ manifest="$(realpath -e -- "${1:?manifest path is required}")"
 artifact_dir="$(realpath -e -- "${2:?artifact directory is required}")"
 channel="${3:?stable or beta channel is required}"
 case "$channel" in stable|beta) ;; *) echo "Invalid channel" >&2; exit 2 ;; esac
+python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel"
 
 contract="$artifact_dir/artifacts.json"
 packages="$artifact_dir/packages"
