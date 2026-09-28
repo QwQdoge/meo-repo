@@ -1,0 +1,39 @@
+name: Repository validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repository-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    name: Package and release contracts
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install validation dependencies
+        run: pacman -Syu --noconfirm --needed python curl git openssh sudo namcap gnupg
+
+      - name: Compile Python sources
+        run: python -m compileall -q scripts tests
+
+      - name: Run repository contracts
+        run: python -m unittest discover -s tests -v
+
+      - name: Check shell entrypoints
+        run: |
+          find ci scripts -type f -name '*.sh' -print0 |
+            xargs -0 -n1 bash -n
