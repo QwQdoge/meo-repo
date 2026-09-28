@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Fail-closed validation for immutable MeoArch release manifests."""
+import argparse
 import json
 import re
 import sys
@@ -15,8 +16,17 @@ SHA256 = re.compile(r"^[0-9a-f]{64}$")
 def fail(message: str) -> None:
     raise SystemExit(f"manifest validation failed: {message}")
 
-def main(path: str) -> None:
-    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+def main(path: str, channel: str | None = None) -> None:
+    manifest_path = Path(path).resolve()
+    if channel is not None:
+        if channel not in {"stable", "beta"}:
+            fail("release channel must be stable or beta")
+        expected_parent = Path(__file__).resolve().parents[1] / "manifests" / channel
+        try:
+            manifest_path.relative_to(expected_parent)
+        except ValueError:
+            fail(f"manifest must be under manifests/{channel}/ for the selected release channel")
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
     if payload.get("schemaVersion") != 1 or payload.get("architecture") != "x86_64":
         fail("unsupported schema or architecture")
     components = payload.get("components")
@@ -69,6 +79,8 @@ def main(path: str) -> None:
                 fail("omnistore-bin verifierSha256 must be pinned")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("usage: validate_manifest.py MANIFEST.json")
-    main(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("manifest")
+    parser.add_argument("--channel", choices=("stable", "beta"))
+    args = parser.parse_args()
+    main(args.manifest, args.channel)
