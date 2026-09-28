@@ -52,7 +52,7 @@ class ReleaseClosureTests(unittest.TestCase):
             del manifest["components"]["helper"]
             with self.assertRaisesRegex(ValueError, "helper"):
                 closure.validate(manifest, catalog, recipes)
-            manifest, catalog = self.fixture(recipes)
+            manifest["components"]["helper"] = {"expectedVersion": "2.0-1"}
             manifest["components"]["unrelated"] = {"expectedVersion": "9.9-9"}
             with self.assertRaisesRegex(ValueError, "outside the package catalog closure"):
                 closure.validate(manifest, catalog, recipes)
