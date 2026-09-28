@@ -89,7 +89,6 @@ class ReleaseClosureTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "helper requires a positive sourceDateEpoch"):
                 closure.validate(manifest, catalog, recipes)
 
-            manifest, catalog = self.fixture(recipes)
             manifest["components"]["core"]["sourceDateEpoch"] = 0
             with self.assertRaisesRegex(ValueError, "core requires a positive sourceDateEpoch"):
                 closure.validate(manifest, catalog, recipes, candidate="core")
