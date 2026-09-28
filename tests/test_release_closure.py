@@ -121,6 +121,30 @@ class ReleaseClosureTests(unittest.TestCase):
         )
         self.assertNotIn("if: inputs.candidate == 'meo-account'", workflow)
 
+    def test_unchanged_control_packages_are_reused_only_when_signed(self):
+        build = (ROOT / "ci/build-release.sh").read_text()
+        workflow = (ROOT / ".github/workflows/release.yml").read_text()
+
+        self.assertIn("reuse_or_build_control()", build)
+        self.assertIn("https://packages.meoarch.org/meo/os/x86_64/$filename", build)
+        self.assertIn("--write-out '%{http_code}'", build)
+        self.assertIn("200)", build)
+        self.assertIn("404)", build)
+        self.assertIn('GNUPGHOME="$control_verify_home" gpg --batch --verify', build)
+        self.assertIn('actual_identity="$(LC_ALL=C pacman -Qp "$local_package")"', build)
+        self.assertIn("Existing control package signature verification failed", build)
+        self.assertIn("Unexpected HTTP status while checking control package", build)
+        self.assertIn('reuse_or_build_control "$package" "$context"', build)
+        self.assertIn("python curl git openssh sudo namcap gnupg", workflow)
+
+        reuse = build.split("reuse_or_build_control() {", 1)[1].split(
+            'if [ -n "$candidate" ]', 1
+        )[0]
+        branch_404 = reuse.split("404)", 1)[1].split(";;", 1)[0]
+        branch_200 = reuse.split("200)", 1)[1].split(";;", 1)[0]
+        self.assertIn('build_context "$package" "$context"', branch_404)
+        self.assertNotIn('build_context "$package" "$context"', branch_200)
+
     def test_workflow_requires_explicit_manifest_and_preflights_closure_twice(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
         build = (ROOT / "ci/build-release.sh").read_text()
