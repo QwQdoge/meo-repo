@@ -34,6 +34,6 @@ Keep recipe syntax, local build, signed package, repository metadata, remote ins
 
 ## Files and generated output
 
-Keep maintained contracts in `docs/`. Project records belong under `$MEO_DOCS_ROOT/Projects/meo-repo/`; generated output under `$MEO_OUTPUT_ROOT/meo-repo/{build,install,validation,packages,tmp}/`. Do not invent machine-specific paths if those roots are unset.
+Keep maintained contracts in `docs/`. Project records belong under `$MEO_DOCS_ROOT/Projects/meo-repo/`. Existing package/test tools may use ephemeral work directories; retained evidence and deliverables belong under `$MEO_OUTPUT_ROOT/meo-repo/{build,install,validation,packages,tmp}/`. Do not invent machine-specific paths if those roots are unset.
 
 Preserve unrelated dirty work and existing tracked repository payloads. Avoid destructive Git cleanup or broad deletion.
