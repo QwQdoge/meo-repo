@@ -1,54 +1,19 @@
 # MeoArch Package Repository agent rules
 
-This is the package-control worktree. Preserve package sources, release
-manifests, keyring inputs, and the tracked x86_64 repository payload.
+## Scope
 
-## Source ownership
+This repository owns package recipes and package-owned files in `packages/`, release inputs in `manifests/`, validation tooling in `scripts/` and `tests/`, and the retained `x86_64/` repository payload. Do not vendor source from MeoUI, MeoKDE, OmniStore, or another component unless the task is explicitly about packaging that source.
 
-- Keep Arch package recipes and package-owned files in packages/.
-- Keep release inputs in manifests/, checks in scripts/ and tests/, and
-  code-bound release/key-management contracts in docs/.
-- Treat x86_64/ as retained repository state, not as an unowned build cache.
-- Do not vendor source from MeoUI, MeoKDE, OmniStore, or another component
-  repository into a package recipe without an explicitly scoped packaging task.
+## Work sequence and validation
 
-## Portable workspace roots
+Inspect the affected recipe/manifest/script and `git status` before editing. For normal repository-contract changes, mirror CI:
 
-- Never assume a developer username, home directory, checkout location, or Obsidian vault path.
-- Resolve external project records from `$MEO_DOCS_ROOT` and generated artifacts from `$MEO_OUTPUT_ROOT`. If either variable is unset, do not invent a machine-specific absolute path.
+- `python -m compileall -q scripts tests`
+- `python -m unittest discover -s tests -v`
+- syntax-check affected shell entrypoints (CI checks `ci/` and `scripts/`)
 
-## Documentation and records
+A recipe syntax/static check, a local package build, a signed package, repository metadata, and a real install are distinct evidence levels. Run the heavier build/install level only when the task requires it.
 
-- Do not create root-level plan files, audits, architecture drafts, agent
-  journals, screenshots, logs, or temporary notes.
-- Store plans, decisions, audits, and historical reports in
-  `$MEO_DOCS_ROOT/Projects/meo-repo/`, using
-  00-inbox, 01-overview, 02-decisions, 03-work, 04-validation, and 99-archive.
-- Existing documentation and payloads are preserved. Do not move or delete
-  them as incidental cleanup.
+Use `$MEO_DOCS_ROOT/Projects/meo-repo/` for plans/audits/decisions and `$MEO_OUTPUT_ROOT/meo-repo/{build,install,validation,packages,tmp}/` for generated output. Keep generated material out of the repository root and preserve existing payloads/history.
 
-## Output rules
-
-Write new durable output only under `$MEO_OUTPUT_ROOT/meo-repo/`:
-
-| Kind | Path |
-| --- | --- |
-| Build work | build/ |
-| Repository/install handoff | install/ |
-| Validation evidence | validation/<UTC-run-id>/ |
-| Candidate packages | packages/ |
-| Disposable work | tmp/ |
-
-Use YYYY-MM-DDTHHMMSSZ-short-label for every validation run.
-
-## Signing and publication boundary
-
-- Never add private keys, passphrases, tokens, or credentials to source,
-  external project records, or outputs.
-- Do not sign packages, mutate the repository database, publish a channel,
-  upload artifacts, or replace remote repository content without explicit user
-  authorization.
-- Preserve dirty work and avoid git reset, git clean, broad deletion, or
-  unreviewed recursive commands.
-- State whether validation covered recipe syntax, local build, signed package,
-  repository metadata, and real installation; do not collapse these levels.
+Never place private keys, passphrases, tokens, or credentials in source or outputs. Do not sign packages, mutate the repository database, publish a channel, upload artifacts, or replace remote repository content without explicit authorization. Avoid `git reset`, `git clean`, and broad deletion.
