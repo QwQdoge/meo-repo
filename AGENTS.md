@@ -1,19 +1,39 @@
 # MeoArch Package Repository agent rules
 
-## Scope
+## Start here
 
-This repository owns package recipes and package-owned files in `packages/`, release inputs in `manifests/`, validation tooling in `scripts/` and `tests/`, and the retained `x86_64/` repository payload. Do not vendor source from MeoUI, MeoKDE, OmniStore, or another component unless the task is explicitly about packaging that source.
+This repository owns package recipes, release manifests, validation tooling, keyring inputs, and the tracked repository payload. Inspect `git status`, the affected package/manifest/script, and its nearest test before editing. Do not audit every package or read all release history by default.
 
-## Work sequence and validation
+## Ownership
 
-Inspect the affected recipe/manifest/script and `git status` before editing. For normal repository-contract changes, mirror CI:
+- `packages/`: Arch package recipes and package-owned files.
+- `manifests/`: reviewed release inputs.
+- `scripts/`, `ci/`, `tests/`: validation/repository tooling and contracts.
+- `docs/`: maintained release/key-management contracts.
+- `x86_64/`: retained repository state, not disposable cache.
+
+Do not vendor MeoUI, MeoKDE, OmniStore, or another project into package recipes unless the task is explicitly about packaging that source.
+
+## Validation matrix
+
+For normal package/repository source changes, mirror `.github/workflows/validation.yml`:
 
 - `python -m compileall -q scripts tests`
 - `python -m unittest discover -s tests -v`
-- syntax-check affected shell entrypoints (CI checks `ci/` and `scripts/`)
+- `find ci scripts -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n`
 
-A recipe syntax/static check, a local package build, a signed package, repository metadata, and a real install are distinct evidence levels. Run the heavier build/install level only when the task requires it.
+For a single recipe or manifest, run the narrowest matching test first. Use `namcap`, package builds, or install smoke only when that layer changed and the required environment is available.
 
-Use `$MEO_DOCS_ROOT/Projects/meo-repo/` for plans/audits/decisions and `$MEO_OUTPUT_ROOT/meo-repo/{build,install,validation,packages,tmp}/` for generated output. Keep generated material out of the repository root and preserve existing payloads/history.
+`.github/workflows/repository-smoke.yml` talks to the **published** repository. Do not run remote repository smoke as a substitute for local source validation, and do not run it unless the task explicitly needs published-repository evidence.
 
-Never place private keys, passphrases, tokens, or credentials in source or outputs. Do not sign packages, mutate the repository database, publish a channel, upload artifacts, or replace remote repository content without explicit authorization. Avoid `git reset`, `git clean`, and broad deletion.
+## Signing and publication boundary
+
+Never expose private keys, passphrases, signing material, tokens, or credentials. Do not sign packages, mutate repository databases, publish stable/beta channels, upload artifacts, or replace remote repository content without explicit authorization.
+
+Keep recipe syntax, local build, signed package, repository metadata, remote install, and live upgrade as separate evidence levels.
+
+## Files and generated output
+
+Keep maintained contracts in `docs/`. Project records belong under `$MEO_DOCS_ROOT/Projects/meo-repo/`; generated output under `$MEO_OUTPUT_ROOT/meo-repo/{build,install,validation,packages,tmp}/`. Do not invent machine-specific paths if those roots are unset.
+
+Preserve unrelated dirty work and existing tracked repository payloads. Avoid destructive Git cleanup or broad deletion.
