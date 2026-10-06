@@ -1,7 +1,7 @@
 pkgname=meo-plasma-login-manager
 pkgver=6.7.5
-pkgrel=1
-pkgdesc="MeoArch Plasma Login Manager fork"
+pkgrel=2
+pkgdesc="Meo Login display manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'
 license=('GPL-2.0-or-later')
@@ -19,8 +19,9 @@ source=()
 sha256sums=()
 
 # The protected renderer supplies the reviewed meo/6.7 checkout as
-# $srcdir/source.  This recipe deliberately keeps PAM, systemd and service
-# ownership in the upstream-compatible project rather than recreating them.
+# $srcdir/source. The public product is Meo Login, while PAM, systemd,
+# configuration and service identifiers intentionally stay compatible with
+# upstream Plasma Login Manager.
 build() {
   cmake -S "$srcdir/source" -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
