@@ -30,6 +30,9 @@ jobs:
       - name: Compile Python sources
         run: python -m compileall -q scripts tests
 
+      - name: Check public product identity
+        run: python scripts/validate_product_identity.py
+
       - name: Run repository contracts
         run: python -m unittest discover -s tests -v
 
