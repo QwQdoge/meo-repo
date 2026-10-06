@@ -1,7 +1,7 @@
 pkgname=meo-account
 pkgver=0.1.0
-pkgrel=6
-pkgdesc="MeoArch system account broker and authentication dialog"
+pkgrel=7
+pkgdesc="Meo Account broker and authentication dialog for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-account'
 license=('GPL-3.0-or-later')
