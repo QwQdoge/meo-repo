@@ -17,7 +17,7 @@ provides=('omnistore')
 conflicts=('omnistore' 'omnistore-git')
 source=('org.meo.OmniStore.json'
         'omnistore.desktop')
-sha256sums=('33469846134a52b3acbf2450a4d4ff72f4dd304eb8c9a5cd0bfb64a70d21a576'
+sha256sums=('0353714821b198d956899a399fc56ebbe09dca368eda5c6506820b6b8731be50'
             '50279aede8e00311980b46812ef4eaaf2ca33b8100d9bbb5850c9017a3df1904')
 
 prepare() {
