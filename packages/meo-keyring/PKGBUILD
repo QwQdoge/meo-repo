@@ -1,7 +1,7 @@
 pkgname=meo-keyring
 pkgver=1
-pkgrel=3
-pkgdesc="MeoArch pacman signing keyring"
+pkgrel=4
+pkgdesc="Meo package signing keyring for MeoArch"
 arch=('any')
 license=('MIT')
 # Public bootstrap payload is reviewed under files/. Private key material is
