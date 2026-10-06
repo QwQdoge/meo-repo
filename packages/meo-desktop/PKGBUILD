@@ -1,7 +1,7 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=11
-pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
+pkgrel=12
+pkgdesc="Meo Desktop integration for MeoArch, powered by KDE Plasma"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
 license=('GPL-3.0-or-later' 'GPL-2.0-or-later' 'MIT' 'Apache-2.0' 'OFL-1.1')
@@ -21,14 +21,14 @@ conflicts=('meo-kde-runtime')
 replaces=('meo-kde-runtime')
 install=meo-desktop.install
 # Temporary one-cycle adoption path for installations that predate pacman
-# ownership of the KDecoration plugin.  If an unowned legacy copy exists,
+# ownership of the KDecoration plugin. If an unowned legacy copy exists,
 # pacman writes the reviewed package payload as .pacnew and the install hook
 # below atomically adopts it during the same transaction.
 backup=('usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so')
 source=()
 sha256sums=()
 
-# The release renderer supplies a pinned source tree as $srcdir/source.  This
+# The release renderer supplies a pinned source tree as $srcdir/source. This
 # recipe intentionally never reads a developer sibling checkout.
 build() {
   cmake -S "$srcdir/source/native" -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
@@ -52,7 +52,7 @@ package() {
   for theme in MeoLight MeoDark; do
     cp -a "$source/themes/desktoptheme/$theme" "$pkgdir/usr/share/plasma/desktoptheme/"
   done
-  # The default layout remains defined by the source layout script.  Install
+  # The default layout remains defined by the source layout script. Install
   # every supported Meo top-bar applet so optional variants are available from
   # Plasma's Widget Explorer without rewriting an existing user panel.
   for plasmoid in org.meo.topbar org.meo.timecenter org.meo.notifications \
@@ -91,9 +91,10 @@ package() {
   for entry in kde/kdeglobals kwin/kwinrc plasma/plasmarc plasma/plasma-welcomerc plasma/meo-shellrc; do
     install -Dm644 "$source/defaults/$entry" "$pkgdir/etc/xdg/${entry##*/}"
   done
-  # Plasma Login Manager is the primary supported login manager.  SDDM files
-  # stay out of the base package so a compatibility adapter can never silently
-  # select or configure SDDM on a new Meo installation.
+  # Meo Login is the primary supported login experience. Its upstream-compatible
+  # plasmalogin service/PAM/configuration identifiers intentionally remain
+  # unchanged. SDDM files stay out of the base package so a compatibility
+  # adapter can never silently select or configure SDDM on a new Meo installation.
   install -Dm644 "$source/defaults/environment/90-meo-applications.conf" "$pkgdir/etc/environment.d/90-meo-applications.conf"
   # This immutable source train does not provide responsiveness policy files.
   # Do not fabricate them from an unpinned newer checkout.
