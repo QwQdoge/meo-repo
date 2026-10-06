@@ -1,7 +1,7 @@
 pkgname=meo-release
 pkgver=2026.09
-pkgrel=1
-pkgdesc="MeoArch release generation and official package catalog"
+pkgrel=2
+pkgdesc="MeoArch release metadata"
 arch=('any')
 license=('MIT')
 depends=('meo-keyring' 'meo-mirrorlist' 'meo-channel')
