@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=12
+pkgrel=13
 pkgdesc="Meo Desktop integration for MeoArch, powered by KDE Plasma"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -10,6 +10,7 @@ depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-wor
          'konsole' 'meo-plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
          'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
+         'fcitx5' 'fcitx5-qt' 'fcitx5-gtk'
          'system76-scheduler' 'zram-generator' 'dbus-broker-units'
          'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
