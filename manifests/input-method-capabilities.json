@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "frameworks": [
+    {
+      "id": "fcitx5",
+      "name": "Fcitx 5",
+      "sessionModel": "wayland-user-session",
+      "packages": [
+        {
+          "name": "fcitx5",
+          "role": "framework",
+          "required": true
+        },
+        {
+          "name": "fcitx5-qt",
+          "role": "toolkit-bridge",
+          "required": false
+        },
+        {
+          "name": "fcitx5-gtk",
+          "role": "toolkit-bridge",
+          "required": false
+        },
+        {
+          "name": "fcitx5-configtool",
+          "role": "configuration",
+          "required": false
+        }
+      ],
+      "modes": [
+        "meo-managed",
+        "self-managed"
+      ]
+    }
+  ],
+  "engines": [
+    {
+      "id": "fcitx5.pinyin",
+      "framework": "fcitx5",
+      "name": "Pinyin",
+      "languages": ["zh"],
+      "packages": [
+        {
+          "name": "fcitx5-chinese-addons",
+          "role": "engine",
+          "required": true
+        }
+      ],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.rime",
+      "framework": "fcitx5",
+      "name": "Rime",
+      "languages": ["zh"],
+      "packages": [
+        {
+          "name": "fcitx5-rime",
+          "role": "engine",
+          "required": true
+        }
+      ],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.mozc",
+      "framework": "fcitx5",
+      "name": "Mozc",
+      "languages": ["ja"],
+      "packages": [
+        {
+          "name": "fcitx5-mozc",
+          "role": "engine",
+          "required": true
+        }
+      ],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.hangul",
+      "framework": "fcitx5",
+      "name": "Hangul",
+      "languages": ["ko"],
+      "packages": [
+        {
+          "name": "fcitx5-hangul",
+          "role": "engine",
+          "required": true
+        }
+      ],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.m17n",
+      "framework": "fcitx5",
+      "name": "M17N",
+      "languages": ["mul"],
+      "packages": [
+        {
+          "name": "fcitx5-m17n",
+          "role": "engine",
+          "required": true
+        }
+      ],
+      "sourcePolicy": "configured-signed-repository"
+    }
+  ]
+}
