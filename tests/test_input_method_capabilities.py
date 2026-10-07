@@ -40,7 +40,7 @@ class InputMethodCapabilityCatalogTests(unittest.TestCase):
                 self.assertEqual(framework["sessionModel"], "wayland-user-session")
                 self.assertTrue(framework["packages"])
                 self.assertIn("meo-managed", framework["modes"])
-                self.assertIn("self-managed", framework["modes"])
+                self.assertNotIn("self-managed", framework["modes"])
 
                 package_names = [entry["name"] for entry in framework["packages"]]
                 self.assertEqual(len(package_names), len(set(package_names)))
