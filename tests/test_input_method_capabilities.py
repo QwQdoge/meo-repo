@@ -88,13 +88,33 @@ class InputMethodCapabilityCatalogTests(unittest.TestCase):
         expected = {
             "fcitx5.pinyin": "fcitx5-chinese-addons",
             "fcitx5.rime": "fcitx5-rime",
+            "fcitx5.chewing": "fcitx5-chewing",
+            "fcitx5.table-extra": "fcitx5-table-extra",
+            "fcitx5.table-other": "fcitx5-table-other",
             "fcitx5.mozc": "fcitx5-mozc",
+            "fcitx5.anthy": "fcitx5-anthy",
+            "fcitx5.skk": "fcitx5-skk",
+            "fcitx5.kkc": "fcitx5-kkc",
             "fcitx5.hangul": "fcitx5-hangul",
+            "fcitx5.unikey": "fcitx5-unikey",
+            "fcitx5.bamboo": "fcitx5-bamboo",
+            "fcitx5.sayura": "fcitx5-sayura",
             "fcitx5.m17n": "fcitx5-m17n",
         }
         self.assertEqual(set(engines), set(expected))
         for engine_id, package_name in expected.items():
             self.assertIn(package_name, {entry["name"] for entry in engines[engine_id]["packages"]})
+
+    def test_catalog_covers_common_cjk_and_vietnamese_choices(self):
+        by_language = {}
+        for engine in self.catalog["engines"]:
+            for language in engine["languages"]:
+                by_language.setdefault(language, set()).add(engine["id"])
+        self.assertTrue({"fcitx5.pinyin", "fcitx5.rime"}.issubset(by_language["zh"]))
+        self.assertIn("fcitx5.chewing", by_language["zh-Hant"])
+        self.assertTrue({"fcitx5.mozc", "fcitx5.anthy", "fcitx5.skk", "fcitx5.kkc"}.issubset(by_language["ja"]))
+        self.assertIn("fcitx5.hangul", by_language["ko"])
+        self.assertTrue({"fcitx5.unikey", "fcitx5.bamboo"}.issubset(by_language["vi"]))
 
     def test_catalog_contains_no_urls_commands_or_local_paths(self):
         serialized = CATALOG.read_text(encoding="utf-8")
