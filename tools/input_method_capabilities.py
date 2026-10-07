@@ -2,7 +2,7 @@
 """Pure resolver for the versioned input-method capability catalog.
 
 This module performs no package-manager, network, privilege, or filesystem
-mutation.  Consumers provide stable catalog capability IDs and receive a
+mutation. Consumers provide stable catalog capability IDs and receive a
 bounded package plan which a separate trusted transaction authority may resolve
 against the repositories configured on the target.
 """
@@ -77,7 +77,7 @@ def validate_catalog(catalog: Any) -> None:
             raise CapabilityError(f"duplicate framework id: {framework_id}")
         framework_ids.add(framework_id)
         modes = framework.get("modes")
-        if not isinstance(modes, list) or not modes or any(mode not in {"meo-managed", "self-managed"} for mode in modes):
+        if not isinstance(modes, list) or not modes or any(mode != "meo-managed" for mode in modes):
             raise CapabilityError(f"framework {framework_id} has invalid modes")
         _validate_packages(framework.get("packages"), framework_id)
 
