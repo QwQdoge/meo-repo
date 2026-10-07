@@ -2,7 +2,7 @@
 # the immutable manifest. The verifier is fetched from that exact source tag.
 pkgname=omnistore-bin
 pkgver=0.1.4beta3
-pkgrel=5
+pkgrel=6
 pkgdesc="OmniStore software manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'
