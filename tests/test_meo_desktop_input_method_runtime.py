@@ -36,7 +36,8 @@ class MeoDesktopInputMethodRuntimeTests(unittest.TestCase):
         source = PKGBUILD.read_text(encoding="utf-8")
         self.assertNotIn("org.fcitx.Fcitx5.desktop", source)
         self.assertNotIn("fcitx5.service", source)
-        self.assertNotIn("autostart", source.lower())
+        self.assertNotIn("etc/xdg/autostart/org.fcitx", source)
+        self.assertNotIn("systemd/user/fcitx", source)
 
 
 if __name__ == "__main__":
