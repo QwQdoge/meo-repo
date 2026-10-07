@@ -20,11 +20,14 @@ The first catalog describes the supported Fcitx 5 path:
 - framework: `fcitx5`;
 - optional Qt and GTK toolkit bridges;
 - optional upstream configuration tool for specialist fallback;
-- Pinyin through `fcitx5-chinese-addons`;
-- Rime;
-- Mozc;
-- Hangul;
+- Chinese: Pinyin, Rime, Chewing/Zhuyin, and repository table collections;
+- Japanese: Mozc, Anthy, SKK, and KKC;
+- Korean: Hangul;
+- Vietnamese: UniKey and Bamboo;
+- Sinhala: Sayura;
 - M17N multilingual engines.
+
+These entries are discovery capabilities, not default-install requirements. A clean Meo Desktop can ship the Fcitx framework and toolkit bridges while installing none of the optional language engines until the user requests one.
 
 The package names are intentionally **not version-pinned**. Version selection, signatures, repository priority, dependency solving, mirrors, download size, and whether a package is currently available remain package-manager/repository responsibilities.
 
