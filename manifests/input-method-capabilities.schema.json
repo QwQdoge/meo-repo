@@ -53,7 +53,7 @@
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
-          "items": {"enum": ["meo-managed", "self-managed"]}
+          "items": {"enum": ["meo-managed"]}
         }
       }
     },
