@@ -25,12 +25,27 @@ class MeoDesktopInputMethodRuntimeTests(unittest.TestCase):
         for engine in (
             "fcitx5-chinese-addons",
             "fcitx5-rime",
+            "fcitx5-chewing",
+            "fcitx5-table-extra",
             "fcitx5-mozc",
+            "fcitx5-anthy",
+            "fcitx5-skk",
+            "fcitx5-kkc",
             "fcitx5-hangul",
+            "fcitx5-unikey",
+            "fcitx5-bamboo",
+            "fcitx5-sayura",
             "fcitx5-m17n",
         ):
             with self.subTest(engine=engine):
                 self.assertNotIn(engine, depends)
+
+    def test_advanced_configuration_tool_is_optional_metadata(self):
+        source = PKGBUILD.read_text(encoding="utf-8")
+        depends = re.search(r"depends=\((.*?)\)\nmakedepends=", source, re.S).group(1)
+        optdepends = re.search(r"optdepends=\((.*?)\)\noptions=", source, re.S).group(1)
+        self.assertNotIn("fcitx5-configtool", depends)
+        self.assertIn("fcitx5-configtool: advanced Fcitx configuration fallback", optdepends)
 
     def test_recipe_does_not_create_a_second_fcitx_lifecycle_owner(self):
         source = PKGBUILD.read_text(encoding="utf-8")
