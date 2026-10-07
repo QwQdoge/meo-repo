@@ -142,13 +142,19 @@ def resolve(
     if not optional_roles.issubset(OPTIONAL_ROLES):
         raise CapabilityError("unsupported optional input-method package role")
 
-    if mode == "keyboard-only":
+    # These two modes deliberately create no Meo-owned package request.
+    # keyboard-only means no IMF is wanted; self-managed means the user will
+    # own framework/engine choices independently. Existing packages are never
+    # removed by this pure resolver.
+    if mode in {"keyboard-only", "self-managed"}:
         if framework is not None or requested_engines or optional_roles:
-            raise CapabilityError("keyboard-only mode cannot request a framework, engine, or optional package role")
+            raise CapabilityError(
+                f"{mode} mode cannot request a Meo framework, engine, or optional package role"
+            )
         return InputMethodPlan(1, mode, None, (), (), "configured-signed-repository")
 
     if not isinstance(framework, str) or not FRAMEWORK_ID.fullmatch(framework):
-        raise CapabilityError("managed input-method mode requires a valid framework id")
+        raise CapabilityError("meo-managed input-method mode requires a valid framework id")
 
     frameworks = {entry["id"]: entry for entry in catalog["frameworks"]}
     framework_entry = frameworks.get(framework)
