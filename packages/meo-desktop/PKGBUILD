@@ -109,7 +109,7 @@ package() {
   for unit in meo-dynamic-colors.path meo-dynamic-colors.service; do
     install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
   done
-  sed -i 's|%h/.local/bin/|/usr/bin|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
+  sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
   install -d "$pkgdir/usr/lib/systemd/user/default.target.wants" "$pkgdir/etc/fonts/conf.d"
   ln -s ../meo-dynamic-colors.path "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path"
   ln -s ../meo-weather-refresh.timer "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-weather-refresh.timer"
