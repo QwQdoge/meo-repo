@@ -15,7 +15,8 @@ depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-wor
          'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
 optdepends=('preload-ng: optional learned application prefetching (disabled by default)'
-            'prelockd: optional bounded desktop memory locking (disabled by default)')
+            'prelockd: optional bounded desktop memory locking (disabled by default)'
+            'fcitx5-configtool: advanced Fcitx configuration fallback')
 options=('!debug')
 provides=('meo-kde-runtime=0.4.0')
 conflicts=('meo-kde-runtime')
@@ -108,7 +109,7 @@ package() {
   for unit in meo-dynamic-colors.path meo-dynamic-colors.service; do
     install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
   done
-  sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
+  sed -i 's|%h/.local/bin/|/usr/bin|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
   install -d "$pkgdir/usr/lib/systemd/user/default.target.wants" "$pkgdir/etc/fonts/conf.d"
   ln -s ../meo-dynamic-colors.path "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path"
   ln -s ../meo-weather-refresh.timer "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-weather-refresh.timer"
