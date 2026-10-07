@@ -35,9 +35,11 @@ The package names are intentionally **not version-pinned**. Version selection, s
 
 ## Managed modes
 
-`meo-managed` means MeoArch may manage the supported framework integration, runtime state, engine selection, and contextual package requests through its typed backends.
+`meo-managed` means MeoArch may request the supported framework, runtime integration, engine selection, and contextual package capabilities through its typed backends.
 
-`self-managed` keeps the framework available but stops Meo from treating optional engine/configuration choices as managed product state.
+`self-managed` produces **no Meo-owned framework, engine, or optional-package request**. It means the user owns those choices independently. The resolver is non-destructive: it does not uninstall a framework or engine that is already present for another desktop dependency or from an earlier user choice.
+
+`keyboard-only` is also package-request-free, but expresses that no input-method framework is wanted rather than delegating IMF ownership to the user.
 
 Switching modes is a Settings/runtime concern. This catalog does not remove packages or user dictionaries and does not define destructive cleanup.
 
