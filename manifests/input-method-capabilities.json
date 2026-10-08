@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "frameworks": [
+    {
+      "id": "fcitx5",
+      "name": "Fcitx 5",
+      "sessionModel": "wayland-user-session",
+      "packages": [
+        {
+          "name": "fcitx5",
+          "role": "framework",
+          "required": true
+        },
+        {
+          "name": "fcitx5-qt",
+          "role": "toolkit-bridge",
+          "required": false
+        },
+        {
+          "name": "fcitx5-gtk",
+          "role": "toolkit-bridge",
+          "required": false
+        },
+        {
+          "name": "fcitx5-configtool",
+          "role": "configuration",
+          "required": false
+        }
+      ],
+      "modes": [
+        "meo-managed"
+      ]
+    }
+  ],
+  "engines": [
+    {
+      "id": "fcitx5.pinyin",
+      "framework": "fcitx5",
+      "name": "Pinyin",
+      "languages": ["zh"],
+      "packages": [{"name": "fcitx5-chinese-addons", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.rime",
+      "framework": "fcitx5",
+      "name": "Rime",
+      "languages": ["zh"],
+      "packages": [{"name": "fcitx5-rime", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.chewing",
+      "framework": "fcitx5",
+      "name": "Chewing / Zhuyin",
+      "languages": ["zh-Hant"],
+      "packages": [{"name": "fcitx5-chewing", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.table-extra",
+      "framework": "fcitx5",
+      "name": "Chinese table extras",
+      "languages": ["zh"],
+      "packages": [{"name": "fcitx5-table-extra", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.table-other",
+      "framework": "fcitx5",
+      "name": "Chinese table collection",
+      "languages": ["zh"],
+      "packages": [{"name": "fcitx5-table-other", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.mozc",
+      "framework": "fcitx5",
+      "name": "Mozc",
+      "languages": ["ja"],
+      "packages": [{"name": "fcitx5-mozc", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.anthy",
+      "framework": "fcitx5",
+      "name": "Anthy",
+      "languages": ["ja"],
+      "packages": [{"name": "fcitx5-anthy", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.skk",
+      "framework": "fcitx5",
+      "name": "SKK",
+      "languages": ["ja"],
+      "packages": [{"name": "fcitx5-skk", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.kkc",
+      "framework": "fcitx5",
+      "name": "KKC",
+      "languages": ["ja"],
+      "packages": [{"name": "fcitx5-kkc", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.hangul",
+      "framework": "fcitx5",
+      "name": "Hangul",
+      "languages": ["ko"],
+      "packages": [{"name": "fcitx5-hangul", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.unikey",
+      "framework": "fcitx5",
+      "name": "UniKey",
+      "languages": ["vi"],
+      "packages": [{"name": "fcitx5-unikey", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.bamboo",
+      "framework": "fcitx5",
+      "name": "Bamboo",
+      "languages": ["vi"],
+      "packages": [{"name": "fcitx5-bamboo", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.sayura",
+      "framework": "fcitx5",
+      "name": "Sayura",
+      "languages": ["si"],
+      "packages": [{"name": "fcitx5-sayura", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    },
+    {
+      "id": "fcitx5.m17n",
+      "framework": "fcitx5",
+      "name": "M17N",
+      "languages": ["mul"],
+      "packages": [{"name": "fcitx5-m17n", "role": "engine", "required": true}],
+      "sourcePolicy": "configured-signed-repository"
+    }
+  ]
+}
