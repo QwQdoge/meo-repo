@@ -16,6 +16,12 @@ class MeoDesktopSessionIsolationTests(unittest.TestCase):
         self.assertIn('data/wayland-sessions/meo.desktop', self.source)
         self.assertIn('usr/share/wayland-sessions/meo.desktop', self.source)
 
+    def test_package_does_not_force_a_display_manager(self):
+        depends_block = self.source.split("makedepends=", 1)[0]
+        self.assertNotIn("'meo-plasma-login-manager'", depends_block)
+        self.assertNotIn("'plasma-login-manager'", depends_block)
+        self.assertNotIn("'sddm'", depends_block)
+
     def test_plasma_defaults_are_session_seed_files_not_global_xdg_overrides(self):
         for relative in (
             'session-defaults/kdeglobals',
