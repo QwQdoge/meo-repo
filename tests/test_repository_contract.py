@@ -129,12 +129,11 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertEqual(catalog["packages"]["meo-icon-studio"]["requires"], ["meo-icons"])
         self.assertIn("meo-icon-studio", catalog["packages"]["meo-settings"]["requires"])
 
-    def test_desktop_package_does_not_install_retired_standalone_dock(self):
+    def test_desktop_package_installs_the_default_meo_dock(self):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
-        smoke = (ROOT / "ci/smoke-installed.sh").read_text()
-        self.assertNotIn("dynamic-color dock decoration", desktop)
-        self.assertNotIn("org.meo.dock.desktop", desktop)
-        self.assertNotIn("/usr/bin/meo-dock", smoke)
+        self.assertIn("-DMEO_BUILD_STANDALONE_DOCK=ON", desktop)
+        self.assertIn("application-style dock; do", desktop)
+        self.assertIn("org.meo.dock.desktop", desktop)
 
     def test_kde_runtime_package_carries_the_weather_cache_producer(self):
         runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()

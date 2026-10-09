@@ -9,7 +9,7 @@ depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-wor
          'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
          'konsole' 'meo-plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
-         'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
+         'libplasma' 'layer-shell-qt' 'kdecoration' 'kcmutils' 'kcolorscheme'
          'system76-scheduler' 'zram-generator' 'dbus-broker-units'
          'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
@@ -32,15 +32,15 @@ sha256sums=()
 # recipe intentionally never reads a developer sibling checkout.
 build() {
   cmake -S "$srcdir/source/native" -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_SYSCONFDIR=/etc
+    -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DMEO_BUILD_STANDALONE_DOCK=ON
   cmake --build build --parallel
 }
 
 package() {
   # Use the existing KDE polkit agent for this E2E candidate. Do not install a
   # second agent's overlapping service/autostart paths into the same target.
-  # The standalone Layer Shell dock is retired and disabled in current MeoKDE.
-  for component in system dynamic-color decoration application-style; do
+  for component in system dynamic-color decoration application-style dock; do
     DESTDIR="$pkgdir" cmake --install "build/$component"
   done
   local source="$srcdir/source"
@@ -83,6 +83,10 @@ package() {
   install -Dm755 "$source/tools/theme/apply-meo-mode.sh" "$pkgdir/usr/bin/meo-theme-mode"
   install -Dm755 "$source/tools/theme/apply-meo-desktop.sh" "$pkgdir/usr/bin/meo-desktop-apply"
   install -Dm755 "$source/tools/shell/apply-meo-panel-layout.sh" "$pkgdir/usr/bin/meo-desktop-layout"
+  install -Dm644 "$source/data/autostart/org.meo.dock.desktop" \
+    "$pkgdir/usr/share/applications/org.meo.dock.desktop"
+  install -Dm644 "$source/data/autostart/org.meo.dock.desktop" \
+    "$pkgdir/etc/xdg/autostart/org.meo.dock.desktop"
   install -Dm755 "$source/tools/input-method/meo-input-method.sh" "$pkgdir/usr/bin/meo-input-method"
   install -Dm644 "$source/defaults/kwin/kwinrc" "$pkgdir/usr/share/meo-desktop/defaults/kwinrc"
   # os-release is target configuration, not an overwrite of Arch filesystem's
