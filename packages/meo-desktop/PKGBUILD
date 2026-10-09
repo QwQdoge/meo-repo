@@ -14,7 +14,8 @@ depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-wor
          'system76-scheduler' 'zram-generator' 'dbus-broker-units'
          'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
-optdepends=('preload-ng: optional learned application prefetching (disabled by default)'
+optdepends=('meo-plasma-login-manager: MeoArch login experience; the Meo session works with other display managers'
+            'preload-ng: optional learned application prefetching (disabled by default)'
             'prelockd: optional bounded desktop memory locking (disabled by default)'
             'fcitx5-configtool: advanced Fcitx configuration fallback')
 options=('!debug')
