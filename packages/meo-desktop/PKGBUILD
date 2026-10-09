@@ -123,11 +123,14 @@ package() {
   for file in gtk.css.in index.theme; do
     install -Dm644 "$source/themes/input-method/ibus/$file" "$pkgdir/usr/share/meo-desktop/input-method/ibus/$file"
   done
-  for unit in meo-dynamic-colors.path meo-dynamic-colors.service; do
+  for unit in \
+      meo-dynamic-colors.path meo-dynamic-colors.service \
+      meo-weather-refresh.service meo-weather-refresh.timer; do
     install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
   done
   sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
   # Deliberately do not enable Meo user units globally. A normal Plasma login
-  # must remain unchanged merely because meo-desktop is installed.
+  # must remain unchanged merely because meo-desktop is installed. The Meo
+  # session/runtime can opt into its own path/timer lifecycle.
   install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
 }
