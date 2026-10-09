@@ -1,6 +1,6 @@
 pkgname=meo-plasma-login-manager
 pkgver=6.7.5
-pkgrel=2
+pkgrel=3
 pkgdesc="Meo Login display manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'
@@ -15,8 +15,8 @@ options=('!debug')
 provides=('plasma-login-manager=6.7.5')
 conflicts=('plasma-login-manager')
 replaces=('plasma-login-manager')
-source=()
-sha256sums=()
+source=('meo-session.conf')
+sha256sums=('941980b4af5931af96037ae8ce9e203d4413aab823d16bc8f256d7df2150ab7f')
 
 # The protected renderer supplies the reviewed meo/6.7 checkout as
 # $srcdir/source. The public product is Meo Login, while PAM, systemd,
@@ -34,4 +34,8 @@ package() {
   DESTDIR="$pkgdir" cmake --install build
   install -Dm644 "$srcdir/source/LICENSE" \
     "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  # Preselect Meo without autologin. The greeter still exposes every installed
+  # Wayland session, including ordinary KDE Plasma, so users can switch freely.
+  install -Dm644 "$srcdir/meo-session.conf" \
+    "$pkgdir/etc/plasmalogin.conf.d/20-meo-session.conf"
 }
