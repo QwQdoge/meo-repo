@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=13
+pkgrel=14
 pkgdesc="Meo Desktop integration for MeoArch, powered by KDE Plasma"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -48,7 +48,9 @@ package() {
   local source="$srcdir/source"
   install -d "$pkgdir/usr/lib/qt6/qml/MeoKDE" "$pkgdir/usr/share/plasma/look-and-feel" \
     "$pkgdir/usr/share/plasma/desktoptheme" "$pkgdir/usr/share/plasma/plasmoids" \
-    "$pkgdir/usr/share/color-schemes" "$pkgdir/usr/share/fonts/meo"
+    "$pkgdir/usr/share/color-schemes" "$pkgdir/usr/share/fonts/meo" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/fcitx5/conf" \
+    "$pkgdir/usr/share/wayland-sessions"
   cp -a "$source/qml/MeoKDE/." "$pkgdir/usr/lib/qt6/qml/MeoKDE/"
   cp -a "$source/themes/look-and-feel/org.meo.desktop" "$pkgdir/usr/share/plasma/look-and-feel/"
   for theme in MeoLight MeoDark; do
@@ -58,8 +60,10 @@ package() {
   # every supported Meo top-bar applet so optional variants are available from
   # Plasma's Widget Explorer without rewriting an existing user panel.
   for plasmoid in org.meo.topbar org.meo.timecenter org.meo.notifications \
-                  org.meo.time-notifications org.meo.shelf org.meo.toptasks; do
-    cp -a "$source/plasmoids/$plasmoid" "$pkgdir/usr/share/plasma/plasmoids/"
+                  org.meo.time-notifications org.meo.shelf org.meo.toptasks \
+                  org.meo.systemmenu; do
+    [ ! -d "$source/plasmoids/$plasmoid" ] || \
+      cp -a "$source/plasmoids/$plasmoid" "$pkgdir/usr/share/plasma/plasmoids/"
   done
   install -m644 "$source"/themes/color-schemes/*.colors "$pkgdir/usr/share/color-schemes/"
   install -m644 "$source"/assets/fonts/*.ttf "$pkgdir/usr/share/fonts/meo/"
@@ -86,21 +90,34 @@ package() {
   install -Dm755 "$source/tools/theme/apply-meo-desktop.sh" "$pkgdir/usr/bin/meo-desktop-apply"
   install -Dm755 "$source/tools/shell/apply-meo-panel-layout.sh" "$pkgdir/usr/bin/meo-desktop-layout"
   install -Dm755 "$source/tools/input-method/meo-input-method.sh" "$pkgdir/usr/bin/meo-input-method"
-  install -Dm644 "$source/defaults/kwin/kwinrc" "$pkgdir/usr/share/meo-desktop/defaults/kwinrc"
-  # os-release is target configuration, not an overwrite of Arch filesystem's
+  install -Dm755 "$source/tools/session/startmeo-wayland" "$pkgdir/usr/bin/startmeo-wayland"
+  install -Dm644 "$source/data/wayland-sessions/meo.desktop" "$pkgdir/usr/share/wayland-sessions/meo.desktop"
+
+  # Meo Desktop is a separate login session. Keep all shell/application
+  # defaults in a session-owned seed directory; startmeo-wayland copies only
+  # missing files into ~/.config/meo-desktop. Installing this package must not
+  # change the user's ordinary Plasma configuration under ~/.config or /etc/xdg.
+  install -Dm644 "$source/defaults/kde/kdeglobals" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/kdeglobals"
+  if [ -f "$source/defaults/kde/kglobalshortcutsrc" ]; then
+    install -Dm644 "$source/defaults/kde/kglobalshortcutsrc" \
+      "$pkgdir/usr/share/meo-desktop/session-defaults/kglobalshortcutsrc"
+  fi
+  install -Dm644 "$source/defaults/kwin/kwinrc" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/kwinrc"
+  install -Dm644 "$source/defaults/plasma/plasmarc" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/plasmarc"
+  install -Dm644 "$source/defaults/plasma/plasma-welcomerc" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/plasma-welcomerc"
+  install -Dm644 "$source/defaults/plasma/meo-shellrc" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/meo-shellrc"
+  install -Dm644 "$source/defaults/input-method/fcitx5/conf/classicui.conf" \
+    "$pkgdir/usr/share/meo-desktop/session-defaults/fcitx5/conf/classicui.conf"
+
+  # os-release is target branding, not an overwrite of Arch filesystem's
   # package-owned symlink. The Installer applies this packaged template.
   install -Dm644 "$source/defaults/system/os-release" "$pkgdir/usr/share/meo-desktop/os-release"
-  for entry in kde/kdeglobals kwin/kwinrc plasma/plasmarc plasma/plasma-welcomerc plasma/meo-shellrc; do
-    install -Dm644 "$source/defaults/$entry" "$pkgdir/etc/xdg/${entry##*/}"
-  done
-  # Meo Login is the primary supported login experience. Its upstream-compatible
-  # plasmalogin service/PAM/configuration identifiers intentionally remain
-  # unchanged. SDDM files stay out of the base package so a compatibility
-  # adapter can never silently select or configure SDDM on a new Meo installation.
-  install -Dm644 "$source/defaults/environment/90-meo-applications.conf" "$pkgdir/etc/environment.d/90-meo-applications.conf"
-  # This immutable source train does not provide responsiveness policy files.
-  # Do not fabricate them from an unpinned newer checkout.
-  install -Dm644 "$source/defaults/input-method/fcitx5/conf/classicui.conf" "$pkgdir/etc/xdg/fcitx5/conf/classicui.conf"
+
   install -d "$pkgdir/usr/share/fcitx5/themes"
   cp -a "$source/themes/input-method/fcitx5/MeoInputMethod-Light" "$source/themes/input-method/fcitx5/MeoInputMethod-Dark" "$pkgdir/usr/share/fcitx5/themes/"
   for file in gtk.css.in index.theme; do
@@ -110,9 +127,7 @@ package() {
     install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
   done
   sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
-  install -d "$pkgdir/usr/lib/systemd/user/default.target.wants" "$pkgdir/etc/fonts/conf.d"
-  ln -s ../meo-dynamic-colors.path "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path"
-  ln -s ../meo-weather-refresh.timer "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-weather-refresh.timer"
+  # Deliberately do not enable Meo user units globally. A normal Plasma login
+  # must remain unchanged merely because meo-desktop is installed.
   install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
-  ln -s ../conf.avail/50-meo-fonts.conf "$pkgdir/etc/fonts/conf.d/50-meo-fonts.conf"
 }
