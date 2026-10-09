@@ -12,7 +12,6 @@ depends=('glibc' 'kauth' 'kcmutils' 'kconfig' 'kcoreaddons' 'kdbusaddons'
          'systemd-libs')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools' 'qt6-shadertools')
 options=('!debug')
-options=('!debug')
 provides=('plasma-login-manager=6.7.5')
 conflicts=('plasma-login-manager')
 replaces=('plasma-login-manager')
