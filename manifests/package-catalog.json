@@ -36,7 +36,7 @@
     },
     "meo-plasma-login-manager": {
       "requiredBy": [
-        "installed-system"
+        "desktop"
       ],
       "profiles": [
         "recommended",
@@ -46,7 +46,8 @@
     "meo-desktop": {
       "requires": [
         "meoui-qml",
-        "meo-icons"
+        "meo-icons",
+        "meo-plasma-login-manager"
       ],
       "profiles": [
         "recommended",
