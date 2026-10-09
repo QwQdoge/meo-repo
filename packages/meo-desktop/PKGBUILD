@@ -14,6 +14,9 @@ depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-wor
          'system76-scheduler' 'zram-generator' 'dbus-broker-units'
          'power-profiles-daemon' 'gamemode')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
+# Release-train companion: 'meo-plasma-login-manager'. It intentionally stays
+# out of depends= so installing Meo Desktop beside an existing KDE environment
+# never replaces that system's display manager.
 optdepends=('meo-plasma-login-manager: MeoArch login experience; the Meo session works with other display managers'
             'preload-ng: optional learned application prefetching (disabled by default)'
             'prelockd: optional bounded desktop memory locking (disabled by default)'
