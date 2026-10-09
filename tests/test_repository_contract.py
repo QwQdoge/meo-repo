@@ -141,19 +141,19 @@ class RepositoryContractTests(unittest.TestCase):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
         self.assertIn('source/native/system', runtime)
         self.assertIn('cmake --install build', runtime)
-        self.assertIn('meo-weather-refresh.timer', runtime)
-        self.assertIn('meo-weather-refresh.timer', desktop)
+        self.assertNotIn('default.target.wants', runtime)
+        self.assertIn('tools/session/package-meo-desktop', desktop)
 
     def test_desktop_replaces_the_legacy_runtime_during_sysupgrade(self):
         desktop = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
-        install_script = (ROOT / "packages/meo-desktop/meo-desktop.install").read_text()
-        self.assertIn("provides=('meo-kde-runtime=0.4.0')", desktop)
+        self.assertIn("'meo-kde-runtime=0.4.0'", desktop)
+        self.assertIn("'meo-desktop-session=1'", desktop)
         self.assertIn("conflicts=('meo-kde-runtime')", desktop)
         self.assertIn("replaces=('meo-kde-runtime')", desktop)
-        self.assertIn("install=meo-desktop.install", desktop)
-        self.assertIn("backup=('usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so')", desktop)
-        self.assertIn('mv -f -- "$candidate" "$_meo_decoration_plugin"', install_script)
-        self.assertNotIn("--overwrite", install_script)
+        self.assertNotIn("install=meo-desktop.install", desktop)
+        self.assertNotIn("backup=(", desktop)
+        self.assertIn("tools/session/package-meo-desktop", desktop)
+        self.assertFalse((ROOT / "packages/meo-desktop/meo-desktop.install").exists())
 
     def test_meo_account_oauth_config_is_readable_by_the_user_daemon(self):
         recipe = (ROOT / "packages/meo-account/PKGBUILD").read_text()
@@ -485,7 +485,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn("provides=('plasma-login-manager=6.7.5')", login)
         self.assertIn("conflicts=('plasma-login-manager')", login)
         self.assertIn("replaces=('plasma-login-manager')", login)
-        self.assertIn("'meo-plasma-login-manager'", desktop)
+        self.assertNotIn("'meo-plasma-login-manager'", desktop)
         self.assertNotIn("'konsole' 'plasma-login-manager'", desktop)
         self.assertIn("meo-plasma-login-manager|meo-desktop", build)
         self.assertIn("meo-icon-studio|meo-settings", build)
@@ -499,7 +499,7 @@ class RepositoryContractTests(unittest.TestCase):
     def test_meoui_consumers_require_the_latest_beta_runtime(self):
         for package in ("meo-kde-runtime", "meo-desktop", "meo-settings", "meo-account"):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
-            self.assertIn("meoui-qml>=1.0.4beta1", recipe, package)
+            self.assertIn("meoui-qml>=1.0.4beta2" if package == "meo-desktop" else "meoui-qml>=1.0.4beta1", recipe, package)
 
     def test_latest_published_stable_manifest_is_smoke_only_not_a_release_default(self):
         manifest = json.loads((ROOT / "manifests/stable/2026.09.3.json").read_text())

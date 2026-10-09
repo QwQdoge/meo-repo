@@ -112,16 +112,7 @@ class MinimalReleaseTests(unittest.TestCase):
             "OFL-1.1",
         ):
             self.assertIn(declared, desktop)
-        for required in (
-            "THIRD_PARTY_NOTICES.md",
-            "GPL-2.0-or-later.txt",
-            "Material-Symbols-Apache-2.0.txt",
-            "Material-Color-Utilities-Apache-2.0.txt",
-            "DankMaterialShell-MIT.txt",
-            "OFL-Roboto.txt",
-            "OFL-Comfortaa.txt",
-        ):
-            self.assertIn(required, desktop)
+        self.assertIn("source/tools/session/package-meo-desktop", desktop)
 
         runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
         self.assertIn("GPL-2.0-or-later", runtime)
@@ -136,22 +127,15 @@ class MinimalReleaseTests(unittest.TestCase):
 
     def test_desktop_recipe_uses_meo_login_manager_without_sddm_payload(self):
         recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
-        self.assertIn("'meo-plasma-login-manager'", recipe)
+        self.assertNotIn("'meo-plasma-login-manager'", recipe)
         self.assertNotIn("'konsole' 'plasma-login-manager'", recipe)
         self.assertNotIn("sddm.conf.d", recipe)
         self.assertNotIn("usr/share/sddm", recipe)
 
     def test_desktop_recipe_installs_all_supported_meo_topbar_applets(self):
         recipe = (ROOT / "packages/meo-desktop/PKGBUILD").read_text()
-        for applet in (
-            "org.meo.topbar",
-            "org.meo.timecenter",
-            "org.meo.notifications",
-            "org.meo.time-notifications",
-            "org.meo.shelf",
-            "org.meo.toptasks",
-        ):
-            self.assertIn(applet, recipe)
+        self.assertIn("source/tools/session/package-meo-desktop", recipe)
+        self.assertIn("-DMEO_BUILD_STANDALONE_DOCK=OFF", recipe)
 
     def test_repository_order_checks_exact_set_and_parser_failure(self):
         with tempfile.TemporaryDirectory() as directory:

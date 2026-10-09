@@ -31,7 +31,7 @@ pacman -Qlq meo-icons | grep '/icons/MeoSymbols/index.theme$' >/dev/null
 pacman -Qlq meo-desktop | grep -E '/(wayland-sessions|xsessions|plasma/look-and-feel)/' >/dev/null
 for path in /usr/lib/qt6/qml/MeoKDE/qmldir \
   /usr/lib/qt6/qml/Meo/System/libmeosystemplugin.so \
-  /usr/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do
+  /usr/share/meo-desktop/runtime/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do
   test -s "$path"
 done
 has_meo_login_manager="$(python3 -c 'import json,sys; print("true" if "meo-plasma-login-manager" in json.load(open(sys.argv[1])).get("components", {}) else "false")' "$manifest")"

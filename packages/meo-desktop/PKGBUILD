@@ -1,115 +1,41 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=11
+pkgrel=12
 pkgdesc="MeoArch KDE Plasma desktop defaults and integration"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
 license=('GPL-3.0-or-later' 'GPL-2.0-or-later' 'MIT' 'Apache-2.0' 'OFL-1.1')
-depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
+depends=('meoui-qml>=1.0.4beta2' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
          'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
-         'konsole' 'meo-plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
+         'konsole' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
-         'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
-         'system76-scheduler' 'zram-generator' 'dbus-broker-units'
-         'power-profiles-daemon' 'gamemode')
+         'libplasma' 'layer-shell-qt' 'kdecoration' 'kcmutils' 'kcolorscheme'
+         'fcitx5' 'fcitx5-gtk' 'fcitx5-qt' 'dbus-broker-units')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-base' 'qt6-declarative' 'polkit-qt6')
-optdepends=('preload-ng: optional learned application prefetching (disabled by default)'
+optdepends=('fcitx5-configtool: upstream input method configuration'
+            'ibus: optional alternative input method'
+            'kwin-effect-rounded-corners: optional window rounding effect'
+            'preload-ng: optional learned application prefetching (disabled by default)'
             'prelockd: optional bounded desktop memory locking (disabled by default)')
 options=('!debug')
-provides=('meo-kde-runtime=0.4.0')
+provides=('meo-kde-runtime=0.4.0' 'meo-desktop-session=1')
 conflicts=('meo-kde-runtime')
 replaces=('meo-kde-runtime')
-install=meo-desktop.install
-# Temporary one-cycle adoption path for installations that predate pacman
-# ownership of the KDecoration plugin.  If an unowned legacy copy exists,
-# pacman writes the reviewed package payload as .pacnew and the install hook
-# below atomically adopts it during the same transaction.
-backup=('usr/lib/qt6/plugins/org.kde.kdecoration3/org.meo.decoration.so')
 source=()
 sha256sums=()
 
-# The release renderer supplies a pinned source tree as $srcdir/source.  This
-# recipe intentionally never reads a developer sibling checkout.
+# The release renderer supplies a pinned source tree; no sibling checkout is read.
 build() {
+  test -x "$srcdir/source/tools/session/package-meo-desktop" || {
+    echo "Pinned MeoKDE source predates the independent session contract" >&2
+    return 1
+  }
   cmake -S "$srcdir/source/native" -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_SYSCONFDIR=/etc
+    -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DMEO_BUILD_STANDALONE_DOCK=OFF
   cmake --build build --parallel
 }
 
 package() {
-  # Use the existing KDE polkit agent for this E2E candidate. Do not install a
-  # second agent's overlapping service/autostart paths into the same target.
-  # The standalone Layer Shell dock is retired and disabled in current MeoKDE.
-  for component in system dynamic-color decoration application-style; do
-    DESTDIR="$pkgdir" cmake --install "build/$component"
-  done
-  local source="$srcdir/source"
-  install -d "$pkgdir/usr/lib/qt6/qml/MeoKDE" "$pkgdir/usr/share/plasma/look-and-feel" \
-    "$pkgdir/usr/share/plasma/desktoptheme" "$pkgdir/usr/share/plasma/plasmoids" \
-    "$pkgdir/usr/share/color-schemes" "$pkgdir/usr/share/fonts/meo"
-  cp -a "$source/qml/MeoKDE/." "$pkgdir/usr/lib/qt6/qml/MeoKDE/"
-  cp -a "$source/themes/look-and-feel/org.meo.desktop" "$pkgdir/usr/share/plasma/look-and-feel/"
-  for theme in MeoLight MeoDark; do
-    cp -a "$source/themes/desktoptheme/$theme" "$pkgdir/usr/share/plasma/desktoptheme/"
-  done
-  # The default layout remains defined by the source layout script.  Install
-  # every supported Meo top-bar applet so optional variants are available from
-  # Plasma's Widget Explorer without rewriting an existing user panel.
-  for plasmoid in org.meo.topbar org.meo.timecenter org.meo.notifications \
-                  org.meo.time-notifications org.meo.shelf org.meo.toptasks; do
-    cp -a "$source/plasmoids/$plasmoid" "$pkgdir/usr/share/plasma/plasmoids/"
-  done
-  install -m644 "$source"/themes/color-schemes/*.colors "$pkgdir/usr/share/color-schemes/"
-  install -m644 "$source"/assets/fonts/*.ttf "$pkgdir/usr/share/fonts/meo/"
-  install -Dm644 "$source/LICENSE" \
-    "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-  install -Dm644 "$source/assets/licenses/GPL-2.0-or-later.txt" \
-    "$pkgdir/usr/share/licenses/$pkgname/GPL-2.0-or-later.txt"
-  install -Dm644 "$source/THIRD_PARTY_NOTICES.md" \
-    "$pkgdir/usr/share/licenses/$pkgname/THIRD_PARTY_NOTICES.md"
-  install -Dm644 "$source/assets/fonts/OFL-Roboto.txt" \
-    "$pkgdir/usr/share/licenses/$pkgname/OFL-Roboto.txt"
-  install -Dm644 "$source/assets/fonts/OFL-Comfortaa.txt" \
-    "$pkgdir/usr/share/licenses/$pkgname/OFL-Comfortaa.txt"
-  install -Dm644 "$source/assets/licenses/Material-Symbols-Apache-2.0.txt" \
-    "$pkgdir/usr/share/licenses/$pkgname/Material-Symbols-Apache-2.0.txt"
-  install -Dm644 "$source/native/third_party/material-color-utilities/LICENSE" \
-    "$pkgdir/usr/share/licenses/$pkgname/Material-Color-Utilities-Apache-2.0.txt"
-  install -Dm644 "$source/assets/licenses/DankMaterialShell-MIT.txt" \
-    "$pkgdir/usr/share/licenses/$pkgname/DankMaterialShell-MIT.txt"
-  install -Dm644 "$source/assets/wallpapers/installer_background.png" "$pkgdir/usr/share/wallpapers/MeoArch/installer_background.png"
-  install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/pixmaps/meoarch-logo.svg"
-  install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/meoarch-logo.svg"
-  install -Dm755 "$source/tools/theme/apply-meo-mode.sh" "$pkgdir/usr/bin/meo-theme-mode"
-  install -Dm755 "$source/tools/theme/apply-meo-desktop.sh" "$pkgdir/usr/bin/meo-desktop-apply"
-  install -Dm755 "$source/tools/shell/apply-meo-panel-layout.sh" "$pkgdir/usr/bin/meo-desktop-layout"
-  install -Dm755 "$source/tools/input-method/meo-input-method.sh" "$pkgdir/usr/bin/meo-input-method"
-  install -Dm644 "$source/defaults/kwin/kwinrc" "$pkgdir/usr/share/meo-desktop/defaults/kwinrc"
-  # os-release is target configuration, not an overwrite of Arch filesystem's
-  # package-owned symlink. The Installer applies this packaged template.
-  install -Dm644 "$source/defaults/system/os-release" "$pkgdir/usr/share/meo-desktop/os-release"
-  for entry in kde/kdeglobals kwin/kwinrc plasma/plasmarc plasma/plasma-welcomerc plasma/meo-shellrc; do
-    install -Dm644 "$source/defaults/$entry" "$pkgdir/etc/xdg/${entry##*/}"
-  done
-  # Plasma Login Manager is the primary supported login manager.  SDDM files
-  # stay out of the base package so a compatibility adapter can never silently
-  # select or configure SDDM on a new Meo installation.
-  install -Dm644 "$source/defaults/environment/90-meo-applications.conf" "$pkgdir/etc/environment.d/90-meo-applications.conf"
-  # This immutable source train does not provide responsiveness policy files.
-  # Do not fabricate them from an unpinned newer checkout.
-  install -Dm644 "$source/defaults/input-method/fcitx5/conf/classicui.conf" "$pkgdir/etc/xdg/fcitx5/conf/classicui.conf"
-  install -d "$pkgdir/usr/share/fcitx5/themes"
-  cp -a "$source/themes/input-method/fcitx5/MeoInputMethod-Light" "$source/themes/input-method/fcitx5/MeoInputMethod-Dark" "$pkgdir/usr/share/fcitx5/themes/"
-  for file in gtk.css.in index.theme; do
-    install -Dm644 "$source/themes/input-method/ibus/$file" "$pkgdir/usr/share/meo-desktop/input-method/ibus/$file"
-  done
-  for unit in meo-dynamic-colors.path meo-dynamic-colors.service; do
-    install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
-  done
-  sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
-  install -d "$pkgdir/usr/lib/systemd/user/default.target.wants" "$pkgdir/etc/fonts/conf.d"
-  ln -s ../meo-dynamic-colors.path "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path"
-  ln -s ../meo-weather-refresh.timer "$pkgdir/usr/lib/systemd/user/default.target.wants/meo-weather-refresh.timer"
-  install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
-  ln -s ../conf.avail/50-meo-fonts.conf "$pkgdir/etc/fonts/conf.d/50-meo-fonts.conf"
+  "$srcdir/source/tools/session/package-meo-desktop" "$srcdir/source" "$srcdir/build" "$pkgdir"
 }

@@ -12,7 +12,10 @@ class ResponsivenessPackageTests(unittest.TestCase):
             "system76-scheduler", "zram-generator", "dbus-broker-units",
             "power-profiles-daemon", "gamemode",
         ):
-            self.assertIn(f"'{package}'", recipe)
+            if package == "dbus-broker-units":
+                self.assertIn(f"'{package}'", recipe)
+            else:
+                self.assertNotIn(f"'{package}'", recipe)
         self.assertNotIn("'ananicy-cpp'", recipe)
 
 

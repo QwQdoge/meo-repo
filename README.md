@@ -44,6 +44,11 @@ the acceptance target; unrelated feature expansion is deferred.
 The current Stable system-migration train is pinned in
 [`manifests/stable/2026.09.2.json`](manifests/stable/2026.09.2.json).
 
+## Independent desktop packages
+
+See [the desktop package contract](docs/desktop-packages.md) for package ownership,
+standard local makepkg contexts, and the separate existing-system/ISO paths.
+
 ## Package-source boundary
 
 Package recipes and their package-owned files are source. The x86_64 repository

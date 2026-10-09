@@ -1,6 +1,6 @@
 pkgname=meo-plasma-login-manager
 pkgver=6.7.5
-pkgrel=1
+pkgrel=2
 pkgdesc="MeoArch Plasma Login Manager fork"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'
@@ -10,7 +10,8 @@ depends=('glibc' 'kauth' 'kcmutils' 'kconfig' 'kcoreaddons' 'kdbusaddons'
          'layer-shell-qt' 'libkscreen' 'libplasma' 'libstdc++' 'libxau' 'pam'
          'plasma-workspace' 'qt6-5compat' 'qt6-base' 'qt6-declarative' 'sh'
          'systemd-libs')
-makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools')
+makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools' 'qt6-shadertools')
+options=('!debug')
 options=('!debug')
 provides=('plasma-login-manager=6.7.5')
 conflicts=('plasma-login-manager')
@@ -25,6 +26,10 @@ build() {
   cmake -S "$srcdir/source" -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_INSTALL_LIBDIR=lib \
+    -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+    -DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+    -DBUILD_TESTING=OFF \
     -DINSTALL_PAM_CONFIGURATION=ON
   cmake --build build --parallel
 }
