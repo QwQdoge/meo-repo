@@ -30,14 +30,14 @@ class OmniStoreNativeContractTests(unittest.TestCase):
         self.assertIn("org.meo.OmniStore.desktop", self.recipe)
         self.assertIn("org.meo.OmniStore.svg", self.recipe)
 
-    def test_account_client_targets_native_binary_without_retired_ai_grant(self):
+    def test_account_client_targets_native_binary_with_system_ai_capability(self):
         self.assertEqual(self.account["id"], "org.meo.OmniStore")
         self.assertEqual(
             self.account["executables"],
             ["/usr/lib/omnistore/omnistore-native"],
         )
         self.assertEqual(self.account["redirectUri"], "omnistore://auth/callback")
-        self.assertEqual(self.account["capabilities"], [])
+        self.assertEqual(self.account["capabilities"], ["local_ai"])
 
     def test_runtime_dependencies_follow_qml_stack(self):
         for dependency in (

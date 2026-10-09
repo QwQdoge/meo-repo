@@ -29,7 +29,7 @@ class RepositoryContractTests(_suite.RepositoryContractTests):
             ["/usr/lib/omnistore/omnistore-native"],
         )
         self.assertEqual(manifest["redirectUri"], "omnistore://auth/callback")
-        self.assertEqual(manifest["capabilities"], [])
+        self.assertEqual(manifest["capabilities"], ["local_ai"])
         self.assertIn("Exec=/usr/bin/omnistore %u", desktop)
         self.assertIn("Icon=org.meo.OmniStore", desktop)
         self.assertIn("MimeType=x-scheme-handler/omnistore;", desktop)
