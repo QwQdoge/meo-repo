@@ -1,6 +1,7 @@
 import importlib.util
 from pathlib import Path
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).parents[1]
 SPEC = importlib.util.spec_from_file_location("release_center", ROOT / "tools/release_center.py")
@@ -39,6 +40,40 @@ class ReleaseCenterTests(unittest.TestCase):
         result = release_center.validate_selection("stable", beta, "", full=False)
         self.assertFalse(result["ok"])
         self.assertIn("select a committed manifest", result["output"])
+
+    def test_manifest_health_surfaces_version_or_epoch_drift(self):
+        manifest = release_center.manifests("beta")[0]
+        result = release_center.manifest_health(manifest, "beta")
+        self.assertIn("components", result)
+        rows = {row["name"]: row for row in result["components"]}
+        self.assertIn("meo-desktop", rows)
+        self.assertIn("expected", rows["meo-desktop"])
+        self.assertIn("recipe", rows["meo-desktop"])
+        self.assertIn("epoch", rows["meo-desktop"])
+        self.assertEqual(rows["meo-desktop"]["ok"],
+                         rows["meo-desktop"]["expected"] == rows["meo-desktop"]["recipe"]
+                         and rows["meo-desktop"]["epoch"])
+
+    def test_git_sync_requires_exact_remote_main_head(self):
+        responses = [
+            {"ok": True, "code": 0, "output": "a" * 40},
+            {"ok": True, "code": 0, "output": "b" * 40},
+        ]
+        with mock.patch.object(release_center, "run", side_effect=responses):
+            result = release_center.git_sync(fetch=False)
+        self.assertFalse(result["ok"])
+        self.assertIn("does not match", result["output"])
+
+    def test_dispatch_stops_before_gh_when_main_is_not_synced(self):
+        with mock.patch.object(release_center, "validate_selection",
+                               return_value={"ok": True, "output": "ok"}), \
+             mock.patch.object(release_center, "git_sync",
+                               return_value={"ok": False, "output": "main differs"}), \
+             mock.patch.object(release_center, "gh_ready") as gh_ready:
+            result = release_center.dispatch("beta", "manifests/beta/example.json", "meo-desktop")
+        self.assertFalse(result["ok"])
+        self.assertIn("Push/sync main", result["output"])
+        gh_ready.assert_not_called()
 
 
 if __name__ == "__main__":
