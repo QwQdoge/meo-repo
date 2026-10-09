@@ -31,6 +31,29 @@ reports, architecture drafts, screenshots, or build logs to the root.
 
 The single copyable cross-repository implementation and Arch release runbook is
 [`docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md`](docs/MEOARCH_IMPLEMENTATION_RUNBOOK.md).
+
+## Meo Release Center
+
+For normal manual releases, use the local graphical control panel instead of
+copying workflow inputs by hand:
+
+```bash
+python tools/release_center.py
+```
+
+It opens a localhost-only browser UI that lists reviewed manifests, derives the
+candidate list from the selected manifest, checks that the manifest is tracked
+and clean, runs release preflight validation, and dispatches the existing
+protected `release.yml` workflow through the authenticated GitHub CLI.
+
+The Release Center never imports signing keys and never receives R2 or
+Cloudflare credentials. Signing and repository publication remain inside the
+GitHub `release` Environment. Install and authenticate `gh` first when needed:
+
+```bash
+gh auth login
+```
+
 The current complete prerelease train is pinned in
 [`manifests/beta/2026.09-beta.7.json`](manifests/beta/2026.09-beta.7.json); it
 records every component's owning GitHub repository, immutable release tag,
