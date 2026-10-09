@@ -7,7 +7,7 @@ url='https://github.com/QwQdoge/meo-kde'
 license=('GPL-3.0-or-later' 'GPL-2.0-or-later' 'MIT' 'Apache-2.0' 'OFL-1.1')
 depends=('meoui-qml>=1.0.4beta1' 'meo-icons>=0.4.0' 'plasma-desktop' 'plasma-workspace'
          'plasma-nm' 'plasma-pa' 'powerdevil' 'bluedevil' 'systemsettings' 'dolphin'
-         'konsole' 'meo-plasma-login-manager' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
+         'konsole' 'breeze' 'polkit-kde-agent' 'networkmanager-qt' 'bluez-qt'
          'solid' 'pulseaudio-qt' 'kguiaddons' 'kwindowsystem' 'kconfig' 'kirigami'
          'libplasma' 'kdecoration' 'kcmutils' 'kcolorscheme'
          'fcitx5' 'fcitx5-qt' 'fcitx5-gtk'
