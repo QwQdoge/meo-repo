@@ -28,7 +28,7 @@ build() {
 
 package() {
   # Do not install the add_subdirectory MeoUI dependency a second time.
-  DESTDIR="$pkgdir" cmake --install native-build --local-only
+  DESTDIR="$pkgdir" cmake -DCMAKE_INSTALL_LOCAL_ONLY=TRUE -P native-build/cmake_install.cmake
   DESTDIR="$pkgdir" meson install -C engine-build --no-rebuild
   # The inherited Meson launcher mode is owner-executable only (0544).
   # Packaged launchers must also be executable by ordinary desktop users.
