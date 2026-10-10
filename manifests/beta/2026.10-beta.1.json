@@ -119,7 +119,7 @@
       "sourceSha256": "3b09f8f6ec6217f1def0783efaff52f8fe4e08e0e6fda6a6a8f9bd27e14b177a",
       "sourceDateEpoch": 1791611656,
       "sourceLayout": "source",
-      "expectedVersion": "0.2.0beta4-7"
+      "expectedVersion": "0.2.0beta5-1"
     },
     "omnistore-bin": {
       "repository": "QwQdoge/OmniStore",
