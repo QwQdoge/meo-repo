@@ -63,6 +63,12 @@ and icons before desktop/applications, and Account/Icon Studio before Settings.
 The native AI package includes the inherited compatibility engine and disabled
 user services; it does not ship cloud credentials or enable provider/system
 access. Build/install checks do not certify real Plasma/PAM or provider use.
+After publication, dispatch `repository-smoke.yml` with channel `beta`, the
+October manifest, and candidate `all` to install the complete application graph
+from the signed public repositories and verify exact versions plus offscreen
+Settings, Welcome, AI, Repair and OmniStore checks. Desktop supplies the
+standalone runtime in this graph; the separate runtime candidate is verified
+by its own release run. This check runs only in a disposable Arch container.
 
 The previous complete prerelease train is pinned in
 [`manifests/beta/2026.09-beta.7.json`](manifests/beta/2026.09-beta.7.json); it
