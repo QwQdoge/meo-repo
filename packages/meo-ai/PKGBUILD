@@ -15,7 +15,7 @@ optdepends=('python-pyaudio: microphone input'
             'python-mcp: external MCP tools')
 options=('!debug')
 source=('org.meo.AI.desktop')
-sha256sums=('6adfb97c529bcc8d5e912358bab1e608dde362110ee7f94f76e0f9d5d774256f')
+sha256sums=('4599b696120724b9473498d90cbd9eea7fad3ff3808a14afb33652da7ca0eabf')
 
 build() {
   cmake -S "$srcdir/source/meo" -B native-build -G Ninja \
@@ -30,6 +30,10 @@ package() {
   # Do not install the add_subdirectory MeoUI dependency a second time.
   DESTDIR="$pkgdir" cmake --install native-build --local-only
   DESTDIR="$pkgdir" meson install -C engine-build --no-rebuild
+  # The inherited Meson launcher mode is owner-executable only (0544).
+  # Packaged launchers must also be executable by ordinary desktop users.
+  chmod 755 "$pkgdir/usr/bin/newelle" "$pkgdir/usr/bin/meo-agent-service" \
+    "$pkgdir/usr/bin/meo-agentd" "$pkgdir/usr/bin/meo-connect-device"
   # The headless compatibility adapter imports src.*, while Meson installs
   # the inherited engine under newelle/. Both names refer to one engine.
   ln -s newelle "$pkgdir/usr/share/newelle/src"

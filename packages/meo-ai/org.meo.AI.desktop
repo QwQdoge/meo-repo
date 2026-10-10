@@ -3,6 +3,6 @@ Type=Application
 Name=Meo AI
 Comment=Your MeoArch AI assistant
 Exec=meo-ai
-Icon=io.github.qwersyk.Newelle
+Icon=meo-ai
 Terminal=false
 Categories=Utility;
