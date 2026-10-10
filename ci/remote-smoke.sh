@@ -59,9 +59,20 @@ PY
     channel_package=meo-channel-stable
     ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
+    case "$candidate" in all|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
     repositories=$'[meo-beta]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo-beta/os/x86_64\n\n[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
     packages=("$candidate")
+    if [ "$candidate" = all ]; then
+      # Desktop provides the standalone runtime; installing both explicitly
+      # would conflict. Verify the standalone variant in its candidate run.
+      mapfile -t packages < <(python3 - "$manifest" <<'PY'
+import json, sys
+components = json.load(open(sys.argv[1], encoding="utf-8"))["components"]
+print(*(name for name in components if name != "meo-kde-runtime"
+        or "meo-desktop" not in components), sep="\n")
+PY
+      )
+    fi
     channel_package=meo-channel-beta
     ;;
   *) echo "Invalid channel" >&2; exit 2 ;;
@@ -84,6 +95,21 @@ test -s /etc/pacman.d/meo-channel.conf
 printf '\nInclude = /etc/pacman.d/meo-channel.conf\n' >>/etc/pacman.conf
 bash "$repo_root/ci/check-repository-order.sh" /etc/pacman.conf "$channel"
 pacman -Syu --noconfirm
+if [ "$channel" = beta ]; then
+  # Installation alone can accidentally accept the previous public version.
+  for package in "${packages[@]}"; do
+    expected="$(python3 - "$manifest" "$package" <<'PY'
+import json, sys
+print(json.load(open(sys.argv[1], encoding="utf-8"))["components"][sys.argv[2]]["expectedVersion"])
+PY
+    )"
+    actual="$(pacman -Q "$package")"
+    [ "$actual" = "$package $expected" ] || {
+      echo "Published version mismatch: expected $package $expected, got $actual" >&2
+      exit 3
+    }
+  done
+fi
 for directory in / /etc /usr /var; do
   test "$(stat -c '%u:%g' "$directory")" = 0:0 || {
     echo "Remote installation left unsafe ownership on $directory" >&2
@@ -91,7 +117,7 @@ for directory in / /etc /usr /var; do
   }
 done
 systemd-tmpfiles --create --remove
-if [ "$candidate" = meo-settings ]; then
+if [ "$candidate" = meo-settings ] || [ "$candidate" = all ]; then
   stale_qml_root="$(mktemp -d)"
   trap 'cleanup_keyring_bootstrap; rm -f -- "$config"; rm -rf -- "$stale_qml_root"' EXIT
   mkdir -p "$stale_qml_root/MeoUI"
@@ -103,15 +129,18 @@ if [ "$candidate" = meo-settings ]; then
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_FORCE_STDERR_LOGGING=1 \
     timeout 30 meo-welcome --show --smoke
 fi
-if [ "$candidate" = meo-ai ]; then
+if [ "$candidate" = meo-ai ] || [ "$candidate" = all ]; then
   QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 meo-ai --smoke
   MEO_AI_BACKEND_FACTORY= timeout 30 meo-agent-service --self-check
   # The real compatibility engine must initialize without a display/provider.
   timeout 60 dbus-run-session -- meo-agent-service --self-check
 fi
-if [ "$candidate" = meo-repair ]; then
+if [ "$candidate" = meo-repair ] || [ "$candidate" = all ]; then
   timeout 30 meoarch-repair --list-categories
   QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 \
     meoarch-repair --preview --screenshot /tmp/meo-repair-preview.png
+fi
+if [ "$candidate" = omnistore-bin ] || [ "$candidate" = all ]; then
+  QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 omnistore --check-qml
 fi
 [ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"
