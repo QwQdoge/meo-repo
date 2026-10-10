@@ -10,6 +10,7 @@ REQUIRED = {"meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime", "meo-acc
 MINIMAL = {"meoui-qml", "meo-icons", "meo-desktop"}
 LEGACY_RECOMMENDED = REQUIRED - {"meo-kde-runtime"}
 NEXT_COMPONENTS = {"meo-icon-studio", "meo-plasma-login-manager"}
+OPTIONAL_APPLICATIONS = {"meo-ai", "meo-repair"}
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 VERSION = re.compile(r"^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -52,7 +53,8 @@ def main(path: str, channel: str | None = None) -> None:
             for base in (REQUIRED, LEGACY_RECOMMENDED)
             for extra in next_variants
         }
-    if not isinstance(components, dict) or frozenset(selected) not in valid_sets:
+    profile_selected = selected - OPTIONAL_APPLICATIONS if profile == "recommended" else selected
+    if not isinstance(components, dict) or frozenset(profile_selected) not in valid_sets:
         fail("components must be exactly the selected Meo release profile")
     for name, component in components.items():
         if not isinstance(component, dict):

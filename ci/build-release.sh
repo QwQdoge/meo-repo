@@ -9,12 +9,12 @@ channel="${3:-stable}"
 candidate="${4:-}"
 case "$channel" in
   stable)
-    case "$candidate" in ''|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin) ;; *)
+    case "$candidate" in ''|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *)
       echo "Invalid Stable candidate" >&2; exit 2;;
     esac
     ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin) ;; *)
+    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *)
       echo "Beta build requires one reviewed core package candidate" >&2; exit 2;;
     esac
     ;;
@@ -170,6 +170,13 @@ for package in "${core_packages[@]}"; do
   # Build jobs have no release secrets. Installing their own unsigned outputs
   # is confined to this disposable builder and only enables downstream builds.
   sudo pacman -U --noconfirm "$output/packages/$package-"*.pkg.tar.*
+  if [ "$package" = meo-ai ]; then
+    QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 meo-ai --smoke
+    MEO_AI_BACKEND_FACTORY= timeout 30 meo-agent-service --self-check
+    timeout 60 dbus-run-session -- meo-agent-service --self-check
+  elif [ "$package" = meo-repair ]; then
+    timeout 30 meoarch-repair --list-categories
+  fi
 done
 
 if [ "$channel" = stable ] && [ -z "$candidate" ]; then

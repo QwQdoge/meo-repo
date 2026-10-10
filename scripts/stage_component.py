@@ -143,6 +143,21 @@ def stage(manifest_path: Path, package: str, output: Path) -> None:
     safe_extract(archive, destination, component.get("sourcePaths"))
     archive.unlink()
 
+    if package == "meo-plasma-login-manager":
+        stage_local_sources(output, ("meo-session.conf",))
+
+    if package == "meo-ai":
+        # Native Meo AI builds against the same immutable MeoUI as the train.
+        # Its local-only CMake install keeps shared MeoUI files in meoui-qml.
+        ui = manifest["components"]["meoui-qml"]
+        dependency_archive = output / "meoui-source.archive"
+        download(ui["sourceUrl"], ui["sourceSha256"], dependency_archive)
+        dependency_source = output / "src" / "meoui"
+        dependency_source.mkdir()
+        safe_extract(dependency_archive, dependency_source)
+        dependency_archive.unlink()
+        stage_local_sources(output, ("org.meo.AI.desktop",))
+
     if package == "omnistore-bin":
         # The component bundle is staged manually and makepkg runs with
         # --noextract, so local recipe sources must be placed in $srcdir too.

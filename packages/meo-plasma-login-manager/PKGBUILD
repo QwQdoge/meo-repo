@@ -1,6 +1,6 @@
 pkgname=meo-plasma-login-manager
 pkgver=6.7.5
-pkgrel=3
+pkgrel=4
 pkgdesc="Meo Login display manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'

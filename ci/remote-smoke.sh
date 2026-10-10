@@ -59,7 +59,7 @@ PY
     channel_package=meo-channel-stable
     ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
+    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
     repositories=$'[meo-beta]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo-beta/os/x86_64\n\n[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
     packages=("$candidate")
     channel_package=meo-channel-beta
@@ -102,5 +102,14 @@ if [ "$candidate" = meo-settings ]; then
   QML_IMPORT_PATH="$stale_qml_root" QML2_IMPORT_PATH="$stale_qml_root" \
     QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software QT_FORCE_STDERR_LOGGING=1 \
     timeout 30 meo-welcome --show --smoke
+fi
+if [ "$candidate" = meo-ai ]; then
+  QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 meo-ai --smoke
+  MEO_AI_BACKEND_FACTORY= timeout 30 meo-agent-service --self-check
+  # The real compatibility engine must initialize without a display/provider.
+  timeout 60 dbus-run-session -- meo-agent-service --self-check
+fi
+if [ "$candidate" = meo-repair ]; then
+  timeout 30 meoarch-repair --list-categories
 fi
 [ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"

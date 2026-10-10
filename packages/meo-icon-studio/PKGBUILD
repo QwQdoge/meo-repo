@@ -1,6 +1,6 @@
 pkgname=meo-icon-studio
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="MeoArch per-application icon renderer and reviewed identity source sheet"
 arch=('any')
 url='https://github.com/QwQdoge/meo-kde'

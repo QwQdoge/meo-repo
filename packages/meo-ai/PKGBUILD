@@ -1,0 +1,41 @@
+pkgname=meo-ai
+pkgver=0.1.0beta1
+pkgrel=1
+pkgdesc="Meo AI native assistant and headless AgentService"
+arch=('x86_64')
+url='https://github.com/QwQdoge/meo-ai'
+license=('GPL-3.0-or-later')
+depends=('meoui-qml>=1.0.4beta3' 'qt6-base' 'qt6-declarative'
+         'python' 'python-gobject' 'python-aiohttp' 'python-requests'
+         'python-pillow' 'python-tiktoken' 'python-dbus-next'
+         'gtk4' 'libadwaita' 'gtksourceview5' 'webkitgtk-6.0' 'vte4')
+makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools' 'meson' 'gettext')
+optdepends=('python-openai: OpenAI-compatible providers'
+            'python-pyaudio: microphone input'
+            'python-pydub: audio conversion'
+            'python-mcp: external MCP tools')
+options=('!debug')
+source=('org.meo.AI.desktop')
+sha256sums=('6adfb97c529bcc8d5e912358bab1e608dde362110ee7f94f76e0f9d5d774256f')
+
+build() {
+  cmake -S "$srcdir/source/meo" -B native-build -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+    -DMEO_UI_ROOT="$srcdir/meoui" -DBUILD_TESTING=OFF
+  cmake --build native-build --parallel 2
+  meson setup engine-build "$srcdir/source" --prefix=/usr --libdir=lib -Dprofile=release
+  meson compile -C engine-build
+}
+
+package() {
+  # Do not install the add_subdirectory MeoUI dependency a second time.
+  DESTDIR="$pkgdir" cmake --install native-build --local-only
+  DESTDIR="$pkgdir" meson install -C engine-build --no-rebuild
+  # The headless compatibility adapter imports src.*, while Meson installs
+  # the inherited engine under newelle/. Both names refer to one engine.
+  ln -s newelle "$pkgdir/usr/share/newelle/src"
+  install -Dm644 "$srcdir/org.meo.AI.desktop" "$pkgdir/usr/share/applications/org.meo.AI.desktop"
+  install -Dm644 "$srcdir/source/COPYING" "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+  # User services are shipped disabled; credentials and cloud deployment
+  # configuration are never part of this desktop package.
+}

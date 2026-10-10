@@ -1,6 +1,6 @@
 pkgname=meo-kde-runtime
 pkgver=0.4.0beta3
-pkgrel=5
+pkgrel=6
 pkgdesc="Minimal Meo KDE runtime bridge for Meo applications"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'

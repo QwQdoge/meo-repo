@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=14
+pkgrel=15
 pkgdesc="Meo Desktop integration for MeoArch, powered by KDE Plasma"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'

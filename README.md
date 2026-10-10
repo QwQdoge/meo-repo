@@ -54,7 +54,17 @@ GitHub `release` Environment. Install and authenticate `gh` first when needed:
 gh auth login
 ```
 
-The current complete prerelease train is pinned in
+The October Beta component refresh is pinned in
+[`manifests/beta/2026.10-beta.1.json`](manifests/beta/2026.10-beta.1.json).
+It updates shared UI, desktop/runtime, icons, login, Account and Settings, adds
+Icon Studio, Meo AI and Repair publication inputs, and retains the existing
+immutable OmniStore bundle. Publish one Beta candidate at a time, with MeoUI
+and icons before desktop/applications, and Account/Icon Studio before Settings.
+The native AI package includes the inherited compatibility engine and disabled
+user services; it does not ship cloud credentials or enable provider/system
+access. Build/install checks do not certify real Plasma/PAM or provider use.
+
+The previous complete prerelease train is pinned in
 [`manifests/beta/2026.09-beta.7.json`](manifests/beta/2026.09-beta.7.json); it
 records every component's owning GitHub repository, immutable release tag,
 commit, package version, source URL, and SHA-256.
