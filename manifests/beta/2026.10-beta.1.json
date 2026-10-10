@@ -80,7 +80,9 @@
         "qml/MeoKDE",
         "assets/licenses",
         "LICENSE",
-        "THIRD_PARTY_NOTICES.md"
+        "THIRD_PARTY_NOTICES.md",
+        "native/translations",
+        "translations"
       ]
     },
     "meo-account": {
