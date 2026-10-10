@@ -8,18 +8,18 @@ manifest="$(realpath -e -- "${1:?manifest path is required}")"
 artifact_dir="$(realpath -e -- "${2:?artifact directory is required}")"
 channel="${3:?stable or beta channel is required}"
 case "$channel" in stable|beta) ;; *) echo "Invalid channel" >&2; exit 2 ;; esac
-python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel"
+python3 "$repo_root/scripts/validate_manifest.py" "$manifest" --channel "$channel" >&2
 
 contract="$artifact_dir/artifacts.json"
 packages="$artifact_dir/packages"
 python3 "$repo_root/scripts/artifact_manifest.py" verify \
-  --contract "$contract" --manifest "$manifest" --packages "$packages"
+  --contract "$contract" --manifest "$manifest" --packages "$packages" >&2
 contract_candidate="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8")).get("candidate") or "")' "$contract")"
 closure_args=("$manifest")
 [ -n "$contract_candidate" ] && closure_args+=(--candidate "$contract_candidate")
-python3 "$repo_root/scripts/validate_release_closure.py" "${closure_args[@]}"
+python3 "$repo_root/scripts/validate_release_closure.py" "${closure_args[@]}" >&2
 python3 "$repo_root/scripts/verify_package_metadata.py" \
-  --contract "$contract" --packages "$packages"
+  --contract "$contract" --packages "$packages" >&2
 contract_channel="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["channel"])' "$contract")"
 [ "$contract_channel" = "$channel" ] || { echo "Artifact channel does not match publication channel" >&2; exit 3; }
 python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "$contract"

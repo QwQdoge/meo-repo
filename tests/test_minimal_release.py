@@ -1,8 +1,10 @@
 import io
+import hashlib
 import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tarfile
 import tempfile
@@ -15,6 +17,37 @@ from stage_component import safe_extract
 
 
 class MinimalReleaseTests(unittest.TestCase):
+    def test_publication_preflight_emits_only_digest_and_keeps_failures_closed(self):
+        # Exercise the shell/output contract independently of package validation:
+        # successful validators may log messages, but GitHub output must be one SHA.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "ci").mkdir()
+            (root / "scripts").mkdir()
+            script = root / "ci/preflight-publication.sh"
+            shutil.copyfile(ROOT / "ci/preflight-publication.sh", script)
+            manifest = root / "manifest.json"
+            manifest.write_text("{}")
+            artifacts = root / "artifacts"
+            artifacts.mkdir()
+            contract = artifacts / "artifacts.json"
+            contract.write_text(json.dumps({"channel": "beta", "candidate": "meoui-qml"}))
+            for validator in ("validate_manifest.py", "artifact_manifest.py",
+                              "validate_release_closure.py", "verify_package_metadata.py"):
+                (root / "scripts" / validator).write_text(
+                    'import os, sys\nprint("validation status")\n'
+                    'sys.exit(3 if os.environ.get("FAIL_VALIDATION") else 0)\n')
+            success = subprocess.run(["bash", script, manifest, artifacts, "beta"],
+                                     capture_output=True, text=True)
+            self.assertEqual(success.returncode, 0, success.stderr)
+            self.assertEqual(success.stdout, hashlib.sha256(contract.read_bytes()).hexdigest() + "\n")
+            self.assertIn("validation status", success.stderr)
+            failed = subprocess.run(["bash", script, manifest, artifacts, "beta"],
+                                    env=dict(os.environ, FAIL_VALIDATION="1"),
+                                    capture_output=True, text=True)
+            self.assertNotEqual(failed.returncode, 0)
+            self.assertEqual(failed.stdout, "")
+
     def test_namcap_errors_block_even_when_command_returns_zero(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
