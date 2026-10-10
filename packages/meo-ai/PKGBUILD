@@ -4,18 +4,22 @@ pkgrel=1
 pkgdesc="Meo AI native assistant and headless AgentService"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-ai'
-license=('GPL-3.0-or-later')
+license=('GPL-3.0-or-later' 'MIT' 'BSD-3-Clause')
 depends=('meoui-qml>=1.0.4beta3' 'qt6-base' 'qt6-declarative'
-         'python' 'python-pip' 'python-openai' 'python-gobject' 'python-aiohttp' 'python-requests'
+         'python' 'python-pip' 'python-openai' 'python-gobject' 'python-cairo' 'python-aiohttp' 'python-requests'
          'python-pillow' 'python-tiktoken' 'python-dbus-next'
+         'python-numpy' 'python-pydub' 'python-audioop-lts'
+         'python-beautifulsoup4' 'python-cssselect' 'python-feedparser'
+         'python-jieba' 'python-lxml' 'python-lxml-html-clean' 'python-nltk'
+         'python-dateutil' 'python-yaml' 'python-tldextract' 'python-six'
          'gtk4' 'libadwaita' 'gtksourceview5' 'webkitgtk-6.0' 'vte4')
-makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools' 'meson' 'gettext')
+makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools' 'meson' 'gettext'
+             'python-setuptools' 'python-wheel')
 optdepends=('python-pyaudio: microphone input'
-            'python-pydub: audio conversion'
             'python-mcp: external MCP tools')
 options=('!debug')
-source=('org.meo.AI.desktop')
-sha256sums=('4599b696120724b9473498d90cbd9eea7fad3ff3808a14afb33652da7ca0eabf')
+source=('org.meo.AI.desktop' 'newspaper3k-LICENSE' 'feedfinder2-LICENSE' 'tinysegmenter-LICENSE' 'runtime-sources.json')
+sha256sums=('4599b696120724b9473498d90cbd9eea7fad3ff3808a14afb33652da7ca0eabf' '662ea995a58f4d1138128ae1f44a91bccd4ddb114419d04446cf165442b8217c' 'dd878f923e4dc2e4ee6a4482fc00a94a933888c2ceb51db131827939a26739af' '3ecf2511b2bfac0296d6d4efe236e323d8989b779e0dcce281f2482ebdd560af' 'f38110e262126c355bfe4f5ebe10b38dac960a00f1c20ea5f89f638a36f92706')
 
 build() {
   cmake -S "$srcdir/source/meo" -B native-build -G Ninja \
@@ -30,6 +34,12 @@ package() {
   # Do not install the add_subdirectory MeoUI dependency a second time.
   DESTDIR="$pkgdir" cmake -DCMAKE_INSTALL_LOCAL_ONLY=TRUE -P native-build/cmake_install.cmake
   DESTDIR="$pkgdir" meson install -C engine-build --no-rebuild
+  # These three pure-Python modules are absent from Arch's repositories.
+  # Stage their immutable upstream hashes, build offline, and keep them
+  # private to this application. All other dependencies are pacman-owned.
+  PIP_NO_INDEX=1 python -m pip install --no-deps --no-build-isolation \
+    --no-compile --target "$pkgdir/usr/share/newelle" \
+    "$srcdir/third-party/"*.whl "$srcdir/third-party/"*.tar.gz
   # The inherited Meson launcher mode is owner-executable only (0544).
   # Packaged launchers must also be executable by ordinary desktop users.
   chmod 755 "$pkgdir/usr/bin/newelle" "$pkgdir/usr/bin/meo-agent-service" \
@@ -39,6 +49,12 @@ package() {
   ln -s newelle "$pkgdir/usr/share/newelle/src"
   install -Dm644 "$srcdir/org.meo.AI.desktop" "$pkgdir/usr/share/applications/org.meo.AI.desktop"
   install -Dm644 "$srcdir/source/COPYING" "$pkgdir/usr/share/licenses/$pkgname/COPYING"
+  for dependency in newspaper3k feedfinder2 tinysegmenter; do
+    install -Dm644 "$startdir/$dependency-LICENSE" \
+      "$pkgdir/usr/share/licenses/$pkgname/$dependency-LICENSE"
+  done
+  install -Dm644 "$startdir/runtime-sources.json" \
+    "$pkgdir/usr/share/licenses/$pkgname/runtime-sources.json"
   # User services are shipped disabled; credentials and cloud deployment
   # configuration are never part of this desktop package.
 }

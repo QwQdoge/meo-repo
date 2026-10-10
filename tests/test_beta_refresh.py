@@ -14,6 +14,34 @@ import validate_manifest
 
 
 class BetaRefreshTests(unittest.TestCase):
+    def test_ai_context_stages_locked_private_runtime_inputs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = root / "manifest.json"
+            version = stage_component.recipe_version((ROOT / "packages/meo-ai/PKGBUILD").read_text())
+            source = {"sourceUrl": "https://example.test/source", "sourceSha256": "0" * 64}
+            manifest.write_text(json.dumps({"components": {
+                "meo-ai": dict(source, expectedVersion=version), "meoui-qml": source}}))
+            downloads = []
+
+            def download(url, checksum, destination):
+                downloads.append((url, checksum, destination))
+                if destination.name.endswith(".archive"):
+                    with tarfile.open(destination, "w"):
+                        pass
+                else:
+                    destination.write_bytes(b"verified fixture")
+
+            context = root / "context"
+            with patch.object(stage_component, "download", download):
+                stage_component.stage(manifest, "meo-ai", context)
+            locked = json.loads((ROOT / "packages/meo-ai/runtime-sources.json").read_text())["sources"]
+            for item in locked:
+                filename = item["url"].rsplit("/", 1)[-1]
+                destination = context / "src/third-party" / filename
+                self.assertIn((item["url"], item["sha256"], destination), downloads)
+                self.assertEqual(destination.read_bytes(), b"verified fixture")
+
     def test_login_preextracted_context_contains_session_default(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

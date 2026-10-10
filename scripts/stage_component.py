@@ -12,6 +12,7 @@ import subprocess
 import tarfile
 import tempfile
 import urllib.request
+import urllib.parse
 from pathlib import Path, PurePosixPath
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -157,6 +158,14 @@ def stage(manifest_path: Path, package: str, output: Path) -> None:
         safe_extract(dependency_archive, dependency_source)
         dependency_archive.unlink()
         stage_local_sources(output, ("org.meo.AI.desktop",))
+        runtime_sources = json.loads((output / "runtime-sources.json").read_text())
+        runtime_dir = output / "src" / "third-party"
+        runtime_dir.mkdir()
+        for source in runtime_sources["sources"]:
+            name = PurePosixPath(urllib.parse.urlsplit(source["url"]).path).name
+            if not name or name in {".", ".."}:
+                raise ValueError("invalid private Python runtime source filename")
+            download(source["url"], source["sha256"], runtime_dir / name)
 
     if package == "omnistore-bin":
         # The component bundle is staged manually and makepkg runs with
