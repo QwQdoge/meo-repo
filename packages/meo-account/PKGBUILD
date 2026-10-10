@@ -6,7 +6,7 @@ arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-account'
 license=('GPL-3.0-or-later')
 depends=('qt6-base' 'qt6-declarative' 'kwallet' 'meoui-qml>=1.0.4beta1')
-makedepends=('cmake' 'ninja')
+makedepends=('cmake' 'ninja' 'qt6-tools')
 backup=('etc/meo-account/broker.conf')
 source=()
 sha256sums=()
