@@ -111,5 +111,7 @@ if [ "$candidate" = meo-ai ]; then
 fi
 if [ "$candidate" = meo-repair ]; then
   timeout 30 meoarch-repair --list-categories
+  QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 \
+    meoarch-repair --preview --screenshot /tmp/meo-repair-preview.png
 fi
 [ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"

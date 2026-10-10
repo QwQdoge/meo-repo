@@ -5,7 +5,7 @@ pkgdesc="Meo Repair diagnostics and consent-gated system repair for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-os-workspace'
 license=('GPL-3.0-or-later')
-depends=('meoui-qml>=1.0.4beta1' 'qt6-base' 'qt6-declarative' 'qtkeychain-qt6' 'polkit-qt6')
+depends=('meoui-qml>=1.0.4beta1' 'meo-kde-runtime>=0.4.0beta3' 'qt6-base' 'qt6-declarative' 'qtkeychain-qt6' 'polkit-qt6')
 makedepends=('cmake' 'ninja' 'qt6-tools')
 options=('!debug')
 source=()

@@ -176,6 +176,8 @@ for package in "${core_packages[@]}"; do
     timeout 60 dbus-run-session -- meo-agent-service --self-check
   elif [ "$package" = meo-repair ]; then
     timeout 30 meoarch-repair --list-categories
+    QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 \
+      meoarch-repair --preview --screenshot "$output/repair-preview.png"
   fi
 done
 
