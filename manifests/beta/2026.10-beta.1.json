@@ -140,13 +140,13 @@
     },
     "meo-ai": {
       "repository": "QwQdoge/meo-ai",
-      "tag": "v0.1.0-beta.1",
-      "commit": "4b89f234f5ac357d842a6574fa476a7c2ec89497",
-      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-ai/tar.gz/4b89f234f5ac357d842a6574fa476a7c2ec89497",
-      "sourceSha256": "d173b3ae4c4dc015649c0d547e6ee8d5f187b2c7585175e70784196670020050",
-      "sourceDateEpoch": 1791613919,
+      "tag": "v0.1.0-beta.2",
+      "commit": "41a751e278ea9e2f90c11044e2b7077e19ef3dab",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-ai/tar.gz/41a751e278ea9e2f90c11044e2b7077e19ef3dab",
+      "sourceSha256": "de7e57693564edafb2ec3f7bad138f1139bc0d8af0215284ec0198e24f251290",
+      "sourceDateEpoch": 1791616007,
       "sourceLayout": "source",
-      "expectedVersion": "0.1.0beta1-1"
+      "expectedVersion": "0.1.0beta2-1"
     },
     "meo-repair": {
       "repository": "QwQdoge/MeoArch-os-workspace",
