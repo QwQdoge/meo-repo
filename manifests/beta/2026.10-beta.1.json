@@ -82,7 +82,9 @@
         "LICENSE",
         "THIRD_PARTY_NOTICES.md",
         "native/translations",
-        "translations"
+        "translations",
+        "data",
+        "defaults"
       ]
     },
     "meo-account": {
@@ -154,7 +156,12 @@
       "sourceSha256": "e5d3d2817422d5a29c4517c36a74cac187ec479684364ff913ea7b95b3d2e501",
       "sourceDateEpoch": 1791533425,
       "sourceLayout": "source",
-      "expectedVersion": "0.1.0-1"
+      "expectedVersion": "0.1.0-1",
+      "sourcePaths": [
+        "repair",
+        "installer/app",
+        "LICENSE"
+      ]
     }
   },
   "description": "Beta component refresh from pinned source commits. Publish dependency candidates first; OmniStore remains the already-published immutable bundle. Plasma/PAM and real provider acceptance remain separate."
