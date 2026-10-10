@@ -29,16 +29,16 @@ prepare() {
     error "Native MeoArch release bundle must not contain the retired Flutter frontend"
     return 1
   }
-  # The upstream SDK build embeds its runner's Qt path and an empty entry.
-  # Arch resolves Qt from system packages; only the package-owned directory
-  # may be searched ahead of the system loader paths, never the working dir.
-  patchelf --set-rpath '$ORIGIN' "$srcdir/release_bundle/omnistore-native"
   python "$srcdir/verify_release_exporter_contract.py" --backend "$srcdir/release_bundle/backends/python_server"
 }
 
 package() {
   install -d "$pkgdir/usr/lib/omnistore"
   cp -a "$srcdir/release_bundle/." "$pkgdir/usr/lib/omnistore/"
+  # The upstream SDK build embeds its runner's Qt path and an empty entry.
+  # Apply this in package(): release CI stages sources with --noextract,
+  # which skips prepare(). Arch uses system Qt and a package-owned origin.
+  patchelf --set-rpath '$ORIGIN' "$pkgdir/usr/lib/omnistore/omnistore-native"
 
   test -x "$pkgdir/usr/lib/omnistore/backends/meo_stable_rollback.py" || {
     error "Release bundle lacks the required Stable rollback root helper"
