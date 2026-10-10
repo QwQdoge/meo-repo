@@ -1,6 +1,6 @@
 pkgname=meo-settings
 pkgver=0.2.0beta5
-pkgrel=2
+pkgrel=3
 pkgdesc="Meo Settings application for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoSettings'
