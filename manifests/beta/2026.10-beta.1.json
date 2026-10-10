@@ -23,7 +23,10 @@
       "sourceSha256": "c1e543ae72968283ce06c6eaf813f9d5db516bb840419bd99858523142c6a982",
       "sourceDateEpoch": 1791592009,
       "sourceLayout": "source",
-      "expectedVersion": "0.4.0-5"
+      "expectedVersion": "0.4.0-5",
+      "sourcePaths": [
+        "themes/icons"
+      ]
     },
     "meo-plasma-login-manager": {
       "repository": "QwQdoge/meo-login-manager",
@@ -43,7 +46,22 @@
       "sourceSha256": "c1e543ae72968283ce06c6eaf813f9d5db516bb840419bd99858523142c6a982",
       "sourceDateEpoch": 1791592009,
       "sourceLayout": "source",
-      "expectedVersion": "0.4.0-15"
+      "expectedVersion": "0.4.0-15",
+      "sourcePaths": [
+        "native",
+        "qml",
+        "defaults",
+        "data",
+        "plasmoids",
+        "themes",
+        "tools",
+        "assets/fonts",
+        "assets/wallpapers",
+        "assets/icons/meoarch-logo.svg",
+        "assets/licenses",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md"
+      ]
     },
     "meo-kde-runtime": {
       "repository": "QwQdoge/meo-kde",
@@ -53,7 +71,16 @@
       "sourceSha256": "c1e543ae72968283ce06c6eaf813f9d5db516bb840419bd99858523142c6a982",
       "sourceDateEpoch": 1791592009,
       "sourceLayout": "source",
-      "expectedVersion": "0.4.0beta3-6"
+      "expectedVersion": "0.4.0beta3-6",
+      "sourcePaths": [
+        "native/system",
+        "native/dynamic-color",
+        "native/third_party/material-color-utilities",
+        "qml/MeoKDE",
+        "assets/licenses",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md"
+      ]
     },
     "meo-account": {
       "repository": "QwQdoge/MeoArch-account",
@@ -74,7 +101,12 @@
       "sourceSha256": "c1e543ae72968283ce06c6eaf813f9d5db516bb840419bd99858523142c6a982",
       "sourceDateEpoch": 1791592009,
       "sourceLayout": "source",
-      "expectedVersion": "0.1.0-2"
+      "expectedVersion": "0.1.0-2",
+      "sourcePaths": [
+        "tools/icons",
+        "assets/icons/application-identities",
+        "LICENSE"
+      ]
     },
     "meo-settings": {
       "repository": "QwQdoge/MeoSettings",
