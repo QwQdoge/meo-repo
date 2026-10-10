@@ -10,6 +10,7 @@ license=('GPL-3.0-only')
 depends=('qt6-base' 'qt6-declarative' 'meoui-qml>=1.0.4beta2-4'
          'meo-kde-runtime>=0.4.0beta3' 'ksshaskpass' 'libsecret'
          'pacman-contrib' 'python' 'pyalpm')
+makedepends=('patchelf')
 optdepends=('meo-release: shared MeoArch application catalog and channel integration'
             'meo-account>=0.1.0-8: system AI connections and remembered catalog consent'
             'flatpak: install applications from Flatpak remotes')
@@ -28,6 +29,10 @@ prepare() {
     error "Native MeoArch release bundle must not contain the retired Flutter frontend"
     return 1
   }
+  # The upstream SDK build embeds its runner's Qt path and an empty entry.
+  # Arch resolves Qt from system packages; only the package-owned directory
+  # may be searched ahead of the system loader paths, never the working dir.
+  patchelf --set-rpath '$ORIGIN' "$srcdir/release_bundle/omnistore-native"
   python "$srcdir/verify_release_exporter_contract.py" --backend "$srcdir/release_bundle/backends/python_server"
 }
 
