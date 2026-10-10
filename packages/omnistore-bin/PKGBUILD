@@ -1,17 +1,17 @@
 # The protected renderer sets pkgver, _release_tag and source checksums from
 # the immutable manifest. The verifier is fetched from that exact source tag.
 pkgname=omnistore-bin
-pkgver=0.1.4beta3
-pkgrel=6
+pkgver=0.1.5beta1
+pkgrel=1
 pkgdesc="OmniStore software manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/OmniStore'
 license=('GPL-3.0-only')
-depends=('qt6-base' 'qt6-declarative' 'meoui-qml>=1.0.4beta1'
+depends=('qt6-base' 'qt6-declarative' 'meoui-qml>=1.0.4beta2-4'
          'meo-kde-runtime>=0.4.0beta3' 'ksshaskpass' 'libsecret'
          'pacman-contrib' 'python' 'pyalpm')
 optdepends=('meo-release: shared MeoArch application catalog and channel integration'
-            'meo-account: use Meo Account'
+            'meo-account>=0.1.0-8: system AI connections and remembered catalog consent'
             'flatpak: install applications from Flatpak remotes')
 provides=('omnistore')
 conflicts=('omnistore' 'omnistore-git')

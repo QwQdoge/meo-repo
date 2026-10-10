@@ -13,21 +13,32 @@ SPEC.loader.exec_module(release_center)
 
 
 class ReleaseCenterTests(unittest.TestCase):
+    @staticmethod
+    def preparation_record():
+        return {"schemaVersion": 1, "release": "example-beta", "channel": "beta",
+                "status": "preparation", "components": [{
+                    "package": "meoui-qml", "repository": "QwQdoge/MeoUI",
+                    "reviewedCommit": "a" * 40,
+                    "remaining": ["Create an immutable component release"]}]}
+
     def test_pending_train_tracks_reviewed_sources_but_cannot_be_dispatched(self):
-        records = release_center.pending_trains("beta")
-        train = next(record for record in records if record["release"] == "2026.09-beta.8")
-        self.assertEqual({c["package"] for c in train["components"]},
-                         {"meoui-qml", "meo-account", "omnistore-bin"})
-        self.assertNotIn(train["path"], release_center.manifests("beta"))
-        with mock.patch.object(release_center, "run") as run:
-            result = release_center.validate_selection("beta", train["path"], "omnistore-bin")
-        self.assertFalse(result["ok"])
-        run.assert_not_called()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            target = root / "manifests" / "pending"
+            target.mkdir(parents=True)
+            (target / "example.json").write_text(json.dumps(self.preparation_record()))
+            with mock.patch.object(release_center, "ROOT", root):
+                train = release_center.pending_trains("beta")[0]
+                self.assertNotIn(train["path"], release_center.manifests("beta"))
+                with mock.patch.object(release_center, "run") as run:
+                    result = release_center.validate_selection("beta", train["path"], "meoui-qml")
+                self.assertFalse(result["ok"])
+                run.assert_not_called()
 
     def test_pending_records_are_filtered_by_channel_and_require_pinned_commits(self):
         self.assertEqual(release_center.pending_trains("stable"), [])
         self.assertEqual(release_center.pending_trains("../pending"), [])
-        payload = release_center.pending_trains("beta")[0]
+        payload = self.preparation_record()
         payload["components"][0]["reviewedCommit"] = "main"
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

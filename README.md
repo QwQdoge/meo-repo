@@ -58,14 +58,16 @@ The current complete prerelease train is pinned in
 [`manifests/beta/2026.09-beta.7.json`](manifests/beta/2026.09-beta.7.json); it
 records every component's owning GitHub repository, immutable release tag,
 commit, package version, source URL, and SHA-256.
-Unpublished integration work after that frozen train targets Beta 8. A Beta 8
-manifest is created only after every included component has an immutable tag,
-commit, package version, source URL, and verified checksum.
+The sparse [Beta 8 application update](manifests/beta/2026.09-beta.8.json)
+pins new MeoUI, Account and native OmniStore releases with immutable tags,
+commits, package versions, source URLs and verified checksums. Publish only
+`meoui-qml`, `meo-account` and `omnistore-bin`, with both dependency packages
+available before OmniStore. Other component entries retain frozen Beta 7
+provenance; this update does not claim a new complete desktop or ISO train.
 Preparation records in `manifests/pending/` track reviewed component commits
 and remaining integration/release work. The Release Center displays these
-separately from publishable manifests; they are never workflow inputs. Beta 8
-currently queues native OmniStore, MeoUI compatibility fixes and scoped Account
-AI consent. A reviewed commit is a source checkpoint, not a published tag or
+separately from publishable manifests; they are never workflow inputs.
+A reviewed commit is a source checkpoint, not a published tag or
 proof of complete runtime acceptance. After integration, replace checkpoints
 with the final commits and create the channel manifest from verified releases.
 Beta 8 is a stabilization train: compatibility, accessibility, failure-state,

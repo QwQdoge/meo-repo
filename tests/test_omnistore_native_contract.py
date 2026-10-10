@@ -43,7 +43,7 @@ class OmniStoreNativeContractTests(unittest.TestCase):
         for dependency in (
             "qt6-base",
             "qt6-declarative",
-            "meoui-qml>=1.0.4beta1",
+            "meoui-qml>=1.0.4beta2-4",
             "meo-kde-runtime>=0.4.0beta3",
             "pyalpm",
         ):
