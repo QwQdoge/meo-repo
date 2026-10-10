@@ -60,7 +60,8 @@
         "assets/icons/meoarch-logo.svg",
         "assets/licenses",
         "LICENSE",
-        "THIRD_PARTY_NOTICES.md"
+        "THIRD_PARTY_NOTICES.md",
+        "translations"
       ]
     },
     "meo-kde-runtime": {
