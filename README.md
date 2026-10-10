@@ -61,6 +61,13 @@ commit, package version, source URL, and SHA-256.
 Unpublished integration work after that frozen train targets Beta 8. A Beta 8
 manifest is created only after every included component has an immutable tag,
 commit, package version, source URL, and verified checksum.
+Preparation records in `manifests/pending/` track reviewed component commits
+and remaining integration/release work. The Release Center displays these
+separately from publishable manifests; they are never workflow inputs. Beta 8
+currently queues native OmniStore, MeoUI compatibility fixes and scoped Account
+AI consent. A reviewed commit is a source checkpoint, not a published tag or
+proof of complete runtime acceptance. After integration, replace checkpoints
+with the final commits and create the channel manifest from verified releases.
 Beta 8 is a stabilization train: compatibility, accessibility, failure-state,
 packaging, and verification fixes are accepted with the first Stable train as
 the acceptance target; unrelated feature expansion is deferred.

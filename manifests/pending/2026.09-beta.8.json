@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "release": "2026.09-beta.8",
+  "channel": "beta",
+  "status": "preparation",
+  "baseManifest": "manifests/beta/2026.09-beta.7.json",
+  "components": [
+    {
+      "package": "meoui-qml",
+      "repository": "QwQdoge/MeoUI",
+      "reviewedCommit": "ba227dc39db3d2e2a41118a5ac3c68cb3f69ee15",
+      "changes": "Navigation search visibility, dropdown selection, sidebar labels and dialog geometry used by the native store.",
+      "remaining": ["Integrate the reviewed source branch without losing existing main changes", "Create an immutable component release and verify its source checksum"]
+    },
+    {
+      "package": "meo-account",
+      "repository": "QwQdoge/MeoArch-account",
+      "reviewedCommit": "ca094981644a1b36c428c6b7cedb323dc9e942a5",
+      "changes": "Scoped remembered catalog AI consent, revocation and nested D-Bus consent decoding.",
+      "remaining": ["Integrate origin/main device-revocation changes and repeat desktop checks", "Create an immutable component release and verify its source checksum"]
+    },
+    {
+      "package": "omnistore-bin",
+      "repository": "QwQdoge/OmniStore",
+      "reviewedCommit": "615186e57b0abeec98fa04c183a36f0499d8e21f",
+      "changes": "Native settings, authentication prompts, categories, default application actions, per-source update feedback, source selection and Account-backed catalog AI.",
+      "remaining": ["Pin the new MeoUI release in the native bundle build", "Build and publish a new immutable native bundle with exporter verifier checksums", "Update the recipe MeoUI minimum version to include showSearch", "Verify real provider inference and remembered consent with a user-configured system AI connection"]
+    }
+  ]
+}

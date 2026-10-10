@@ -50,6 +50,36 @@ def manifests(channel: str) -> list[str]:
     return [str(path.relative_to(ROOT)) for path in sorted(directory.glob("*.json"), reverse=True)]
 
 
+def pending_trains(channel: str) -> list[dict[str, object]]:
+    """Preparation records are displayed separately and can never be dispatched."""
+    if channel not in {"beta", "stable"}:
+        return []
+    records = []
+    for path in sorted((ROOT / "manifests" / "pending").glob("*.json"), reverse=True):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if payload.get("channel") != channel:
+            continue
+        if payload.get("schemaVersion") != 1 or payload.get("status") != "preparation":
+            raise ValueError(f"invalid preparation record: {path.name}")
+        components = payload.get("components")
+        if not isinstance(components, list) or not components:
+            raise ValueError(f"no preparation components: {path.name}")
+        names = set()
+        for component in components:
+            name = component.get("package", "")
+            if (not re.fullmatch(r"[a-z0-9][a-z0-9+._-]*", name)
+                    or name in names
+                    or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", component.get("repository", ""))
+                    or not re.fullmatch(r"[0-9a-f]{40}", component.get("reviewedCommit", ""))
+                    or not isinstance(component.get("remaining"), list)
+                    or not component["remaining"]
+                    or not all(isinstance(item, str) and item for item in component["remaining"])):
+                raise ValueError(f"invalid preparation component: {path.name}")
+            names.add(name)
+        records.append({**payload, "path": str(path.relative_to(ROOT))})
+    return records
+
+
 def read_manifest(path: str, channel: str) -> dict[str, object]:
     candidate = (ROOT / path).resolve()
     expected = (ROOT / "manifests" / channel).resolve()
@@ -228,6 +258,7 @@ PAGE = r'''<!doctype html>
 <div class="hero"><div><h1>Meo Release Center</h1><p>Prepare, validate and dispatch signed MeoArch releases without handling signing secrets locally.</p></div><div><span id="auth" class="status"><span class="dot"></span>Checking GitHub</span> <span id="sync" class="status"><span class="dot"></span>Checking main</span></div></div>
 <div class="steps"><span class="step">1 · Select train</span><span class="step">2 · Inspect drift</span><span class="step">3 · Preflight</span><span class="step">4 · Protected publish</span><span class="step">5 · Remote smoke</span></div>
 <div class="grid" style="margin-top:18px">
+<section class="card wide"><h2>Next release · preparation</h2><p>Reviewed source commits awaiting integration and immutable release inputs. These records cannot be published.</p><div id="pending" class="health" style="margin-top:14px"></div></section>
 <section class="card"><h2>Release selection</h2>
 <div class="row"><label>Channel</label><select id="channel"><option value="beta">Beta</option><option value="stable">Stable</option></select></div>
 <div class="row"><label>Manifest</label><select id="manifest"></select></div>
@@ -250,7 +281,8 @@ function option(value,label){const n=document.createElement('option');n.value=va
 async function load(preserve=true){const oldManifest=preserve?$('manifest').value:'';const oldCandidate=preserve?$('candidate').value:'';const ch=$('channel').value;const s=await api('/api/state?channel='+encodeURIComponent(ch));token=s.token||token;
  $('auth').className='status '+(s.gh.ok?'ok':'bad');$('auth').textContent=s.gh.ok?'● GitHub ready':'● gh login required';
  $('sync').className='status '+(s.sync.ok?'ok':'bad');$('sync').textContent=s.sync.ok?'● main synced':'● main differs';
- $('manifest').replaceChildren(...s.manifests.map(x=>option(x,x.split('/').pop())));if(oldManifest&&s.manifests.includes(oldManifest))$('manifest').value=oldManifest;await components(oldCandidate);renderRuns(s.runs);await health()}
+ $('manifest').replaceChildren(...s.manifests.map(x=>option(x,x.split('/').pop())));if(oldManifest&&s.manifests.includes(oldManifest))$('manifest').value=oldManifest;await components(oldCandidate);renderPending(s.pending);renderRuns(s.runs);await health()}
+function renderPending(trains){const nodes=[];for(const train of trains||[]){nodes.push(text('h3',train.release+' · awaiting release inputs'));for(const c of train.components){const row=document.createElement('div');row.className='healthRow';const details=document.createElement('div');details.append(text('b',c.package),text('p',c.changes||''),text('small',`${c.repository} · reviewed ${c.reviewedCommit.slice(0,12)}`));const list=document.createElement('ul');for(const item of c.remaining)list.append(text('li',item));details.append(list);row.append(details);nodes.push(row)}}$('pending').replaceChildren(...(nodes.length?nodes:[text('p','No pending train recorded.')]))}
 async function components(preferred=''){const ch=$('channel').value,m=$('manifest').value;if(!m){$('candidate').replaceChildren();return}const x=await api('/api/components?channel='+encodeURIComponent(ch)+'&manifest='+encodeURIComponent(m));const nodes=[];if(ch==='stable')nodes.push(option('','Full stable train'));for(const c of x.components)nodes.push(option(c,c));$('candidate').replaceChildren(...nodes);if(preferred&&x.components.includes(preferred))$('candidate').value=preferred}
 async function health(){const ch=$('channel').value,m=$('manifest').value;if(!m){$('health').replaceChildren(text('p','No manifest selected.'));return}const x=await api('/api/health?channel='+encodeURIComponent(ch)+'&manifest='+encodeURIComponent(m));const rows=(x.components||[]).map(c=>{const row=document.createElement('div');row.className='healthRow';const left=document.createElement('div');left.append(text('b',c.name),document.createElement('br'),text('small',`manifest ${c.expected||'missing'} · recipe ${c.recipe||'missing'} · sourceDateEpoch ${c.epoch?'ok':'missing'}`));row.append(left,text('span',c.ok?'Ready':'Needs attention',c.ok?'okText':'badText'));return row});$('health').replaceChildren(...(rows.length?rows:[text('p',x.output||'No health data.')]))}
 function renderRuns(runs){const nodes=(runs||[]).map(r=>{const row=document.createElement('div');row.className='run';const left=document.createElement('div');left.append(text('b',r.displayTitle||'Release'),document.createElement('br'),text('small',`${r.createdAt||''} · ${r.status}${r.conclusion?' / '+r.conclusion:''}`));const a=document.createElement('a');a.target='_blank';a.rel='noreferrer';a.href=r.url||'#';a.textContent='Open';row.append(left,a);return row});$('runs').replaceChildren(...(nodes.length?nodes:[text('p','No runs available.')]))}
@@ -284,7 +316,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/api/state":
             channel = query.get("channel", ["beta"])[0]
-            self.send_json({"manifests": manifests(channel), "gh": gh_ready(), "sync": git_sync(False), "runs": recent_runs(), "token": SESSION_TOKEN})
+            self.send_json({"manifests": manifests(channel), "pending": pending_trains(channel), "gh": gh_ready(), "sync": git_sync(False), "runs": recent_runs(), "token": SESSION_TOKEN})
             return
         if parsed.path == "/api/components":
             channel = query.get("channel", ["beta"])[0]
