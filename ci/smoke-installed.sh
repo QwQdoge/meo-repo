@@ -76,6 +76,33 @@ grep -q '^RedirectUri=http://127\.0\.0\.1:43887/callback$' /etc/meo-account/brok
 test -s /usr/share/dbus-1/interfaces/org.meo.Accounts1.xml
 test -s /usr/share/meo-account/clients/org.meo.Settings.json
 test -s /usr/share/meo-account/clients/org.meo.OmniStore.json
+
+# If this release train contains Meo AI, prove that the native app, headless
+# runtime, user service and package-owned Account capability arrive together.
+# The manifest is authoritative for whether the train includes the app; older
+# stable trains remain valid without retroactively requiring it.
+has_meo_ai="$(python3 -c 'import json,sys; print("true" if "meo-ai" in json.load(open(sys.argv[1])).get("components", {}) else "false")' "$manifest")"
+if [ "$has_meo_ai" = true ]; then
+  command -v meo-ai >/dev/null
+  command -v meo-agent-service >/dev/null
+  test -s /usr/lib/systemd/user/meo-agent-service.service
+  test -s /usr/share/meo-account/clients/org.meo.MeoAI.json
+  python3 - /usr/share/meo-account/clients/org.meo.MeoAI.json <<'PY'
+import json, pathlib, sys
+path = pathlib.Path(sys.argv[1])
+payload = json.loads(path.read_text(encoding="utf-8"))
+if payload.get("id") != "org.meo.MeoAI":
+    raise SystemExit("Meo AI Account client id is invalid")
+capabilities = set(payload.get("capabilities", []))
+required = {"ai_usage_sync", "local_ai"}
+if not required.issubset(capabilities):
+    raise SystemExit(f"Meo AI Account client is missing capabilities: {sorted(required - capabilities)}")
+executables = set(payload.get("executables", []))
+if "/usr/bin/meo-ai" not in executables:
+    raise SystemExit("Meo AI Account client is not bound to /usr/bin/meo-ai")
+PY
+fi
+
 grep -q '^Exec=/usr/bin/omnistore %u$' /usr/share/applications/omnistore.desktop
 grep -q '^MimeType=x-scheme-handler/omnistore;$' /usr/share/applications/omnistore.desktop
 command -v omnistore >/dev/null
