@@ -1,11 +1,11 @@
 pkgname=meo-ai
 pkgver=0.1.0beta2
-pkgrel=2
+pkgrel=3
 pkgdesc="Meo AI native assistant and headless AgentService"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-ai'
 license=('GPL-3.0-or-later' 'MIT' 'BSD-3-Clause')
-depends=('meoui-qml>=1.0.4beta3' 'qt6-base' 'qt6-declarative'
+depends=('meo-account' 'meoui-qml>=1.0.4beta3' 'qt6-base' 'qt6-declarative'
          'python' 'python-pip' 'python-openai' 'python-gobject' 'python-cairo' 'python-aiohttp' 'python-requests'
          'python-pillow' 'python-tiktoken' 'python-dbus-next'
          'python-numpy' 'python-pydub' 'python-audioop-lts'
@@ -15,7 +15,8 @@ depends=('meoui-qml>=1.0.4beta3' 'qt6-base' 'qt6-declarative'
          'gtk4' 'libadwaita' 'gtksourceview5' 'webkitgtk-6.0' 'vte4')
 makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools' 'meson' 'gettext'
              'python-setuptools' 'python-wheel')
-optdepends=('python-pyaudio: microphone input'
+optdepends=('meo-settings: manage Meo Account and device AI connections'
+            'python-pyaudio: microphone input'
             'python-mcp: external MCP tools')
 options=('!debug')
 source=('org.meo.AI.desktop' 'newspaper3k-LICENSE' 'feedfinder2-LICENSE' 'tinysegmenter-LICENSE' 'runtime-sources.json')
