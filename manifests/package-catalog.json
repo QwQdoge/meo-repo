@@ -81,6 +81,15 @@
         "recommended"
       ]
     },
+    "meo-ai": {
+      "requires": [
+        "meo-account",
+        "meoui-qml"
+      ],
+      "profiles": [
+        "recommended"
+      ]
+    },
     "omnistore-bin": {
       "requires": [
         "meo-account"
@@ -103,6 +112,7 @@
       "requires": [
         "meo-account",
         "meo-settings",
+        "meo-ai",
         "omnistore-bin"
       ],
       "profiles": [
