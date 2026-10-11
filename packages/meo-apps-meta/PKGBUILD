@@ -1,10 +1,10 @@
 pkgname=meo-apps-meta
 pkgver=2026.09
-pkgrel=2
+pkgrel=3
 pkgdesc="Meo first-party application bundle for MeoArch"
 arch=('any')
 license=('MIT')
-depends=('meo-account' 'meo-settings' 'omnistore-bin' 'flatpak')
+depends=('meo-account' 'meo-settings' 'meo-ai' 'omnistore-bin' 'flatpak')
 source=()
 sha256sums=()
 
