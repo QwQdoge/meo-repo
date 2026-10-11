@@ -1,6 +1,6 @@
 pkgname=meo-account
 pkgver=0.1.0
-pkgrel=9
+pkgrel=10
 pkgdesc="Meo Account broker and authentication dialog for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-account'
@@ -24,4 +24,11 @@ package() {
   # per-user meo-accountd process.
   install -Dm644 "$srcdir/source/desktop/data/broker.conf.example" \
     "$pkgdir/etc/meo-account/broker.conf"
+
+  # Meo Settings intentionally observes the broker instead of activating it
+  # merely to render the Accounts page. Make the broker part of every graphical
+  # user session so Account state is available before Settings asks for it.
+  install -d "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants"
+  ln -s ../meo-accountd.service \
+    "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants/meo-accountd.service"
 }
