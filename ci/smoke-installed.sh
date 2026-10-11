@@ -86,8 +86,9 @@ if [ "$has_meo_ai" = true ]; then
   command -v meo-ai >/dev/null
   command -v meo-agent-service >/dev/null
   test -s /usr/lib/systemd/user/meo-agent-service.service
-  test -s /usr/share/meo-account/clients/org.meo.MeoAI.json
-  python3 - /usr/share/meo-account/clients/org.meo.MeoAI.json <<'PY'
+  meo_ai_account_manifest=/usr/share/meo-account/clients/org.meo.MeoAI.account-client.json
+  test -s "$meo_ai_account_manifest"
+  python3 - "$meo_ai_account_manifest" <<'PY'
 import json, pathlib, sys
 path = pathlib.Path(sys.argv[1])
 payload = json.loads(path.read_text(encoding="utf-8"))
