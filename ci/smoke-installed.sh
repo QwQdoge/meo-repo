@@ -53,6 +53,26 @@ profile="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("
 command -v meo-settings >/dev/null
 command -v meo-accountd >/dev/null
 command -v meo-account-auth-dialog >/dev/null
+
+# Meo Settings deliberately observes the account broker rather than activating
+# it just to render a page. The package therefore has to make the per-user
+# broker part of graphical-session.target and retain D-Bus activation as a
+# recovery path. Catch packaging regressions before an ISO reaches a device.
+test -s /usr/lib/systemd/user/meo-accountd.service
+grep -q '^Type=dbus$' /usr/lib/systemd/user/meo-accountd.service
+grep -q '^BusName=org\.meo\.Accounts1$' /usr/lib/systemd/user/meo-accountd.service
+grep -q '^WantedBy=graphical-session\.target$' /usr/lib/systemd/user/meo-accountd.service
+test -L /usr/lib/systemd/user/graphical-session.target.wants/meo-accountd.service
+[ "$(readlink /usr/lib/systemd/user/graphical-session.target.wants/meo-accountd.service)" = '../meo-accountd.service' ]
+test -s /usr/share/dbus-1/services/org.meo.Accounts1.service
+grep -q '^Name=org\.meo\.Accounts1$' /usr/share/dbus-1/services/org.meo.Accounts1.service
+grep -q '^SystemdService=meo-accountd\.service$' /usr/share/dbus-1/services/org.meo.Accounts1.service
+
+test -s /etc/meo-account/broker.conf
+grep -q '^SupabaseUrl=https://[^[:space:]]\+$' /etc/meo-account/broker.conf
+grep -q '^ClientId=[^[:space:]]\+$' /etc/meo-account/broker.conf
+grep -q '^RedirectUri=http://127\.0\.0\.1:43887/callback$' /etc/meo-account/broker.conf
+
 test -s /usr/share/dbus-1/interfaces/org.meo.Accounts1.xml
 test -s /usr/share/meo-account/clients/org.meo.Settings.json
 test -s /usr/share/meo-account/clients/org.meo.OmniStore.json
