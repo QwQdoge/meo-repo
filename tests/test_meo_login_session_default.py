@@ -16,9 +16,11 @@ class MeoLoginSessionDefaultTests(unittest.TestCase):
         self.assertIn("etc/plasmalogin.conf.d/20-meo-session.conf", recipe)
         self.assertIn("[Greeter]", config)
         self.assertIn(
-            "PreselectedSession=/usr/share/wayland-sessions/meo.desktop",
+            "PreselectedSession=meo.desktop",
             config,
         )
+        # GreeterState selects FileNameRole, whose value is the basename.
+        self.assertNotIn("PreselectedSession=/", config)
         self.assertNotIn("[Autologin]", config)
         self.assertNotIn("User=", config)
 

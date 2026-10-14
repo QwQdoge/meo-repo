@@ -40,7 +40,7 @@ build() {
   cmake -S "$srcdir/source/native" -B build -G Ninja -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_SYSCONFDIR=/etc \
     -DBUILD_TESTING=OFF
-  cmake --build build --parallel
+  cmake --build build --parallel "${MEO_BUILD_PARALLEL_LEVEL:-1}"
 }
 
 package() {
@@ -58,6 +58,10 @@ package() {
     "$pkgdir/usr/share/wayland-sessions"
   cp -a "$source/qml/MeoKDE/." "$pkgdir/usr/lib/qt6/qml/MeoKDE/"
   cp -a "$source/themes/look-and-feel/org.meo.desktop" "$pkgdir/usr/share/plasma/look-and-feel/"
+  install -d "$pkgdir/usr/share/plasma/shells"
+  cp -a "$source/themes/shells/org.meo.shell" "$pkgdir/usr/share/plasma/shells/"
+  install -Dm644 "$source/themes/look-and-feel/org.meo.desktop/contents/lockscreen/config.xml" \
+    "$pkgdir/usr/share/plasma/shells/org.meo.shell/contents/lockscreen/config.xml"
   for theme in MeoLight MeoDark; do
     cp -a "$source/themes/desktoptheme/$theme" "$pkgdir/usr/share/plasma/desktoptheme/"
   done
@@ -66,7 +70,8 @@ package() {
   # Plasma's Widget Explorer without rewriting an existing user panel.
   for plasmoid in org.meo.topbar org.meo.timecenter org.meo.notifications \
                   org.meo.time-notifications org.meo.shelf org.meo.toptasks \
-                  org.meo.systemmenu; do
+                  org.meo.systemmenu org.meo.time org.meo.widgetexplorer \
+                  org.meo.widget.clock org.meo.widget.media org.meo.widget.performance; do
     [ ! -d "$source/plasmoids/$plasmoid" ] || \
       cp -a "$source/plasmoids/$plasmoid" "$pkgdir/usr/share/plasma/plasmoids/"
   done
@@ -137,5 +142,12 @@ package() {
   # Deliberately do not enable Meo user units globally. A normal Plasma login
   # must remain unchanged merely because meo-desktop is installed. The Meo
   # session/runtime can opt into its own path/timer lifecycle.
+  # Keep the installed package consistent with the target responsiveness contract.
+  install -Dm644 "$source/defaults/responsiveness/zram-generator.conf" "$pkgdir/usr/lib/systemd/zram-generator.conf.d/50-meo-desktop.conf"
+  install -Dm644 "$source/defaults/responsiveness/gamemode.ini" "$pkgdir/etc/gamemode.ini"
+  install -Dm644 "$source/defaults/responsiveness/cachyos-ananicy.kdl" "$pkgdir/etc/system76-scheduler/process-scheduler/meo-cachyos.kdl"
+  install -Dm644 "$source/defaults/responsiveness/preload-ng-meo.toml" "$pkgdir/usr/share/meo-desktop/optional/preload-ng.toml"
+  install -Dm644 "$source/defaults/responsiveness/prelockd-meo.conf" "$pkgdir/usr/share/meo-desktop/optional/prelockd.conf"
+  install -Dm644 "$source/defaults/systemd/50-meo-responsiveness.preset" "$pkgdir/usr/lib/systemd/system-preset/50-meo-responsiveness.preset"
   install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
 }

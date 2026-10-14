@@ -16,6 +16,14 @@ class MeoDesktopSessionIsolationTests(unittest.TestCase):
         self.assertIn('data/wayland-sessions/meo.desktop', self.source)
         self.assertIn('usr/share/wayland-sessions/meo.desktop', self.source)
 
+    def test_package_includes_current_shell_and_default_layout_applets(self):
+        self.assertIn('themes/shells/org.meo.shell', self.source)
+        self.assertIn('usr/share/plasma/shells/org.meo.shell/contents/lockscreen/config.xml', self.source)
+        for path in ('etc/gamemode.ini', 'etc/system76-scheduler/process-scheduler/meo-cachyos.kdl', 'usr/lib/systemd/zram-generator.conf.d/50-meo-desktop.conf', 'usr/lib/systemd/system-preset/50-meo-responsiveness.preset'):
+            self.assertIn(path, self.source)
+        for plugin in ('org.meo.time', 'org.meo.widgetexplorer', 'org.meo.widget.clock', 'org.meo.widget.media', 'org.meo.widget.performance'):
+            self.assertIn(plugin, self.source)
+
     def test_package_does_not_force_a_display_manager(self):
         depends_block = self.source.split("makedepends=", 1)[0]
         self.assertNotIn("'meo-plasma-login-manager'", depends_block)
