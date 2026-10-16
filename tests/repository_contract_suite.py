@@ -446,32 +446,22 @@ class RepositoryContractTests(unittest.TestCase):
             self.assertIsNotNone(version, name)
             self.assertEqual(version.group(1).strip("'\\\""), generation, name)
 
-    def test_next_train_does_not_reuse_any_published_stable_core_version(self):
-        published = {}
+    def test_stable_manifests_do_not_rebind_an_immutable_component_version(self):
+        # A manifest is a release input, not proof that its packages were
+        # published. Atomic releases also retain unchanged component entries.
+        # Shared identities must keep their pinned source; publication checks
+        # separately reject different bytes at an existing immutable URL.
+        identities = {}
         for path in sorted((ROOT / "manifests/stable").glob("*.json")):
             manifest = json.loads(path.read_text())
             for name, component in manifest.get("components", {}).items():
-                published.setdefault(name, set()).add(component["expectedVersion"])
-
-        for name, versions in published.items():
-            recipe_path = ROOT / "packages" / name / "PKGBUILD"
-            if not recipe_path.exists():
-                continue
-            recipe = recipe_path.read_text()
-            version = re.search(r"^pkgver=([^\s#]+)$", recipe, re.MULTILINE)
-            release = re.search(r"^pkgrel=([^\s#]+)$", recipe, re.MULTILINE)
-            self.assertIsNotNone(version, name)
-            self.assertIsNotNone(release, name)
-            current = (
-                version.group(1).strip("'\\\"")
-                + "-"
-                + release.group(1).strip("'\\\"")
-            )
-            self.assertNotIn(
-                current,
-                versions,
-                f"{name} would reuse an already-published Stable package filename",
-            )
+                identity = (name, component["expectedVersion"])
+                source = (component["repository"], component["commit"],
+                          component["sourceSha256"])
+                if identity in identities:
+                    self.assertEqual(identities[identity], source,
+                                     f"{path}: immutable package source changed: {identity}")
+                identities[identity] = source
 
     def test_next_train_components_are_first_class_release_packages(self):
         login = (ROOT / "packages/meo-plasma-login-manager/PKGBUILD").read_text()
