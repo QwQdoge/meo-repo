@@ -1,14 +1,14 @@
 pkgname=meo-plasma-login-manager
 pkgver=6.7.5
-pkgrel=4
+pkgrel=5
 pkgdesc="Meo Login display manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'
 license=('GPL-2.0-or-later')
 depends=('glibc' 'kauth' 'kcmutils' 'kconfig' 'kcoreaddons' 'kdbusaddons'
          'ki18n' 'kio' 'kirigami' 'kpackage' 'kservice' 'kwindowsystem'
-         'layer-shell-qt' 'libkscreen' 'libplasma' 'libstdc++' 'libxau' 'pam'
-         'plasma-workspace' 'qt6-5compat' 'qt6-base' 'qt6-declarative' 'sh'
+         'layer-shell-qt' 'libkscreen' 'libplasma>=6.8' 'libstdc++' 'libxau' 'pam'
+         'plasma-workspace>=6.8' 'qt6-5compat' 'qt6-base' 'qt6-declarative' 'sh'
          'systemd-libs')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools')
 options=('!debug')
@@ -27,7 +27,7 @@ build() {
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DINSTALL_PAM_CONFIGURATION=ON
-  cmake --build build --parallel
+  cmake --build build --parallel "${MEO_BUILD_PARALLEL_LEVEL:-1}"
 }
 
 package() {

@@ -170,7 +170,9 @@ for package in "${core_packages[@]}"; do
   # Build jobs have no release secrets. Installing their own unsigned outputs
   # is confined to this disposable builder and only enables downstream builds.
   sudo pacman -U --noconfirm "$output/packages/$package-"*.pkg.tar.*
-  if [ "$package" = meo-settings ]; then
+  if [ "$package" = meo-plasma-login-manager ]; then
+    bash "$repo_root/ci/check-login-runtime.sh"
+  elif [ "$package" = meo-settings ]; then
     bash "$repo_root/ci/check-settings-runtime.sh"
   elif [ "$package" = meo-ai ]; then
     QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 meo-ai --smoke

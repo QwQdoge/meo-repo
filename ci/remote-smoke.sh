@@ -171,6 +171,9 @@ if [ "$candidate" = meo-account ]; then
   "$repo_root/ci/check-account-payload.sh"
 fi
 case "$candidate" in
+  meo-plasma-login-manager|all) bash "$repo_root/ci/check-login-runtime.sh" ;;
+esac
+case "$candidate" in
   meo-desktop|meo-kde-runtime|all) bash "$repo_root/ci/check-plasma-runtime.sh" ;;
 esac
 if [ "$channel" = stable ]; then
