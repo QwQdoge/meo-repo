@@ -94,20 +94,41 @@ fi
 test -s /etc/pacman.d/meo-channel.conf
 printf '\nInclude = /etc/pacman.d/meo-channel.conf\n' >>/etc/pacman.conf
 bash "$repo_root/ci/check-repository-order.sh" /etc/pacman.conf "$channel"
+if [ "$candidate" = meo-kde-runtime ]; then
+  # Verify the actual standalone artifact before the second sysupgrade.
+  # meo-desktop intentionally replaces it during an ordinary upgrade below.
+  standalone_expected="$(python3 - "$manifest" <<'PY'
+import json, sys
+print(json.load(open(sys.argv[1]))["components"]["meo-kde-runtime"]["expectedVersion"])
+PY
+  )"
+  installed_names="$(pacman -Qq)"
+  grep -Fx 'meo-kde-runtime' <<<"$installed_names" >/dev/null
+  test "$(pacman -Q meo-kde-runtime)" = "meo-kde-runtime $standalone_expected"
+  bash "$repo_root/ci/check-plasma-runtime.sh"
+fi
 pacman -Syu --noconfirm
 if [ "$channel" = beta ] || [ -n "$candidate" ]; then
   # Installation alone can accidentally accept the previous public version.
   version_packages=("${packages[@]}")
   if [ "$channel" = stable ]; then version_packages=("$candidate"); fi
   for package in "${version_packages[@]}"; do
-    expected="$(python3 - "$manifest" "$package" <<'PY'
+    identity_package="$package"
+    if [ "$package" = meo-kde-runtime ]; then
+      installed_names="$(pacman -Qq)"
+      if ! grep -Fxq 'meo-kde-runtime' <<<"$installed_names"; then
+        grep -Fx 'meo-desktop' <<<"$installed_names" >/dev/null
+        identity_package=meo-desktop
+      fi
+    fi
+    expected="$(python3 - "$manifest" "$identity_package" <<'PY'
 import json, sys
 print(json.load(open(sys.argv[1], encoding="utf-8"))["components"][sys.argv[2]]["expectedVersion"])
 PY
     )"
-    actual="$(pacman -Q "$package")"
-    [ "$actual" = "$package $expected" ] || {
-      echo "Published version mismatch: expected $package $expected, got $actual" >&2
+    actual="$(pacman -Q "$identity_package")"
+    [ "$actual" = "$identity_package $expected" ] || {
+      echo "Published version mismatch: expected $identity_package $expected, got $actual" >&2
       exit 3
     }
   done
