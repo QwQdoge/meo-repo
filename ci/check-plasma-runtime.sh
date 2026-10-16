@@ -15,9 +15,9 @@ for path in "${paths[@]}"; do
     echo "Retired Plasma dependency in $path" >&2
     exit 1
   fi
-  resolved="$(ldd "$path")"
+  resolved="$(ldd -r "$path" 2>&1)"
   printf '%s\n%s\n' "$path" "$resolved"
-  if grep -F 'not found' <<<"$resolved"; then
+  if grep -E 'not found|undefined symbol:' <<<"$resolved"; then
     echo "Unresolved runtime dependency in $path" >&2
     exit 1
   fi

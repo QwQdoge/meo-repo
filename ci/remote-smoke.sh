@@ -120,6 +120,7 @@ for directory in / /etc /usr /var; do
 done
 systemd-tmpfiles --create --remove
 if [ "$candidate" = meo-settings ] || [ "$candidate" = all ]; then
+  bash "$repo_root/ci/check-settings-runtime.sh"
   stale_qml_root="$(mktemp -d)"
   trap 'cleanup_keyring_bootstrap; rm -f -- "$config"; rm -rf -- "$stale_qml_root"' EXIT
   mkdir -p "$stale_qml_root/MeoUI"
