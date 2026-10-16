@@ -92,7 +92,7 @@ class RepositoryContractTests(unittest.TestCase):
     def test_settings_uses_the_minimal_kde_runtime(self):
         settings = (ROOT / "packages/meo-settings/PKGBUILD").read_text()
         runtime = (ROOT / "packages/meo-kde-runtime/PKGBUILD").read_text()
-        self.assertIn("'meo-kde-runtime>=0.4.0beta3'", settings)
+        self.assertIn("'meo-kde-runtime>=0.4.0beta3-7'", settings)
         self.assertIn("'meo-icon-studio>=0.1.0'", settings)
         self.assertNotIn("'meo-desktop'", settings)
         self.assertIn('source/native/system', runtime)
