@@ -95,9 +95,11 @@ test -s /etc/pacman.d/meo-channel.conf
 printf '\nInclude = /etc/pacman.d/meo-channel.conf\n' >>/etc/pacman.conf
 bash "$repo_root/ci/check-repository-order.sh" /etc/pacman.conf "$channel"
 pacman -Syu --noconfirm
-if [ "$channel" = beta ]; then
+if [ "$channel" = beta ] || [ -n "$candidate" ]; then
   # Installation alone can accidentally accept the previous public version.
-  for package in "${packages[@]}"; do
+  version_packages=("${packages[@]}")
+  if [ "$channel" = stable ]; then version_packages=("$candidate"); fi
+  for package in "${version_packages[@]}"; do
     expected="$(python3 - "$manifest" "$package" <<'PY'
 import json, sys
 print(json.load(open(sys.argv[1], encoding="utf-8"))["components"][sys.argv[2]]["expectedVersion"])
@@ -143,4 +145,11 @@ fi
 if [ "$candidate" = omnistore-bin ] || [ "$candidate" = all ]; then
   QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 omnistore --check-qml
 fi
-[ "$channel" != stable ] || "$repo_root/ci/smoke-installed.sh" "$manifest"
+if [ "$candidate" = meo-account ]; then
+  "$repo_root/ci/check-account-payload.sh"
+fi
+if [ "$channel" = stable ]; then
+  smoke_scope=""
+  case "$candidate" in meoui-qml|meo-account) smoke_scope="$candidate" ;; esac
+  "$repo_root/ci/smoke-installed.sh" "$manifest" meo-channel-stable "$smoke_scope"
+fi

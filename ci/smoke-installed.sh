@@ -6,14 +6,20 @@ set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 manifest="${1:?reviewed manifest is required}"
 channel_package="${2:-meo-channel-stable}"
+candidate="${3:-}"
+case "$candidate" in ''|meoui-qml|meo-account) ;; *) echo 'Unsupported sparse smoke scope' >&2; exit 2 ;; esac
 case "$channel_package" in
   meo-channel-stable|meo-channel-beta) ;;
   *) echo "Unsupported installed channel package: $channel_package" >&2; exit 2 ;;
 esac
-package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" "$channel_package" <<'PY'
+package_output="$(PYTHONPATH="$repo_root/scripts" python3 - "$manifest" "$channel_package" "$candidate" <<'PY'
 import json, sys
 from artifact_manifest import control_packages
 manifest = json.load(open(sys.argv[1]))
+if sys.argv[3]:
+    print(*dict.fromkeys(["meoui-qml", "meo-icons", "meo-desktop", "meo-core-meta",
+                         "meo-keyring", "meo-mirrorlist", "meo-release", sys.argv[2], sys.argv[3]]), sep="\n")
+    raise SystemExit(0)
 controls = [name for name in control_packages(manifest) if not name.startswith('meo-channel-')]
 print(*manifest['components'], *controls, sys.argv[2], sep='\n')
 PY
@@ -34,10 +40,14 @@ for path in /usr/lib/qt6/qml/MeoKDE/qmldir \
   /usr/share/plasma/plasmoids/org.meo.topbar/metadata.json /usr/share/meo-release/application-catalog.json; do
   test -s "$path"
 done
-has_meo_login_manager="$(python3 -c 'import json,sys; print("true" if "meo-plasma-login-manager" in json.load(open(sys.argv[1])).get("components", {}) else "false")' "$manifest")"
+has_meo_login_manager="$(python3 -c 'import json,sys; print("true" if not sys.argv[2] and "meo-plasma-login-manager" in json.load(open(sys.argv[1])).get("components", {}) else "false")' "$manifest" "$candidate")"
 if [ "$has_meo_login_manager" = true ]; then
   pacman -Q meo-plasma-login-manager >/dev/null
-  ! pacman -Q plasma-login-manager >/dev/null 2>&1
+  installed_names="$(pacman -Qq)"
+  if grep -Fxq 'plasma-login-manager' <<<"$installed_names"; then
+    echo 'Upstream login manager is installed alongside the Meo fork.' >&2
+    exit 3
+  fi
   test -x /usr/bin/plasmalogin
   test -s /usr/lib/systemd/system/plasmalogin.service
   login_owner="$(pacman -Qo /usr/bin/plasmalogin)"
@@ -50,6 +60,14 @@ else
 fi
 profile="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("profile", "recommended"))' "$manifest")"
 [ "$profile" != minimal ] || { echo "PASS: installed minimal Meo package payload"; exit 0; }
+if [ "$candidate" = meoui-qml ]; then
+  echo 'PASS: installed Stable MeoUI candidate and core package payload'
+  exit 0
+fi
+if [ "$candidate" = meo-account ]; then
+  "$repo_root/ci/check-account-payload.sh"
+  exit 0
+fi
 command -v meo-settings >/dev/null
 command -v meo-accountd >/dev/null
 command -v meo-account-auth-dialog >/dev/null
@@ -69,7 +87,12 @@ grep -q '^Name=org\.meo\.Accounts1$' /usr/share/dbus-1/services/org.meo.Accounts
 grep -q '^SystemdService=meo-accountd\.service$' /usr/share/dbus-1/services/org.meo.Accounts1.service
 
 test -s /etc/meo-account/broker.conf
-grep -q '^SupabaseUrl=https://[^[:space:]]\+$' /etc/meo-account/broker.conf
+grep -q '^BaseUrl=https://account\.meoarch\.org$' /etc/meo-account/broker.conf
+grep -q '^ApiUrl=https://api\.meoarch\.org$' /etc/meo-account/broker.conf
+if grep -q '^SupabaseUrl=' /etc/meo-account/broker.conf; then
+  echo 'Retired Supabase broker configuration is not accepted.' >&2
+  exit 1
+fi
 grep -q '^ClientId=[^[:space:]]\+$' /etc/meo-account/broker.conf
 grep -q '^RedirectUri=http://127\.0\.0\.1:43887/callback$' /etc/meo-account/broker.conf
 
