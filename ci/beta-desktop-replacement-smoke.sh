@@ -85,7 +85,7 @@ pacman-key --gpgdir "$test_root/etc/pacman.d/gnupg" \
 # Reproduce the currently deployed Beta host shape: Settings pulls in the
 # standalone runtime, while meo-desktop is not installed yet.
 pacman --root "$test_root" --config "$previous_config" -Syu --needed --noconfirm \
-  base python meo/meo-keyring meo/meo-mirrorlist meo/meo-channel-beta \
+  base python binutils meo/meo-keyring meo/meo-mirrorlist meo/meo-channel-beta \
   meo/meo-release meo-settings
 pacman --root "$test_root" -Q meo-kde-runtime >/dev/null
 ! pacman --root "$test_root" -Q meo-desktop >/dev/null 2>&1
@@ -116,5 +116,17 @@ done
 systemd-tmpfiles --root="$test_root" --create --remove
 test -s "$test_root/usr/lib/qt6/qml/MeoKDE/qmldir"
 test -s "$test_root/usr/share/plasma/plasmoids/org.meo.topbar/metadata.json"
+install -Dm755 "$repo_root/ci/check-plasma-runtime.sh" "$test_root/tmp/check-plasma-runtime.sh"
+chroot "$test_root" bash /tmp/check-plasma-runtime.sh
+
+# Also reproduce an existing desktop user's upgrade, rather than only the
+# standalone-runtime replacement. Explicitly install the previous signed
+# desktop, then let the ordinary sysupgrade select the candidate.
+pacman --root "$test_root" --config "$previous_config" -S --noconfirm meo-beta/meo-desktop
+previous_version="$(pacman --root "$test_root" -Q meo-desktop | awk '{print $2}')"
+test "$(vercmp "$candidate_version" "$previous_version")" -gt 0
+pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm
+test "$(pacman --root "$test_root" -Q meo-desktop | awk '{print $2}')" = "$candidate_version"
+chroot "$test_root" bash /tmp/check-plasma-runtime.sh
 python3 "$repo_root/scripts/validate_manifest.py" "$manifest" >/dev/null
 echo "PASS: public Beta runtime replaced by meo-desktop through pacman -Syu"

@@ -98,7 +98,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('source/native/system', runtime)
         self.assertIn('source/qml/MeoKDE', runtime)
         runtime_depends = runtime[runtime.index("depends=("):runtime.index("makedepends=(")]
-        self.assertIn("'plasma-workspace'", runtime_depends)
+        self.assertIn("'plasma-workspace>=6.8'", runtime_depends)
+        self.assertIn("'libplasma>=6.8'", runtime_depends)
         self.assertNotRegex(runtime, r'install[^\n]*os-release')
 
         manifest = json.loads((ROOT / "manifests/beta/2026.09-beta.6.json").read_text())

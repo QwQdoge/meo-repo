@@ -148,6 +148,9 @@ fi
 if [ "$candidate" = meo-account ]; then
   "$repo_root/ci/check-account-payload.sh"
 fi
+case "$candidate" in
+  meo-desktop|meo-kde-runtime|all) bash "$repo_root/ci/check-plasma-runtime.sh" ;;
+esac
 if [ "$channel" = stable ]; then
   smoke_scope=""
   case "$candidate" in meoui-qml|meo-account) smoke_scope="$candidate" ;; esac
