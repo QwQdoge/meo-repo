@@ -24,6 +24,10 @@ class MeoDesktopSessionIsolationTests(unittest.TestCase):
         for plugin in ('org.meo.time', 'org.meo.widgetexplorer', 'org.meo.widget.clock', 'org.meo.widget.media', 'org.meo.widget.performance'):
             self.assertIn(plugin, self.source)
 
+    def test_package_includes_upstream_wallet_login_integration(self):
+        depends_block = self.source.split("makedepends=", 1)[0]
+        self.assertIn("'kwallet-pam'", depends_block)
+
     def test_package_does_not_force_a_display_manager(self):
         depends_block = self.source.split("makedepends=", 1)[0]
         self.assertNotIn("'meo-plasma-login-manager'", depends_block)
