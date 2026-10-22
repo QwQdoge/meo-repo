@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=18
+pkgrel=19
 pkgdesc="Meo Desktop integration for MeoArch, powered by KDE Plasma"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -94,6 +94,7 @@ package() {
   install -Dm644 "$source/assets/licenses/DankMaterialShell-MIT.txt" \
     "$pkgdir/usr/share/licenses/$pkgname/DankMaterialShell-MIT.txt"
   install -Dm644 "$source/assets/wallpapers/installer_background.png" "$pkgdir/usr/share/wallpapers/MeoArch/installer_background.png"
+  install -Dm644 "$source/assets/wallpapers/meoarch_default.jpg" "$pkgdir/usr/share/wallpapers/MeoArch/meoarch_default.jpg"
   install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/pixmaps/meoarch-logo.svg"
   install -Dm644 "$source/assets/icons/meoarch-logo.svg" "$pkgdir/usr/share/icons/hicolor/scalable/apps/meoarch-logo.svg"
   install -Dm755 "$source/tools/theme/apply-meo-mode.sh" "$pkgdir/usr/bin/meo-theme-mode"
