@@ -1,6 +1,6 @@
 pkgname=meo-repair
 pkgver=0.1.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Meo Repair diagnostics and consent-gated system repair for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/MeoArch-os-workspace'
