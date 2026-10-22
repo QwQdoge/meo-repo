@@ -14,7 +14,7 @@ depends=('meo-account' 'meoui-qml>=1.0.4beta3' 'qt6-base' 'qt6-declarative'
          'python-dateutil' 'python-yaml' 'python-tldextract' 'python-six'
          'gtk4' 'libadwaita' 'gtksourceview5' 'webkitgtk-6.0' 'vte4')
 makedepends=('cmake' 'ninja' 'qt6-tools' 'qt6-shadertools' 'meson' 'gettext'
-             'python-setuptools' 'python-wheel')
+             'python-setuptools' 'python-wheel' 'nodejs')
 optdepends=('meo-settings: manage Meo Account and device AI connections'
             'python-pyaudio: microphone input'
             'python-mcp: external MCP tools')
