@@ -22,13 +22,6 @@ options=('!debug')
 source=('org.meo.AI.desktop' 'newspaper3k-LICENSE' 'feedfinder2-LICENSE' 'tinysegmenter-LICENSE' 'runtime-sources.json')
 sha256sums=('4599b696120724b9473498d90cbd9eea7fad3ff3808a14afb33652da7ca0eabf' '662ea995a58f4d1138128ae1f44a91bccd4ddb114419d04446cf165442b8217c' 'dd878f923e4dc2e4ee6a4482fc00a94a933888c2ceb51db131827939a26739af' '3ecf2511b2bfac0296d6d4efe236e323d8989b779e0dcce281f2482ebdd560af' 'f38110e262126c355bfe4f5ebe10b38dac960a00f1c20ea5f89f638a36f92706')
 
-prepare() {
-  # The cloud desktop app (desktop-rs) pins its crates, including the qtbridge git
-  # revision, in Cargo.lock; fetch them once so the build itself runs offline.
-  cargo fetch --locked --target "$(rustc -vV | sed -n 's/^host: //p')" \
-    --manifest-path "$srcdir/source/meo/desktop-rs/Cargo.toml"
-}
-
 build() {
   cmake -S "$srcdir/source/meo" -B native-build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
@@ -36,6 +29,11 @@ build() {
   cmake --build native-build --parallel 2
   meson setup engine-build "$srcdir/source" --prefix=/usr --libdir=lib -Dprofile=release
   meson compile -C engine-build
+  # The cloud desktop app (desktop-rs) pins its crates, including the qtbridge git
+  # revision, in Cargo.lock. Fetch them here: release builds use --noextract, which
+  # skips prepare(); the compile itself then runs offline.
+  cargo fetch --locked --target "$(rustc -vV | sed -n 's/^host: //p')" \
+    --manifest-path "$srcdir/source/meo/desktop-rs/Cargo.toml"
   # rustc needs a larger stack for the shared core's large view builders in release mode.
   RUST_MIN_STACK=33554432 CARGO_TARGET_DIR="$srcdir/cargo-target" \
     cargo build --frozen --release -j 2 --manifest-path "$srcdir/source/meo/desktop-rs/Cargo.toml"
