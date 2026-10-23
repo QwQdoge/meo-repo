@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 1,
+  "release": "2026.10-beta.17",
+  "generation": "2026.09",
+  "architecture": "x86_64",
+  "profile": "recommended",
+  "components": {
+    "meoui-qml": {
+      "repository": "QwQdoge/MeoUI",
+      "tag": "v1.0.4-beta.6",
+      "commit": "0b66dd546c4b3a57c086134ef9f20fdb792eea19",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/MeoUI/tar.gz/0b66dd546c4b3a57c086134ef9f20fdb792eea19",
+      "sourceSha256": "7e9a505db407c78e7ce950c163e01c8f5fd472df060e23d4691d599174e915d7",
+      "sourceDateEpoch": 1792576436,
+      "sourceLayout": "source",
+      "expectedVersion": "1.0.4beta3-3"
+    },
+    "meo-ai": {
+      "repository": "QwQdoge/meo-ai",
+      "tag": "v0.1.0-beta.7",
+      "commit": "fb9033d2dedac1cc25c030bb05196ee170f738ae",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-ai/tar.gz/fb9033d2dedac1cc25c030bb05196ee170f738ae",
+      "sourceSha256": "4a3ae5e102249cf1ea7d319b9c21ff8f43d5a233ea7a179750f3d9b70d7e47ad",
+      "sourceDateEpoch": 1792748420,
+      "sourceLayout": "source",
+      "expectedVersion": "0.1.0beta2-5"
+    },
+    "meo-icons": {
+      "repository": "QwQdoge/meo-kde",
+      "tag": "v0.4.0-beta.4",
+      "commit": "3663bfdbc62c041727b9379ba5a34829a1763328",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/3663bfdbc62c041727b9379ba5a34829a1763328",
+      "sourceSha256": "c1e543ae72968283ce06c6eaf813f9d5db516bb840419bd99858523142c6a982",
+      "sourceDateEpoch": 1791592009,
+      "sourceLayout": "source",
+      "expectedVersion": "0.4.0-5",
+      "sourcePaths": [
+        "themes/icons"
+      ]
+    },
+    "meo-plasma-login-manager": {
+      "repository": "QwQdoge/meo-login-manager",
+      "tag": "v6.7.5-meo-beta.3",
+      "commit": "e6ed5fc70c89f0109e92e3b60a2944cffaee6c67",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-login-manager/tar.gz/e6ed5fc70c89f0109e92e3b60a2944cffaee6c67",
+      "sourceSha256": "9d047f00958226e0d68165d53b133e8de790f3240c304c23b791203d93182927",
+      "sourceDateEpoch": 1792569993,
+      "sourceLayout": "source",
+      "expectedVersion": "6.7.5-6"
+    },
+    "meo-desktop": {
+      "repository": "QwQdoge/meo-kde",
+      "tag": "v0.4.0-beta.9",
+      "commit": "ee0793d53de254a4fb502bf80dbb1b3779dabd11",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/ee0793d53de254a4fb502bf80dbb1b3779dabd11",
+      "sourceSha256": "a74d349491fcd56346a58aa8a61efd1cd647d306f2327494570b293f3b63024c",
+      "sourceDateEpoch": 1792671554,
+      "sourceLayout": "source",
+      "expectedVersion": "0.4.0-20",
+      "sourcePaths": [
+        "native",
+        "qml",
+        "defaults",
+        "data",
+        "plasmoids",
+        "themes",
+        "tools",
+        "assets/fonts",
+        "assets/wallpapers",
+        "assets/icons/meoarch-logo.svg",
+        "assets/licenses",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        "translations"
+      ]
+    },
+    "meo-kde-runtime": {
+      "repository": "QwQdoge/meo-kde",
+      "tag": "v0.4.0-beta.7",
+      "commit": "4f2b18778ecf19bc22e75eabc4fc7c159ec78f77",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/4f2b18778ecf19bc22e75eabc4fc7c159ec78f77",
+      "sourceSha256": "e4367a456e67516e1842f7acb29c215d526c5caae3aba51bbbdd836a02fef68f",
+      "sourceDateEpoch": 1792660417,
+      "sourceLayout": "source",
+      "expectedVersion": "0.4.0beta3-8",
+      "sourcePaths": [
+        "native/system",
+        "native/dynamic-color",
+        "native/third_party/material-color-utilities",
+        "qml/MeoKDE",
+        "assets/licenses",
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        "native/translations",
+        "translations",
+        "data",
+        "defaults"
+      ]
+    },
+    "meo-account": {
+      "repository": "QwQdoge/MeoArch-account",
+      "tag": "v0.1.0-beta.7",
+      "commit": "6b38b90ebddf556e9befee5e0c356dfe5b5c8ef0",
+      "sourceUrl": "ssh://git@github.com/QwQdoge/MeoArch-account.git",
+      "sourceSha256": "8b8fa741f87cdb854177f836b7874b3f0bb30f23779daca7d542f737934d140c",
+      "sourceDateEpoch": 1792633228,
+      "sourceLayout": "source",
+      "sourceTransport": "git-ssh",
+      "expectedVersion": "0.1.0-11"
+    },
+    "meo-icon-studio": {
+      "repository": "QwQdoge/meo-kde",
+      "tag": "v0.4.0-beta.4",
+      "commit": "3663bfdbc62c041727b9379ba5a34829a1763328",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-kde/tar.gz/3663bfdbc62c041727b9379ba5a34829a1763328",
+      "sourceSha256": "c1e543ae72968283ce06c6eaf813f9d5db516bb840419bd99858523142c6a982",
+      "sourceDateEpoch": 1791592009,
+      "sourceLayout": "source",
+      "expectedVersion": "0.1.0-2",
+      "sourcePaths": [
+        "tools/icons",
+        "assets/icons/application-identities",
+        "LICENSE"
+      ]
+    },
+    "meo-settings": {
+      "repository": "QwQdoge/MeoSettings",
+      "tag": "v0.2.0-beta.9",
+      "commit": "e1bd8ea446c406eafba32abc357be1eae40a57a5",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/MeoSettings/tar.gz/e1bd8ea446c406eafba32abc357be1eae40a57a5",
+      "sourceSha256": "8b07b733537d3059e117eea12af0547645a71e9da409060922d63590318358cc",
+      "sourceDateEpoch": 1792305950,
+      "sourceLayout": "source",
+      "expectedVersion": "0.2.0beta5-5"
+    },
+    "omnistore-bin": {
+      "repository": "QwQdoge/OmniStore",
+      "tag": "v0.1.5-beta.1",
+      "commit": "615186e57b0abeec98fa04c183a36f0499d8e21f",
+      "expectedVersion": "0.1.5beta1-1",
+      "sourceUrl": "https://github.com/QwQdoge/OmniStore/releases/download/v0.1.5-beta.1/omnistore-linux-x64.tar.gz",
+      "sourceSha256": "3b14e8d06e29db8a6262c288ba064e8c6311dfc4e140471d0c5c7ae1391eb274",
+      "sourceDateEpoch": 1791551030,
+      "sourceLayout": "release-bundle",
+      "verifierUrl": "https://raw.githubusercontent.com/QwQdoge/OmniStore/615186e57b0abeec98fa04c183a36f0499d8e21f/verify_release_exporter_contract.py",
+      "verifierSha256": "d4b7694e512898a32907be3a4fdf76ffba994b001ae2c957c0533b31b59c0773",
+      "buildInputs": {
+        "meouiCommit": "3558171a246ea11c64b5002eb8099aaf1015f388"
+      }
+    },
+    "meo-repair": {
+      "repository": "QwQdoge/MeoArch-os-workspace",
+      "tag": "v2026.10-beta.2",
+      "commit": "bff7e70558c525ee055284a78511f61657c67188",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/MeoArch-os-workspace/tar.gz/bff7e70558c525ee055284a78511f61657c67188",
+      "sourceSha256": "c41c5e0dee2e69b98f0032f832a68c564169505eaabd74543df29035070e696c",
+      "sourceDateEpoch": 1792577787,
+      "sourceLayout": "source",
+      "expectedVersion": "0.1.0-2",
+      "sourcePaths": [
+        "repair",
+        "installer/app",
+        "LICENSE"
+      ]
+    }
+  },
+  "description": "Beta 12 pins; meo-desktop 0.4.0-20 applies the default wallpaper to the desktop and the lock screen."
+}

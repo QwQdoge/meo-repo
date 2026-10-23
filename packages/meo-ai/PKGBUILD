@@ -35,6 +35,9 @@ build() {
   cargo fetch --locked --target "$(rustc -vV | sed -n 's/^host: //p')" \
     --manifest-path "$srcdir/source/meo/desktop-rs/Cargo.toml"
   # rustc needs a larger stack for the shared core's large view builders in release mode.
+  # qtbridge compiles its C++ bridge through cc; makepkg's -flto would make that GCC LTO
+  # bitcode the Rust link step cannot read (undefined cxxbridge symbols), so not here.
+  CFLAGS="${CFLAGS//-flto=auto/}" CXXFLAGS="${CXXFLAGS//-flto=auto/}" LDFLAGS="${LDFLAGS//-flto=auto/}" \
   RUST_MIN_STACK=33554432 CARGO_TARGET_DIR="$srcdir/cargo-target" \
     cargo build --frozen --release -j 2 --manifest-path "$srcdir/source/meo/desktop-rs/Cargo.toml"
 }
