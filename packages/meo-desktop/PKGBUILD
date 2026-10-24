@@ -1,6 +1,6 @@
 pkgname=meo-desktop
 pkgver=0.4.0
-pkgrel=21
+pkgrel=22
 pkgdesc="Meo Desktop integration for MeoArch, powered by KDE Plasma"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-kde'
@@ -138,8 +138,17 @@ package() {
   done
   for unit in \
       meo-dynamic-colors.path meo-dynamic-colors.service \
+      meo-session-dynamic-colors.path meo-session-dynamic-colors.service \
       meo-weather-refresh.service meo-weather-refresh.timer; do
     install -Dm644 "$source/defaults/systemd/$unit" "$pkgdir/usr/lib/systemd/user/$unit"
+  done
+  # The session-specific color units are conditioned on MEO_DESKTOP_SESSION=1
+  # (exported by startmeo-wayland and imported into the user manager before
+  # graphical-session.target), so enabling them leaves a normal Plasma login
+  # unchanged. They are the only Meo user units started by the package.
+  install -d "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants"
+  for unit in meo-session-dynamic-colors.path meo-session-dynamic-colors.service; do
+    ln -s "../$unit" "$pkgdir/usr/lib/systemd/user/graphical-session.target.wants/$unit"
   done
   sed -i 's|%h/.local/bin/|/usr/bin/|g' "$pkgdir/usr/lib/systemd/user/meo-dynamic-colors.service"
   # Deliberately do not enable Meo user units globally. A normal Plasma login
@@ -153,4 +162,8 @@ package() {
   install -Dm644 "$source/defaults/responsiveness/prelockd-meo.conf" "$pkgdir/usr/share/meo-desktop/optional/prelockd.conf"
   install -Dm644 "$source/defaults/systemd/50-meo-responsiveness.preset" "$pkgdir/usr/lib/systemd/system-preset/50-meo-responsiveness.preset"
   install -Dm644 "$source/defaults/fonts/50-meo-fonts.conf" "$pkgdir/etc/fonts/conf.avail/50-meo-fonts.conf"
+  # Only defines the "Meo Sans"/"Meo Brand" family aliases, so enabling it does
+  # not alter ordinary Plasma text.
+  install -d "$pkgdir/etc/fonts/conf.d"
+  ln -s ../conf.avail/50-meo-fonts.conf "$pkgdir/etc/fonts/conf.d/50-meo-fonts.conf"
 }

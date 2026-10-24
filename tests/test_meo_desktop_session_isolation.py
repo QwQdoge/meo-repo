@@ -56,6 +56,18 @@ class MeoDesktopSessionIsolationTests(unittest.TestCase):
             with self.subTest(forbidden=forbidden):
                 self.assertNotIn(forbidden, self.source)
 
+    def test_session_color_units_are_enabled_only_for_the_meo_session(self):
+        self.assertIn('meo-session-dynamic-colors.path meo-session-dynamic-colors.service', self.source)
+        self.assertIn('usr/lib/systemd/user/graphical-session.target.wants', self.source)
+        self.assertIn('MEO_DESKTOP_SESSION=1', self.source)
+        # Only the session-conditioned pair may be enabled; the unconditioned
+        # units must stay disabled.
+        self.assertNotIn('graphical-session.target.wants/meo-dynamic-colors', self.source)
+        self.assertNotIn('graphical-session.target.wants/meo-weather-refresh', self.source)
+
+    def test_font_alias_config_is_enabled(self):
+        self.assertIn('etc/fonts/conf.d/50-meo-fonts.conf', self.source)
+
     def test_install_does_not_globally_enable_meo_user_units(self):
         self.assertNotIn(
             'usr/lib/systemd/user/default.target.wants/meo-dynamic-colors.path',
