@@ -226,6 +226,13 @@ class RepositoryContractTests(unittest.TestCase):
             recipe = (ROOT / "packages" / package / "PKGBUILD").read_text()
             self.assertNotIn("SKIP", recipe)
 
+    def test_installed_smoke_checks_the_desktop_entry_the_omnistore_package_installs(self):
+        recipe = (ROOT / "packages" / "omnistore-bin" / "PKGBUILD").read_text()
+        smoke = (ROOT / "ci" / "smoke-installed.sh").read_text()
+        self.assertIn('"$pkgdir/usr/share/applications/org.meo.OmniStore.desktop"', recipe)
+        self.assertIn("/usr/share/applications/org.meo.OmniStore.desktop", smoke)
+        self.assertNotIn("/usr/share/applications/omnistore.desktop", smoke)
+
     def test_meta_packages_cover_core_apps_and_recommended_profiles(self):
         expected = {
             "meo-core-meta": ("meo-release", "meo-desktop", "meo-plasma-login-manager"),

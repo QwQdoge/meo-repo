@@ -127,8 +127,8 @@ if "/usr/bin/meo-ai" not in executables:
 PY
 fi
 
-grep -q '^Exec=/usr/bin/omnistore %u$' /usr/share/applications/omnistore.desktop
-grep -q '^MimeType=x-scheme-handler/omnistore;$' /usr/share/applications/omnistore.desktop
+grep -q '^Exec=/usr/bin/omnistore %u$' /usr/share/applications/org.meo.OmniStore.desktop
+grep -q '^MimeType=x-scheme-handler/omnistore;$' /usr/share/applications/org.meo.OmniStore.desktop
 command -v omnistore >/dev/null
 command -v omnistore-cli >/dev/null
 command -v omnistore-apps-export >/dev/null
