@@ -228,7 +228,7 @@ class RepositoryContractTests(unittest.TestCase):
 
     def test_meta_packages_cover_core_apps_and_recommended_profiles(self):
         expected = {
-            "meo-core-meta": ("meo-release", "meo-desktop"),
+            "meo-core-meta": ("meo-release", "meo-desktop", "meo-plasma-login-manager"),
             "meo-apps-meta": ("meo-account", "meo-settings", "omnistore-bin", "flatpak"),
             "meo-recommended-meta": ("meo-core-meta", "meo-apps-meta"),
         }

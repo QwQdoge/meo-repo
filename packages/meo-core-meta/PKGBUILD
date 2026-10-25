@@ -1,10 +1,10 @@
 pkgname=meo-core-meta
 pkgver=2026.09
-pkgrel=2
+pkgrel=3
 pkgdesc="Meo Desktop core package for MeoArch"
 arch=('any')
 license=('MIT')
-depends=('meo-release' 'meo-desktop')
+depends=('meo-release' 'meo-desktop' 'meo-plasma-login-manager')
 source=()
 sha256sums=()
 
