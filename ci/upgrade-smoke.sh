@@ -145,6 +145,14 @@ grep -F '0 altered files' <<<"$desktop_check" >/dev/null || {
   exit 3
 }
 
+# The installed-state smoke below checks every component of the train, but a core-only upgrade does
+# not pull the applications. Give the upgraded system the recommended set plus the optional
+# applications this manifest ships, as a user following the recommended path would have.
+optional_apps="$(python3 -c 'import json,sys; c=json.load(open(sys.argv[1])).get("components", {}); print(" ".join(n for n in ("meo-ai", "meo-repair") if n in c))' "$manifest")"
+# shellcheck disable=SC2086
+pacman --root "$test_root" --config "$candidate_config" -S --needed --noconfirm --ask=4 \
+  meo-recommended-meta $optional_apps
+
 cp -- "$repo_root/ci/smoke-installed.sh" "$test_root/tmp/meo-smoke-installed.sh"
 cp -- "$repo_root/scripts/artifact_manifest.py" "$test_root/scripts/artifact_manifest.py"
 cp -- "$manifest" "$test_root/tmp/meo-release-manifest.json"

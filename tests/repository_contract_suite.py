@@ -567,6 +567,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('systemd-tmpfiles --create --remove', remote)
         self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', upgrade)
         self.assertIn('-Syu --noconfirm --ask=4', upgrade)
+        self.assertIn('meo-recommended-meta $optional_apps', upgrade)
         self.assertIn('-Qo "$test_root/usr/bin/plasmalogin"', upgrade)
         self.assertIn('GPGDir = $test_root/etc/pacman.d/gnupg', upgrade)
         self.assertIn('release_candidate=("$package_dir"/meo-release-', upgrade)
