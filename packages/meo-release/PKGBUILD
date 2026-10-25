@@ -1,13 +1,13 @@
 pkgname=meo-release
 pkgver=2026.09
-pkgrel=2
+pkgrel=3
 pkgdesc="MeoArch release metadata"
 arch=('any')
 license=('MIT')
 depends=('meo-keyring' 'meo-mirrorlist' 'meo-channel')
 install=meo-release.install
 source=('package-catalog.json' 'application-catalog.json')
-sha256sums=('482cf0d2d2290102f52bbaae8221fdebf7bd5cd4dc73bb34f4ff3f8aecaf7993'
+sha256sums=('8cfacbd95790c30c304084393f3b31076116af5a7798b85ab5255a765d2af70e'
             'b19a6fe9e3f331eb6263fbd3766699dcc33ae62843301b6ef7f8c1fe1cf45bf7')
 
 package() {
