@@ -16,7 +16,7 @@ provides=('plasma-login-manager=6.8.1')
 conflicts=('plasma-login-manager')
 replaces=('plasma-login-manager')
 source=('meo-session.conf')
-sha256sums=('941980b4af5931af96037ae8ce9e203d4413aab823d16bc8f256d7df2150ab7f')
+sha256sums=('0e533634254bc76e0b090310c7704ee59222cb2164b1999e8a17fd43edce60f1')
 
 # The protected renderer supplies the reviewed Meo main checkout as
 # $srcdir/source. The public product is Meo Login, while PAM, systemd,
