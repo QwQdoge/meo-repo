@@ -126,9 +126,10 @@ has_meo_login_manager="$(python3 -c 'import json,sys; print("true" if "meo-plasm
 if [ "$has_meo_login_manager" = true ]; then
   pacman --root "$test_root" -Q meo-plasma-login-manager >/dev/null
   ! pacman --root "$test_root" -Q plasma-login-manager >/dev/null 2>&1
-  login_owner="$(pacman --root "$test_root" -Qo /usr/bin/plasmalogin)"
+  # With --root, pacman -Qo resolves the path on the host unless it includes the root prefix.
+  login_owner="$(pacman --root "$test_root" -Qo "$test_root/usr/bin/plasmalogin")"
   case "$login_owner" in
-    "/usr/bin/plasmalogin is owned by meo-plasma-login-manager "*) ;;
+    "$test_root/usr/bin/plasmalogin is owned by meo-plasma-login-manager "*) ;;
     *) echo "Upgrade did not transfer plasmalogin ownership to the Meo package" >&2; exit 3 ;;
   esac
   login_check="$(pacman --root "$test_root" -Qkk meo-plasma-login-manager)"
