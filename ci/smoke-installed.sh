@@ -132,9 +132,13 @@ grep -q '^MimeType=x-scheme-handler/omnistore;$' /usr/share/applications/org.meo
 command -v omnistore >/dev/null
 command -v omnistore-cli >/dev/null
 command -v omnistore-apps-export >/dev/null
-test -x /usr/lib/omnistore/frontend
-! find /usr/lib/omnistore/lib -maxdepth 1 -name '*_plugin.so' -exec readelf -d {} \; \
-  | grep -F '/home/'
+# The native-only package ships omnistore-native and no Flutter frontend or plugin libraries.
+test -x /usr/lib/omnistore/omnistore-native
+test ! -e /usr/lib/omnistore/frontend
+if [ -d /usr/lib/omnistore/lib ]; then
+  ! find /usr/lib/omnistore/lib -maxdepth 1 -name '*_plugin.so' -exec readelf -d {} \; \
+    | grep -F '/home/'
+fi
 test -s /usr/share/meo-release/application-catalog.json
 timeout 10 omnistore-cli --help | grep -q -- '--install'
 

@@ -232,6 +232,8 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertIn('"$pkgdir/usr/share/applications/org.meo.OmniStore.desktop"', recipe)
         self.assertIn("/usr/share/applications/org.meo.OmniStore.desktop", smoke)
         self.assertNotIn("/usr/share/applications/omnistore.desktop", smoke)
+        self.assertIn("test -x /usr/lib/omnistore/omnistore-native", smoke)
+        self.assertNotIn("test -x /usr/lib/omnistore/frontend", smoke)
 
     def test_meta_packages_cover_core_apps_and_recommended_profiles(self):
         expected = {
