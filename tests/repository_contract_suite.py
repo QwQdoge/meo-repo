@@ -566,6 +566,7 @@ class RepositoryContractTests(unittest.TestCase):
         self.assertGreaterEqual(remote.count('-Syu'), 2)
         self.assertIn('systemd-tmpfiles --create --remove', remote)
         self.assertIn('pacman --root "$test_root" --config "$candidate_config" -Syu', upgrade)
+        self.assertIn('-Syu --noconfirm --ask=4', upgrade)
         self.assertIn('GPGDir = $test_root/etc/pacman.d/gnupg', upgrade)
         self.assertIn('release_candidate=("$package_dir"/meo-release-', upgrade)
         self.assertIn('chown 1000:1000 "$test_root/etc" "$test_root/usr"', upgrade)

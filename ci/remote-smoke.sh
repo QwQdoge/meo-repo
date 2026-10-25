@@ -107,7 +107,8 @@ PY
   test "$(pacman -Q meo-kde-runtime)" = "meo-kde-runtime $standalone_expected"
   bash "$repo_root/ci/check-plasma-runtime.sh"
 fi
-pacman -Syu --noconfirm
+# --ask=4 confirms removal of Arch plasma-login-manager, which conflicts with Meo Login.
+pacman -Syu --noconfirm --ask=4
 if [ "$channel" = beta ] || [ -n "$candidate" ]; then
   # Installation alone can accidentally accept the previous public version.
   version_packages=("${packages[@]}")

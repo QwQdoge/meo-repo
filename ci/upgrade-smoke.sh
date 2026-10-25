@@ -108,7 +108,11 @@ if [ "${#release_candidate[@]}" -eq 1 ] && [ -f "${release_candidate[0]}" ]; the
   fi
 fi
 
-pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm
+# Meo Login conflicts with Arch's plasma-login-manager and pacman does not apply
+# `replaces` while Arch still ships that package, so unattended upgrades answer
+# the conflict-removal question (--ask=4). The checks below still require that
+# plasma-login-manager is gone and plasmalogin is owned by the Meo package.
+pacman --root "$test_root" --config "$candidate_config" -Syu --noconfirm --ask=4
 
 for directory in / /etc /usr /var; do
   test "$(stat -c '%u:%g' "$test_root$directory")" = 0:0 || {
