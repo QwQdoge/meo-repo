@@ -1,6 +1,6 @@
 pkgname=meo-plasma-login-manager
-pkgver=6.7.5
-pkgrel=7
+pkgver=6.8.1
+pkgrel=2
 pkgdesc="Meo Login display manager for MeoArch"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-login-manager'
@@ -12,13 +12,13 @@ depends=('glibc' 'kauth' 'kcmutils' 'kconfig' 'kcoreaddons' 'kdbusaddons'
          'systemd-libs')
 makedepends=('cmake' 'ninja' 'extra-cmake-modules' 'qt6-tools')
 options=('!debug')
-provides=('plasma-login-manager=6.7.5')
+provides=('plasma-login-manager=6.8.1')
 conflicts=('plasma-login-manager')
 replaces=('plasma-login-manager')
 source=('meo-session.conf')
 sha256sums=('941980b4af5931af96037ae8ce9e203d4413aab823d16bc8f256d7df2150ab7f')
 
-# The protected renderer supplies the reviewed meo/6.7 checkout as
+# The protected renderer supplies the reviewed Meo main checkout as
 # $srcdir/source. The public product is Meo Login, while PAM, systemd,
 # configuration and service identifiers intentionally stay compatible with
 # upstream Plasma Login Manager.

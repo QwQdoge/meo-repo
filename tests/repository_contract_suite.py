@@ -473,7 +473,7 @@ class RepositoryContractTests(unittest.TestCase):
         validator = (ROOT / "scripts/validate_manifest.py").read_text()
 
         self.assertIn("pkgname=meo-plasma-login-manager", login)
-        self.assertIn("provides=('plasma-login-manager=6.7.5')", login)
+        self.assertIn("provides=('plasma-login-manager=6.8.1')", login)
         self.assertIn("conflicts=('plasma-login-manager')", login)
         self.assertIn("replaces=('plasma-login-manager')", login)
         self.assertIn("'meo-plasma-login-manager'", desktop)
