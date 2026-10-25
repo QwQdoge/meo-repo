@@ -40,13 +40,13 @@
         },
         "meo-plasma-login-manager": {
             "repository": "QwQdoge/meo-login-manager",
-            "tag": "v6.7.5-meo-beta.4",
-            "commit": "67c5c5876644e035a7b7b18de02c3b287be1945d",
-            "sourceUrl": "https://codeload.github.com/QwQdoge/meo-login-manager/tar.gz/67c5c5876644e035a7b7b18de02c3b287be1945d",
-            "sourceSha256": "0c8ae8304930de4e8d468b0dd9b306cb183d7ed86db697597f585b35c51e040a",
-            "sourceDateEpoch": 1792744237,
+            "tag": "v6.8.1-meo-beta.1",
+            "commit": "59d689c0008bbb7efe2846d869657c004a5fb679",
+            "sourceUrl": "https://codeload.github.com/QwQdoge/meo-login-manager/tar.gz/59d689c0008bbb7efe2846d869657c004a5fb679",
+            "sourceSha256": "dfbb699f3fb9d63310d84bbe5f35e4ad18332e1543dc08dae03bb7d5e79c5b68",
+            "sourceDateEpoch": 1792923657,
             "sourceLayout": "source",
-            "expectedVersion": "6.7.5-7"
+            "expectedVersion": "6.8.1-2"
         },
         "meo-desktop": {
             "repository": "QwQdoge/meo-kde",
@@ -126,5 +126,5 @@
             }
         }
     },
-    "description": "Stable 2026.10.2 full train promoted from Beta 2026.10-beta.24 (draft, not published)."
+    "description": "Stable 2026.10.2 full train promoted from Beta 2026.10-beta.25 (meo-plasma-login-manager 6.8.1-2)."
 }
