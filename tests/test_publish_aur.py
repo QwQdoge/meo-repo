@@ -60,7 +60,10 @@ class FlattenTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = sorted((ROOT / "manifests" / "beta").glob("*.json"), key=lambda p: [int(x) for x in re.findall(r"\d+", p.name)])[-1]
             try:
-                target = publish_aur.render_package(manifest, "meoui-qml", Path(tmp))
+                try:
+            target = publish_aur.render_package(manifest, "meoui-qml", Path(tmp))
+        except subprocess.CalledProcessError as exc:
+            self.fail("makepkg --printsrcinfo failed: " + str(exc.stderr))
             except FileNotFoundError:
                 self.skipTest("makepkg is not installed")
             self.assertEqual([p.name for p in target.iterdir() if p.is_dir()], [])
