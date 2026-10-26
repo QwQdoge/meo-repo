@@ -47,6 +47,25 @@ class RenderRecipeTest(unittest.TestCase):
             publish_aur.split_version("nonsense")
 
 
+class FlattenTest(unittest.TestCase):
+    def test_license_files_are_flattened_into_sources_and_the_recipe_uses_srcdir(self):
+        recipe = (ROOT / "packages" / "meoui-qml" / "PKGBUILD").read_text()
+        text = publish_aur.render_recipe(recipe, COMPONENT, {"Apache-2.0.txt": "b" * 64})
+        self.assertIn("'Apache-2.0.txt'", text)
+        self.assertIn("'" + "b" * 64 + "'", text)
+        self.assertNotIn("$startdir/licenses", text)
+        self.assertIn('"$srcdir/$notice"', text)
+
+    def test_rendered_repository_has_no_subdirectories(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = sorted((ROOT / "manifests" / "beta").glob("*.json"), key=lambda p: [int(x) for x in re.findall(r"\d+", p.name)])[-1]
+            try:
+                target = publish_aur.render_package(manifest, "meoui-qml", Path(tmp))
+            except FileNotFoundError:
+                self.skipTest("makepkg is not installed")
+            self.assertEqual([p.name for p in target.iterdir() if p.is_dir()], [])
+
+
 class ComponentPolicyTest(unittest.TestCase):
     def test_every_aur_component_has_a_public_recipe_and_files(self):
         for name, extras in publish_aur.AUR_COMPONENTS.items():

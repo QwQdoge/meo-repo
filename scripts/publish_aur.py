@@ -17,6 +17,7 @@ from a protected secret); it never prints or stores key material.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -28,6 +29,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 # component -> files that must travel with the recipe (relative to packages/<name>/).
+# The AUR forbids subdirectories, so directory entries are flattened into the repository root and
+# the recipe refers to them as ordinary sources.
 AUR_COMPONENTS = {
     "meoui-qml": ("licenses",),
     "meo-plasma-login-manager": ("meo-session.conf",),
@@ -63,8 +66,12 @@ def _array(text: str, key: str) -> re.Match | None:
     return re.search(rf"^{key}=\((.*?)\)\n", text, re.M | re.S)
 
 
-def render_recipe(recipe: str, component: dict) -> str:
-    """Return the AUR PKGBUILD text for ``recipe`` pinned to ``component``."""
+def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None = None) -> str:
+    """Return the AUR PKGBUILD text for ``recipe`` pinned to ``component``.
+
+    ``flattened`` maps file names moved from a package subdirectory into the repository root to
+    their SHA-256; they are appended to the source arrays.
+    """
     pkgver, pkgrel = split_version(component["expectedVersion"])
     directory = source_dir_name(component)
     tarball = f"{component['repository'].split('/')[-1]}-{component['commit']}.tar.gz"
@@ -86,8 +93,9 @@ def render_recipe(recipe: str, component: dict) -> str:
     existing_sums = re.findall(r"'([^']+)'", sums.group(1))
     if len(existing_sources) != len(existing_sums):
         raise AurError("source and sha256sums length mismatch")
-    new_sources = [f"{tarball}::{url}", *existing_sources]
-    new_sums = [digest, *existing_sums]
+    extra = {name: sha for name, sha in (flattened or {}).items() if name not in existing_sources}
+    new_sources = [f"{tarball}::{url}", *existing_sources, *extra]
+    new_sums = [digest, *existing_sums, *extra.values()]
     joined_sources = "\n        ".join(f"'{item}'" for item in new_sources)
     joined_sums = "\n            ".join(f"'{item}'" for item in new_sums)
     text = text.replace(sources.group(0), f"source=({joined_sources})\n", 1)
@@ -95,6 +103,7 @@ def render_recipe(recipe: str, component: dict) -> str:
 
     if "$srcdir/source" not in text:
         raise AurError("recipe does not use $srcdir/source")
+    text = text.replace('"$startdir/licenses/', '"$srcdir/')
     text = text.replace('"$srcdir/source', '"$srcdir/$_srcdir')
     text = text.replace("$srcdir/source", "$srcdir/$_srcdir")
     # `_srcdir` is declared before pkgname so every function sees it.
@@ -109,16 +118,19 @@ def render_package(manifest_path: Path, name: str, out_dir: Path) -> Path:
     package_dir = ROOT / "packages" / name
     recipe = (package_dir / "PKGBUILD").read_text(encoding="utf-8")
     target = out_dir / name
-    target.mkdir(parents=True, exist_ok=True)
-    (target / "PKGBUILD").write_text(render_recipe(recipe, component), encoding="utf-8")
+    shutil.rmtree(target, ignore_errors=True)
+    target.mkdir(parents=True)
+    flattened: dict[str, str] = {}
     for extra in AUR_COMPONENTS[name]:
         source = package_dir / extra
-        destination = target / extra
         if source.is_dir():
-            shutil.rmtree(destination, ignore_errors=True)
-            shutil.copytree(source, destination)
+            for item in sorted(source.iterdir()):
+                if item.is_file():
+                    shutil.copy2(item, target / item.name)
+                    flattened[item.name] = hashlib.sha256(item.read_bytes()).hexdigest()
         else:
-            shutil.copy2(source, destination)
+            shutil.copy2(source, target / extra)
+    (target / "PKGBUILD").write_text(render_recipe(recipe, component, flattened), encoding="utf-8")
     srcinfo = subprocess.run(
         ["makepkg", "--printsrcinfo"], cwd=target, check=True, capture_output=True, text=True,
     ).stdout
