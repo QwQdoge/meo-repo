@@ -42,6 +42,13 @@ AUR_COMPONENTS = {
     "meo-settings": (),
     "meo-repair": (),
     "omnistore-bin": ("omnistore.desktop", "org.meo.OmniStore.json"),
+    "meo-ai": (
+        "org.meo.AI.desktop",
+        "newspaper3k-LICENSE",
+        "feedfinder2-LICENSE",
+        "tinysegmenter-LICENSE",
+        "runtime-sources.json",
+    ),
 }
 
 MAINTAINER = "# Maintainer: MeoArch <https://github.com/QwQdoge>"
@@ -85,11 +92,51 @@ def url_basename(url: str) -> str:
     return url.rstrip("/").rsplit("/", 1)[-1]
 
 
-def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None = None) -> str:
+def add_to_array(text: str, key: str, items: list[str]) -> str:
+    """Appends ``items`` to the ``key=(...)`` array of a recipe, creating it after ``arch`` when absent."""
+    match = _array(text, key)
+    quoted = " ".join(f"'{item}'" for item in items)
+    if match:
+        body = match.group(1).rstrip()
+        sep = " " if body else ""
+        return text.replace(match.group(0), f"{key}=({body}{sep}{quoted})\n", 1)
+    arch = re.search(r"^arch=.*\n", text, re.M)
+    if not arch:
+        raise AurError(f"recipe has neither {key} nor arch")
+    return text.replace(arch.group(0), arch.group(0) + f"{key}=({quoted})\n", 1)
+
+
+def inject_prepare(text: str, lines: list[str]) -> str:
+    """Adds shell lines to ``prepare()``; the function is created before ``build()`` when missing."""
+    body = "".join(f"  {line}\n" for line in lines)
+    if "prepare() {\n" in text:
+        return text.replace("prepare() {\n", "prepare() {\n" + body, 1)
+    if "build() {\n" not in text:
+        raise AurError("recipe has no build() to place prepare() before")
+    return text.replace("build() {\n", "prepare() {\n" + body + "}\n\nbuild() {\n", 1)
+
+
+def beta_variant(text: str, name: str, pkgver: str) -> str:
+    """The recipe as the ``<name>-beta`` AUR package: replaces and provides the stable package."""
+    text = re.sub(r"^pkgname=.*$", f"pkgname={name}-beta", text, count=1, flags=re.M)
+    text = add_to_array(text, "provides", [f"{name}={pkgver}"])
+    text = add_to_array(text, "conflicts", [name])
+    return re.sub(r'^pkgdesc="(.*)"$', r'pkgdesc="\1 (Beta channel)"', text, count=1, flags=re.M)
+
+
+def render_recipe(
+    recipe: str,
+    component: dict,
+    flattened: dict[str, str] | None = None,
+    extras: dict | None = None,
+    beta_of: str | None = None,
+) -> str:
     """Return the AUR PKGBUILD text for ``recipe`` pinned to ``component``.
 
     ``flattened`` maps file names moved from a package subdirectory into the repository root to
-    their SHA-256; they are appended to the source arrays.
+    their SHA-256; they are appended to the source arrays. ``extras`` carries what a recipe needs that
+    the release job stages itself (``sources``: (entry, sha256) pairs, ``noextract``, ``prepare``
+    lines). ``beta_of`` renders the Beta channel package of that stable package name.
     """
     pkgver, pkgrel = split_version(component["expectedVersion"])
     directory = source_dir_name(component)
@@ -115,6 +162,9 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     extra = {name: sha for name, sha in (flattened or {}).items() if name not in existing_sources}
     new_sources = [f"{tarball}::{url}", *existing_sources, *extra]
     new_sums = [digest, *existing_sums, *extra.values()]
+    for entry, sha in (extras or {}).get("sources", []):
+        new_sources.append(entry)
+        new_sums.append(sha)
     if bundle:
         # The prebuilt release bundle has no top-level directory, so it is extracted by prepare().
         new_sources.append(f"{url_basename(component['verifierUrl'])}::{component['verifierUrl']}")
@@ -136,18 +186,58 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     text = text.replace('"$startdir/licenses/', '"$srcdir/')
     text = text.replace('"$srcdir/source', '"$srcdir/$_srcdir')
     text = text.replace("$srcdir/source", "$srcdir/$_srcdir")
+    if (extras or {}).get("noextract"):
+        sums_now = _array(text, "sha256sums")
+        names = " ".join(f"'{n}'" for n in extras["noextract"])
+        text = text.replace(sums_now.group(0), sums_now.group(0) + f"noextract=({names})\n", 1)
+    if (extras or {}).get("prepare"):
+        text = inject_prepare(text, extras["prepare"])
+    if beta_of:
+        text = beta_variant(text, beta_of, pkgver)
     # `_srcdir` is declared before pkgname so every function sees it.
     header = f"{MAINTAINER}\n_srcdir={directory}\n"
     return header + text
 
 
-def render_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tuple[Path, ...] = ()) -> Path:
+def component_extras(name: str, manifest_path: Path, fallbacks: tuple[Path, ...], package_dir: Path) -> dict:
+    """What the release job stages for ``name`` besides its own source, as plain AUR sources."""
+    if name != "meo-ai":
+        return {}
+    # Meo AI builds against the MeoUI source of the same release and pins three pure-Python modules.
+    ui = load_component(manifest_path, "meoui-qml", fallbacks)
+    ui_dir = source_dir_name(ui)
+    ui_file = f"{ui_dir}.tar.gz"
+    runtime = json.loads((package_dir / "runtime-sources.json").read_text(encoding="utf-8"))
+    sources = [(f"{ui_file}::{ui['sourceUrl']}", ui["sourceSha256"])]
+    files = []
+    for item in runtime["sources"]:
+        file = url_basename(item["url"])
+        sources.append((f"{file}::{item['url']}", item["sha256"]))
+        files.append(file)
+    return {
+        "sources": sources,
+        "noextract": files,
+        "prepare": [
+            f'ln -sfn "$srcdir/{ui_dir}" "$srcdir/meoui"',
+            'mkdir -p "$srcdir/third-party"',
+            *[f'cp -f "$srcdir/{f}" "$srcdir/third-party/{f}"' for f in files],
+        ],
+    }
+
+
+def render_package(
+    manifest_path: Path,
+    name: str,
+    out_dir: Path,
+    fallbacks: tuple[Path, ...] = (),
+    beta: bool = False,
+) -> Path:
     if name not in AUR_COMPONENTS:
         raise AurError(f"{name} is not an AUR component")
     component = load_component(manifest_path, name, fallbacks)
     package_dir = ROOT / "packages" / name
     recipe = (package_dir / "PKGBUILD").read_text(encoding="utf-8")
-    target = out_dir / name
+    target = out_dir / (f"{name}-beta" if beta else name)
     shutil.rmtree(target, ignore_errors=True)
     target.mkdir(parents=True)
     flattened: dict[str, str] = {}
@@ -162,7 +252,10 @@ def render_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tup
             shutil.copy2(source, target / extra)
     for install_file in sorted(package_dir.glob("*.install")):
         shutil.copy2(install_file, target / install_file.name)
-    (target / "PKGBUILD").write_text(render_recipe(recipe, component, flattened), encoding="utf-8")
+    extras = component_extras(name, manifest_path, fallbacks, package_dir)
+    (target / "PKGBUILD").write_text(
+        render_recipe(recipe, component, flattened, extras, name if beta else None), encoding="utf-8"
+    )
     command = ["makepkg", "--printsrcinfo"]
     if os.geteuid() == 0:
         # Never bypass makepkg's root guard. Parse the PKGBUILD in an isolated
@@ -329,6 +422,10 @@ def main(argv: list[str] | None = None) -> int:
         item.add_argument("--component", action="append", choices=sorted([*AUR_COMPONENTS, *BIN_COMPONENTS]))
         item.add_argument("--also", action="append", type=Path, default=[],
                           help="fallback manifest consulted for components missing from MANIFEST")
+        item.add_argument("--beta-manifest", type=Path,
+                          help="also publish <name>-beta for every component whose version here differs from MANIFEST")
+        item.add_argument("--beta-only", action="store_true",
+                          help="publish only the <name>-beta packages (after a Beta release)")
         if command == "publish":
             item.add_argument("--push", action="store_true")
     args = parser.parse_args(argv)
@@ -341,14 +438,32 @@ def main(argv: list[str] | None = None) -> int:
     if not names:
         print("no AUR components in this manifest")
         return 0
-    try:
+    jobs: list[tuple[str, Path, tuple[Path, ...], bool]] = [(name, manifest, fallbacks, False) for name in names]
+    if args.beta_manifest:
+        beta_manifest = args.beta_manifest.resolve()
         for name in names:
+            if name not in AUR_COMPONENTS:
+                continue
+            try:
+                stable = load_component(manifest, name, fallbacks)
+                newer = load_component(beta_manifest, name)
+            except AurError:
+                continue
+            if newer["expectedVersion"] != stable["expectedVersion"] or newer["commit"] != stable["commit"]:
+                jobs.append((name, beta_manifest, (manifest, *fallbacks), True))
+    if args.beta_only:
+        jobs = [job for job in jobs if job[3]]
+    try:
+        for name, source, chain, beta in jobs:
+            if name in BIN_COMPONENTS:
+                render = render_bin_package
+            else:
+                render = lambda m, n, o, f, beta=beta: render_package(m, n, o, f, beta=beta)  # noqa: E731
             if args.command == "render":
-                print((render_bin_package if name in BIN_COMPONENTS else render_package)(manifest, name, args.directory.resolve(), fallbacks))
+                print(render(source, name, args.directory.resolve(), chain))
             else:
                 with_tmp = args.directory.resolve() / "_rendered"
-                rendered = (render_bin_package if name in BIN_COMPONENTS else render_package)(manifest, name, with_tmp, fallbacks)
-                publish_package(rendered, args.directory.resolve(), args.push)
+                publish_package(render(source, name, with_tmp, chain), args.directory.resolve(), args.push)
     except (AurError, subprocess.CalledProcessError) as error:
         print(f"publish_aur: {error}", file=sys.stderr)
         return 1

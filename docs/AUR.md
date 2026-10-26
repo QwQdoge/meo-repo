@@ -19,16 +19,29 @@ source commit and SHA-256 (`scripts/publish_aur.py`).
 | `meo-settings` | `QwQdoge/MeoSettings` | Meo Settings; needs `meo-account` (below). |
 | `meo-repair` | `QwQdoge/MeoArch-os-workspace` | Quick Repair application. |
 | `omnistore-bin` | OmniStore release bundle | The prebuilt native release bundle from GitHub Releases. |
+| `meo-ai` | `QwQdoge/meo-ai` (+ MeoUI source, three pinned PyPI modules) | Meo AI desktop app and AgentService; builds Qt, the Newelle engine and the Rust desktop client. |
 | `meo-plasma-login-manager` | `QwQdoge/meo-login-manager` | Meo Login; conflicts with and replaces `plasma-login-manager`. |
 | `meo-account-bin` | published Meo repository package | `meo-account` has private source, so this repackages the signed binary and provides `meo-account`. |
 
-Not on the AUR: `meo-ai` (heavy Rust and Python build; use the Meo repository for now) and the repository plumbing
-packages (`meo-release`, `meo-keyring`, `meo-mirrorlist`, `meo-channel-*`, the `*-meta` packages).
+Not on the AUR: the repository plumbing packages (`meo-release`, `meo-keyring`, `meo-mirrorlist`, `meo-channel-*`, the
+`*-meta` packages); they only make sense with the Meo repository.
+
+## Stable and Beta
+
+Every package above is the **Stable** one, pinned to the latest Stable manifest (components the Stable train does not
+contain, such as `meo-kde-runtime`, come from the newest Beta manifest). For every component whose version in the
+newest Beta manifest differs from Stable there is also a `<name>-beta` package (for example `meo-ai-beta`) that
+provides and conflicts with the stable name, so exactly one of them is installed:
+
+```bash
+yay -Syu meo-ai        # Stable
+yay -Syu meo-ai-beta   # Beta channel
+```
 
 ## Install
 
 ```bash
-yay -Syu meo-desktop meo-settings omnistore-bin
+yay -Syu meo-desktop meo-settings omnistore-bin meo-ai
 ```
 
 ## Publishing (automatic)
@@ -38,7 +51,7 @@ After a **complete Stable** train has published and passed the remote pacman smo
 components the Stable train lacks) and pushes the ones that changed. The job runs in the protected `release`
 environment (so it needs the same approval) and reads the SSH key from the `release` environment secret
 `AUR_SSH_KEY`; the public half is registered on the AUR account. Without the secret it only warns and never fails a
-release. Beta never publishes to the AUR. Re-running is idempotent: unchanged packages are reported as up to date.
+release. A Beta release updates only the `-beta` packages (`publish-aur-beta`). Re-running is idempotent: unchanged packages are reported as up to date.
 
 Run it by hand for an already released manifest:
 

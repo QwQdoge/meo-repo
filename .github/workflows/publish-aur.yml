@@ -10,12 +10,23 @@ on:
         description: Released manifest path, for example manifests/stable/2026.10.2.json
         required: true
         type: string
+      channel:
+        description: stable publishes every package and the -beta variants; beta only the -beta variants
+        required: false
+        default: stable
+        type: string
   workflow_dispatch:
     inputs:
       manifest:
         description: Released manifest path, for example manifests/stable/2026.10.2.json
         required: true
         type: string
+      channel:
+        description: stable publishes every package and the -beta variants; beta only the -beta variants
+        required: false
+        default: stable
+        type: choice
+        options: [stable, beta]
 
 permissions:
   contents: read
@@ -31,6 +42,7 @@ jobs:
         env:
           AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
           RELEASE_MANIFEST: ${{ inputs.manifest }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
         run: |
           if [ -z "$AUR_SSH_KEY" ]; then
             echo "::warning::AUR_SSH_KEY is not configured; skipping AUR publication"
@@ -44,5 +56,12 @@ jobs:
           chmod 600 /home/builder/.ssh/aur_key
           chown -R builder:builder "$GITHUB_WORKSPACE"
           sudo_env="AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key"
-          latest_beta="$(ls manifests/beta/*.json | sort -V | tail -1)"
-          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py publish '$RELEASE_MANIFEST' /home/builder/aur --also '$latest_beta' --push"
+          if [ "$RELEASE_CHANNEL" = beta ]; then
+            # A Beta release: the -beta packages only, compared with the newest Stable manifest.
+            stable="$(ls manifests/stable/*.json | sort -V | tail -1)"
+            args="publish '$stable' /home/builder/aur --also '$RELEASE_MANIFEST' --beta-manifest '$RELEASE_MANIFEST' --beta-only --push"
+          else
+            latest_beta="$(ls manifests/beta/*.json | sort -V | tail -1)"
+            args="publish '$RELEASE_MANIFEST' /home/builder/aur --also '$latest_beta' --beta-manifest '$latest_beta' --push"
+          fi
+          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py $args"

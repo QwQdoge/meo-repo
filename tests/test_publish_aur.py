@@ -79,6 +79,48 @@ class FlattenTest(unittest.TestCase):
             self.assertEqual([p.name for p in target.iterdir() if p.is_dir()], [])
 
 
+class BetaAndMeoAiTest(unittest.TestCase):
+    MANIFEST = sorted((ROOT / "manifests" / "beta").glob("*.json"), key=lambda p: [int(x) for x in re.findall(r"\d+", p.name)])[-1]
+
+    def test_the_beta_package_replaces_and_provides_the_stable_one(self):
+        recipe = (ROOT / "packages" / "omnistore-bin" / "PKGBUILD").read_text()
+        component = json.loads(self.MANIFEST.read_text())["components"]["meoui-qml"]
+        text = publish_aur.render_recipe(
+            (ROOT / "packages" / "meoui-qml" / "PKGBUILD").read_text(), component, beta_of="meoui-qml"
+        )
+        self.assertIn("pkgname=meoui-qml-beta", text)
+        self.assertRegex(text, r"provides=\('meoui-qml=[^']+'\)")
+        self.assertIn("conflicts=('meoui-qml')", text)
+        self.assertIn("(Beta channel)", text)
+        # An existing array is extended, not duplicated.
+        merged = publish_aur.add_to_array(recipe, "conflicts", ["omnistore-bin"])
+        self.assertEqual(merged.count("conflicts=("), 1)
+        self.assertIn("'omnistore-git' 'omnistore-bin'", merged)
+
+    def test_meo_ai_is_built_from_public_sources_with_meoui_and_the_pinned_python_modules(self):
+        package_dir = ROOT / "packages" / "meo-ai"
+        extras = publish_aur.component_extras("meo-ai", self.MANIFEST, (), package_dir)
+        entries = [entry for entry, _ in extras["sources"]]
+        self.assertTrue(any(e.startswith("MeoUI-") and "codeload.github.com/QwQdoge/MeoUI" in e for e in entries), entries)
+        self.assertEqual(len(extras["noextract"]), 3)
+        self.assertTrue(all(len(sha) == 64 for _, sha in extras["sources"]))
+        component = json.loads(self.MANIFEST.read_text())["components"]["meo-ai"]
+        text = publish_aur.render_recipe((package_dir / "PKGBUILD").read_text(), component, None, extras)
+        self.assertIn("prepare() {", text)
+        self.assertIn('ln -sfn "$srcdir/MeoUI-', text)
+        self.assertIn('"$srcdir/meoui"', text)
+        self.assertIn("noextract=(", text)
+        self.assertNotIn("$srcdir/source", text)
+        self.assertEqual(text.count("prepare() {"), 1)
+
+    def test_other_components_need_no_extras(self):
+        self.assertEqual(publish_aur.component_extras("meoui-qml", self.MANIFEST, (), ROOT), {})
+
+    def test_prepare_is_created_or_extended(self):
+        self.assertIn("prepare() {\n  echo x\n}\n\nbuild() {", publish_aur.inject_prepare("build() {\n}\n", ["echo x"]))
+        self.assertIn("prepare() {\n  echo y\n  echo old", publish_aur.inject_prepare("prepare() {\n  echo old\n}\n", ["echo y"]))
+
+
 class BinRecipeTest(unittest.TestCase):
     INFO = """pkgdesc = Meo Account broker
 url = https://github.com/QwQdoge/MeoArch-account
@@ -137,6 +179,13 @@ class WorkflowContractTest(unittest.TestCase):
         self.assertIn("needs: [sign-and-publish, remote-pacman-smoke]", self.caller)
         self.assertIn("inputs.channel == 'stable' && inputs.candidate == ''", self.caller)
         self.assertIn("uses: ./.github/workflows/publish-aur.yml", self.caller)
+
+    def test_a_beta_release_updates_only_the_beta_packages(self):
+        beta = self.release.split("  publish-aur-beta:", 1)[1]
+        self.assertIn("inputs.channel == 'beta'", beta)
+        self.assertIn("channel: beta", beta)
+        self.assertIn("--beta-only", self.job)
+        self.assertIn("--beta-manifest", self.job)
 
     def test_aur_workflow_runs_in_the_protected_release_environment_and_can_be_dispatched(self):
         self.assertIn("environment: release", self.job)

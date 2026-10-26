@@ -185,8 +185,8 @@ jobs:
           ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE" "$RELEASE_MANIFEST"
 
   publish-aur:
-    # Mirrors a completed Stable train to the AUR (`yay -Syu`); see publish-aur.yml. Beta never publishes
-    # to the AUR, and the job only warns when the AUR_SSH_KEY secret is missing.
+    # Mirrors a completed Stable train to the AUR (`yay -Syu`) and the -beta packages; see publish-aur.yml.
+    # The job only warns when the AUR_SSH_KEY secret is missing.
     needs: [sign-and-publish, remote-pacman-smoke]
     if: inputs.channel == 'stable' && inputs.candidate == ''
     permissions:
@@ -194,4 +194,17 @@ jobs:
     uses: ./.github/workflows/publish-aur.yml
     with:
       manifest: ${{ inputs.manifest }}
+      channel: stable
+    secrets: inherit
+
+  publish-aur-beta:
+    # A Beta release updates the <name>-beta AUR packages whose version differs from Stable.
+    needs: [sign-and-publish, remote-pacman-smoke]
+    if: inputs.channel == 'beta'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      manifest: ${{ inputs.manifest }}
+      channel: beta
     secrets: inherit
