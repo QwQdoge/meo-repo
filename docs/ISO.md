@@ -34,7 +34,15 @@ free 10 GB. SourceForge keeps older builds.
 
 ## Setup (once)
 
-- Bucket `meo-iso` (created 2026-10-26, Standard class).
+- Bucket `meo-iso` (created 2026-10-26, Standard class). First ISO published the same day.
 - Custom domain `iso.meoarch.org` attached to the bucket (R2 > meo-iso > Settings > Custom domains).
   Do not use the `r2.dev` URL: it is rate limited and not meant for distribution.
 - Cloudflare does not charge egress for R2; the free tier covers 10 GB storage.
+
+## Owner's machine
+
+The bucket token (`meo-iso-publish`, Object Read & Write, `meo-iso` only) is kept in
+`~/.config/meo/r2-iso.json` (mode 600) and is never committed. `aws-cli` is installed in a venv at
+`~/.local/share/meo-aws`; put its `bin` on `PATH` and set `AWS_REQUEST_CHECKSUM_CALCULATION=when_required`
+and `AWS_RESPONSE_CHECKSUM_VALIDATION=when_required` (R2 does not accept the newer default checksums).
+Rotate the token in R2 > Manage API tokens if it leaks.
