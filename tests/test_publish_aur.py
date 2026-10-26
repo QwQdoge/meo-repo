@@ -132,6 +132,10 @@ class WorkflowContractTest(unittest.TestCase):
         self.assertEqual(len(re.findall(r"secrets\.", self.job)), 1)
         self.assertIn("secrets.AUR_SSH_KEY", self.job)
 
+    def test_aur_job_also_uses_the_latest_beta_manifest_for_components_missing_from_stable(self):
+        self.assertIn("--also", self.job)
+        self.assertIn("manifests/beta/*.json", self.job)
+
     def test_script_help_runs(self):
         result = subprocess.run([sys.executable, str(ROOT / "scripts" / "publish_aur.py"), "--help"], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)

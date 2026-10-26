@@ -213,4 +213,5 @@ jobs:
           chmod 600 /home/builder/.ssh/aur_key
           chown -R builder:builder "$GITHUB_WORKSPACE"
           sudo_env="AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key"
-          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py publish '$RELEASE_MANIFEST' /home/builder/aur --push"
+          latest_beta="$(ls manifests/beta/*.json | sort -V | tail -1)"
+          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py publish '$RELEASE_MANIFEST' /home/builder/aur --also '$latest_beta' --push"
