@@ -117,13 +117,20 @@ class ComponentPolicyTest(unittest.TestCase):
 
 class WorkflowContractTest(unittest.TestCase):
     def setUp(self):
-        self.workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text()
-        self.job = self.workflow.split("  publish-aur:", 1)[1]
+        workflows = ROOT / ".github" / "workflows"
+        self.release = (workflows / "release.yml").read_text()
+        self.job = (workflows / "publish-aur.yml").read_text()
+        self.caller = self.release.split("  publish-aur:", 1)[1]
 
-    def test_aur_job_runs_only_after_a_full_stable_release(self):
-        self.assertIn("needs: [sign-and-publish, remote-pacman-smoke]", self.job)
-        self.assertIn("inputs.channel == 'stable' && inputs.candidate == ''", self.job)
+    def test_release_calls_the_aur_workflow_only_after_a_full_stable_release(self):
+        self.assertIn("needs: [sign-and-publish, remote-pacman-smoke]", self.caller)
+        self.assertIn("inputs.channel == 'stable' && inputs.candidate == ''", self.caller)
+        self.assertIn("uses: ./.github/workflows/publish-aur.yml", self.caller)
+
+    def test_aur_workflow_runs_in_the_protected_release_environment_and_can_be_dispatched(self):
         self.assertIn("environment: release", self.job)
+        self.assertIn("workflow_call:", self.job)
+        self.assertIn("workflow_dispatch:", self.job)
 
     def test_missing_secret_skips_without_failing_and_key_is_never_echoed(self):
         self.assertIn("AUR_SSH_KEY is not configured", self.job)

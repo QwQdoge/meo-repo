@@ -1,0 +1,48 @@
+name: Publish AUR packages
+
+# Mirrors the packages of a released manifest to the AUR (`yay -Syu`). Called by release.yml after a
+# complete Stable train, and runnable by hand with the manifest of an already released train.
+# It never blocks a release: without the AUR_SSH_KEY secret it only prints a warning.
+on:
+  workflow_call:
+    inputs:
+      manifest:
+        description: Released manifest path, for example manifests/stable/2026.10.2.json
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: Released manifest path, for example manifests/stable/2026.10.2.json
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish-aur:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    environment: release
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Publish AUR packages from the released manifest
+        env:
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+          RELEASE_MANIFEST: ${{ inputs.manifest }}
+        run: |
+          if [ -z "$AUR_SSH_KEY" ]; then
+            echo "::warning::AUR_SSH_KEY is not configured; skipping AUR publication"
+            exit 0
+          fi
+          pacman -Syu --noconfirm --needed python git openssh
+          useradd --create-home builder
+          install -d -m 700 -o builder -g builder /home/builder/.ssh
+          printf '%s\n' "$AUR_SSH_KEY" >/home/builder/.ssh/aur_key
+          chown builder:builder /home/builder/.ssh/aur_key
+          chmod 600 /home/builder/.ssh/aur_key
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          sudo_env="AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key"
+          latest_beta="$(ls manifests/beta/*.json | sort -V | tail -1)"
+          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py publish '$RELEASE_MANIFEST' /home/builder/aur --also '$latest_beta' --push"

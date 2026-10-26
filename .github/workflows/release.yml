@@ -185,33 +185,13 @@ jobs:
           ci/remote-smoke.sh "$RELEASE_CHANNEL" "$RELEASE_CANDIDATE" "$RELEASE_MANIFEST"
 
   publish-aur:
-    # Mirrors a completed Stable train to the AUR (`yay -Syu`). It never blocks or fails a release:
-    # without the AUR_SSH_KEY secret it only prints a warning. Beta never publishes to the AUR.
+    # Mirrors a completed Stable train to the AUR (`yay -Syu`); see publish-aur.yml. Beta never publishes
+    # to the AUR, and the job only warns when the AUR_SSH_KEY secret is missing.
     needs: [sign-and-publish, remote-pacman-smoke]
     if: inputs.channel == 'stable' && inputs.candidate == ''
-    runs-on: ubuntu-latest
-    container: archlinux:base-devel
-    environment: release
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Publish AUR packages from the released manifest
-        env:
-          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
-          RELEASE_MANIFEST: ${{ inputs.manifest }}
-        run: |
-          if [ -z "$AUR_SSH_KEY" ]; then
-            echo "::warning::AUR_SSH_KEY is not configured; skipping AUR publication"
-            exit 0
-          fi
-          pacman -Syu --noconfirm --needed python git openssh
-          useradd --create-home builder
-          install -d -m 700 -o builder -g builder /home/builder/.ssh
-          printf '%s\n' "$AUR_SSH_KEY" >/home/builder/.ssh/aur_key
-          chown builder:builder /home/builder/.ssh/aur_key
-          chmod 600 /home/builder/.ssh/aur_key
-          chown -R builder:builder "$GITHUB_WORKSPACE"
-          sudo_env="AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key"
-          latest_beta="$(ls manifests/beta/*.json | sort -V | tail -1)"
-          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py publish '$RELEASE_MANIFEST' /home/builder/aur --also '$latest_beta' --push"
+    uses: ./.github/workflows/publish-aur.yml
+    with:
+      manifest: ${{ inputs.manifest }}
+    secrets: inherit
