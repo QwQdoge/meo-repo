@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import tempfile
 import re
 import shutil
 import subprocess
@@ -164,14 +165,29 @@ def render_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tup
     for install_file in sorted(package_dir.glob("*.install")):
         shutil.copy2(install_file, target / install_file.name)
     (target / "PKGBUILD").write_text(render_recipe(recipe, component, flattened), encoding="utf-8")
-    # GitHub's Arch container runs as root. This command only reads PKGBUILD
-    # metadata; makepkg documents --noconfirm as the root override.
     command = ["makepkg", "--printsrcinfo"]
     if os.geteuid() == 0:
-        command.append("--noconfirm")
-    srcinfo = subprocess.run(
-        command, cwd=target, check=True, capture_output=True, text=True,
-    ).stdout
+        # Never bypass makepkg's root guard. Parse the PKGBUILD in an isolated
+        # temporary directory owned by the unprivileged build account instead.
+        import pwd
+
+        build_user = pwd.getpwnam("nobody")
+        with tempfile.TemporaryDirectory(prefix="meo-aur-srcinfo-") as tmp:
+            workdir = Path(tmp)
+            shutil.copy2(target / "PKGBUILD", workdir / "PKGBUILD")
+            os.chown(workdir, build_user.pw_uid, build_user.pw_gid)
+            os.chown(workdir / "PKGBUILD", build_user.pw_uid, build_user.pw_gid)
+            os.chmod(workdir, 0o755)
+            env = os.environ.copy()
+            env.update({"HOME": str(workdir), "USER": "nobody", "LOGNAME": "nobody"})
+            srcinfo = subprocess.run(
+                command, cwd=workdir, check=True, capture_output=True, text=True,
+                env=env, user=build_user.pw_uid, group=build_user.pw_gid, extra_groups=[],
+            ).stdout
+    else:
+        srcinfo = subprocess.run(
+            command, cwd=target, check=True, capture_output=True, text=True,
+        ).stdout
     (target / ".SRCINFO").write_text(srcinfo, encoding="utf-8")
     return target
 
