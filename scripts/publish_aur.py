@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import tempfile
 import re
 import shutil
 import subprocess
@@ -98,8 +99,10 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     url = component["sourceUrl"]
     digest = component["sourceSha256"]
 
-    internal = ("# Rendered by the protected release job", "# The protected renderer", "# the immutable manifest")
-    text = "\n".join(line for line in recipe.splitlines() if not line.startswith(internal)) + "\n"
+    text = "\n".join(
+        line for line in recipe.splitlines()
+        if not line.startswith("# Rendered by the protected release job")
+    ) + "\n"
     text = re.sub(r"^pkgver=.*$", f"pkgver={pkgver}", text, count=1, flags=re.M)
     text = re.sub(r"^pkgrel=.*$", f"pkgrel={pkgrel}", text, count=1, flags=re.M)
 
@@ -162,9 +165,29 @@ def render_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tup
     for install_file in sorted(package_dir.glob("*.install")):
         shutil.copy2(install_file, target / install_file.name)
     (target / "PKGBUILD").write_text(render_recipe(recipe, component, flattened), encoding="utf-8")
-    srcinfo = subprocess.run(
-        ["makepkg", "--printsrcinfo"], cwd=target, check=True, capture_output=True, text=True,
-    ).stdout
+    command = ["makepkg", "--printsrcinfo"]
+    if os.geteuid() == 0:
+        # Never bypass makepkg's root guard. Parse the PKGBUILD in an isolated
+        # temporary directory owned by the unprivileged build account instead.
+        import pwd
+
+        build_user = pwd.getpwnam("nobody")
+        with tempfile.TemporaryDirectory(prefix="meo-aur-srcinfo-") as tmp:
+            workdir = Path(tmp)
+            shutil.copy2(target / "PKGBUILD", workdir / "PKGBUILD")
+            os.chown(workdir, build_user.pw_uid, build_user.pw_gid)
+            os.chown(workdir / "PKGBUILD", build_user.pw_uid, build_user.pw_gid)
+            os.chmod(workdir, 0o755)
+            env = os.environ.copy()
+            env.update({"HOME": str(workdir), "USER": "nobody", "LOGNAME": "nobody"})
+            srcinfo = subprocess.run(
+                command, cwd=workdir, check=True, capture_output=True, text=True,
+                env=env, user=build_user.pw_uid, group=build_user.pw_gid, extra_groups=[],
+            ).stdout
+    else:
+        srcinfo = subprocess.run(
+            command, cwd=target, check=True, capture_output=True, text=True,
+        ).stdout
     (target / ".SRCINFO").write_text(srcinfo, encoding="utf-8")
     return target
 
