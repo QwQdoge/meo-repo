@@ -42,6 +42,17 @@ class RenderRecipeTest(unittest.TestCase):
         self.assertIn("meo-session.conf", sources)
         self.assertIn("pkgver=6.8.1", text)
 
+    def test_release_job_internal_comments_do_not_reach_the_aur(self):
+        for name in ("omnistore-bin", "meo-plasma-login-manager", "meoui-qml"):
+            recipe = (ROOT / "packages" / name / "PKGBUILD").read_text()
+            component = dict(COMPONENT, expectedVersion="1.0.0-1")
+            if name == "omnistore-bin":
+                component.update(sourceLayout="release-bundle", verifierUrl="https://example.invalid/verify.py",
+                                 verifierSha256="d" * 64, sourceUrl="https://example.invalid/omnistore-linux-x64.tar.gz")
+            text = publish_aur.render_recipe(recipe, component)
+            self.assertNotIn("protected renderer", text.lower(), name)
+            self.assertNotIn("protected release job", text.lower(), name)
+
     def test_unsupported_version_is_rejected(self):
         with self.assertRaises(publish_aur.AurError):
             publish_aur.split_version("nonsense")

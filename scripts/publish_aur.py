@@ -99,10 +99,8 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     url = component["sourceUrl"]
     digest = component["sourceSha256"]
 
-    text = "\n".join(
-        line for line in recipe.splitlines()
-        if not line.startswith("# Rendered by the protected release job")
-    ) + "\n"
+    internal = ("# Rendered by the protected release job", "# The protected renderer", "# the immutable manifest")
+    text = "\n".join(line for line in recipe.splitlines() if not line.startswith(internal)) + "\n"
     text = re.sub(r"^pkgver=.*$", f"pkgver={pkgver}", text, count=1, flags=re.M)
     text = re.sub(r"^pkgrel=.*$", f"pkgrel={pkgrel}", text, count=1, flags=re.M)
 
