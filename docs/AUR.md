@@ -31,26 +31,30 @@ packages (`meo-release`, `meo-keyring`, `meo-mirrorlist`, `meo-channel-*`, the `
 yay -Syu meo-desktop meo-settings omnistore-bin
 ```
 
-## Publishing
+## Publishing (automatic)
 
-`release.yml` has a `publish-aur` job that runs after a **complete Stable** train (`candidate` empty) has published and
-passed the remote pacman smoke. It uses the protected `release` environment and the repository secret `AUR_SSH_KEY`
-(an SSH private key whose public half is registered on the AUR account). Without the secret it only prints a warning;
-it never fails a release. Beta never publishes to the AUR. A manual run:
+After a **complete Stable** train has published and passed the remote pacman smoke, `release.yml` calls
+`publish-aur.yml`, which renders every AUR package from the released manifest (plus the latest Beta manifest for
+components the Stable train lacks) and pushes the ones that changed. The job runs in the protected `release`
+environment (so it needs the same approval) and reads the SSH key from the `release` environment secret
+`AUR_SSH_KEY`; the public half is registered on the AUR account. Without the secret it only warns and never fails a
+release. Beta never publishes to the AUR. Re-running is idempotent: unchanged packages are reported as up to date.
+
+Run it by hand for an already released manifest:
+
+```bash
+gh workflow run publish-aur.yml -R QwQdoge/meo-repo -f manifest=manifests/stable/<release>.json
+```
+
+or locally:
 
 ```bash
 AUR_SSH_KEY_FILE=~/.ssh/meoarch_aur python3 scripts/publish_aur.py publish manifests/stable/<release>.json WORKDIR \
   --also manifests/beta/<latest>.json --push
 ```
 
-`--also` supplies components that the Stable train does not contain (for example `meo-kde-runtime`).
+Rotating the key: generate a new ed25519 key, replace the public key under AUR → My Account → SSH Public Key (the AUR
+asks for the account password), then `gh secret set AUR_SSH_KEY --env release -R QwQdoge/meo-repo < new_key`.
 
-One-time setup (by the AUR account owner):
-
-1. `ssh-keygen -t ed25519 -N '' -C meoarch-aur-publish -f aur_key`
-2. Add `aur_key.pub` under AUR → My Account → SSH Public Key (the AUR asks for the account password).
-3. Add the private key as the GitHub Actions secret `AUR_SSH_KEY` of `QwQdoge/meo-repo`, then delete the local copy.
-
-Notes: the CI job publishes from the Stable manifest only; add `--also` (latest Beta manifest) in the workflow if the
-Stable train omits a dependency. `meo-account-bin` downloads the published package, so publish the pacman repository
-first.
+`meo-account-bin` downloads the published package, so the pacman repository is published first (the workflow order
+guarantees this).
