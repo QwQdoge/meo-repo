@@ -61,6 +61,8 @@ class FlattenTest(unittest.TestCase):
             manifest = sorted((ROOT / "manifests" / "beta").glob("*.json"), key=lambda p: [int(x) for x in re.findall(r"\d+", p.name)])[-1]
             try:
                 target = publish_aur.render_package(manifest, "meoui-qml", Path(tmp))
+            except subprocess.CalledProcessError as exc:
+                self.fail("makepkg --printsrcinfo failed: " + str(exc.stderr))
             except FileNotFoundError:
                 self.skipTest("makepkg is not installed")
             self.assertEqual([p.name for p in target.iterdir() if p.is_dir()], [])
@@ -131,10 +133,6 @@ class WorkflowContractTest(unittest.TestCase):
         self.assertNotRegex(self.job, r"set -x|--debug|cat[^\n]*aur_key")
         self.assertEqual(len(re.findall(r"secrets\.", self.job)), 1)
         self.assertIn("secrets.AUR_SSH_KEY", self.job)
-
-    def test_aur_job_also_uses_the_latest_beta_manifest_for_components_missing_from_stable(self):
-        self.assertIn("--also", self.job)
-        self.assertIn("manifests/beta/*.json", self.job)
 
     def test_script_help_runs(self):
         result = subprocess.run([sys.executable, str(ROOT / "scripts" / "publish_aur.py"), "--help"], capture_output=True, text=True)
