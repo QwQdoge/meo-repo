@@ -1,6 +1,6 @@
 pkgname=meo-ai
 pkgver=0.1.0beta2
-pkgrel=6
+pkgrel=7
 pkgdesc="Meo AI desktop app and headless AgentService"
 arch=('x86_64')
 url='https://github.com/QwQdoge/meo-ai'
