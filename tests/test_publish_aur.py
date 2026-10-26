@@ -66,6 +66,35 @@ class FlattenTest(unittest.TestCase):
             self.assertEqual([p.name for p in target.iterdir() if p.is_dir()], [])
 
 
+class BinRecipeTest(unittest.TestCase):
+    INFO = """pkgdesc = Meo Account broker
+url = https://github.com/QwQdoge/MeoArch-account
+arch = x86_64
+license = GPL-3.0-or-later
+backup = etc/meo-account/broker.conf
+depend = qt6-base
+depend = meoui-qml>=1.0.4beta1
+"""
+
+    def test_bin_recipe_repackages_the_published_package_and_provides_the_component(self):
+        component = {"expectedVersion": "0.1.0-11"}
+        text = publish_aur.render_bin_recipe(
+            "meo-account", component, publish_aur.parse_pkginfo(self.INFO),
+            "meo-account-0.1.0-11-x86_64.pkg.tar.zst",
+            "https://packages.meoarch.org/meo/os/x86_64/meo-account-0.1.0-11-x86_64.pkg.tar.zst", "c" * 64)
+        self.assertIn("pkgname=meo-account-bin", text)
+        self.assertIn("provides=('meo-account=0.1.0-11')", text)
+        self.assertIn("conflicts=('meo-account')", text)
+        self.assertIn("depends=('qt6-base' 'meoui-qml>=1.0.4beta1')", text)
+        self.assertIn("backup=('etc/meo-account/broker.conf')", text)
+        self.assertIn("sha256sums=('" + "c" * 64 + "')", text)
+        self.assertIn("--exclude=.PKGINFO", text)
+
+    def test_private_source_component_is_published_only_as_a_binary_repackage(self):
+        self.assertIn("meo-account", publish_aur.BIN_COMPONENTS)
+        self.assertNotIn("meo-account", publish_aur.AUR_COMPONENTS)
+
+
 class ComponentPolicyTest(unittest.TestCase):
     def test_every_aur_component_has_a_public_recipe_and_files(self):
         for name, extras in publish_aur.AUR_COMPONENTS.items():
@@ -74,7 +103,7 @@ class ComponentPolicyTest(unittest.TestCase):
             for extra in extras:
                 self.assertTrue((package / extra).exists(), f"{name}/{extra}")
 
-    def test_private_source_components_are_never_published_to_the_aur(self):
+    def test_private_source_components_are_never_published_as_source_packages(self):
         self.assertNotIn("meo-account", publish_aur.AUR_COMPONENTS)
 
     def test_aur_components_exist_in_the_latest_beta_manifest(self):

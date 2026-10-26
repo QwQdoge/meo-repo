@@ -20,8 +20,7 @@ those from the Meo repository.
 ## Install
 
 ```bash
-yay -S meoui-qml
-yay -S meo-plasma-login-manager
+yay -Syu meoui-qml meo-plasma-login-manager
 ```
 
 (only after the packages are live on the AUR; check `https://aur.archlinux.org/packages/meoui-qml`).

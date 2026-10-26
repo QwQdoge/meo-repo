@@ -34,21 +34,35 @@ ROOT = Path(__file__).resolve().parents[1]
 AUR_COMPONENTS = {
     "meoui-qml": ("licenses",),
     "meo-plasma-login-manager": ("meo-session.conf",),
+    "meo-icons": (),
+    "meo-icon-studio": (),
+    "meo-kde-runtime": (),
+    "meo-desktop": (),
+    "meo-settings": (),
+    "meo-repair": (),
+    "omnistore-bin": ("omnistore.desktop", "org.meo.OmniStore.json"),
 }
 
 MAINTAINER = "# Maintainer: MeoArch <https://github.com/QwQdoge>"
+
+# Components whose source is private: the AUR package repackages the signed binary package that the
+# Meo repository already publishes. component -> AUR package name.
+BIN_COMPONENTS = {"meo-account": "meo-account-bin"}
+REPO_BASE = "https://packages.meoarch.org"
 
 
 class AurError(Exception):
     pass
 
 
-def load_component(manifest_path: Path, name: str) -> dict:
-    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-    component = payload.get("components", {}).get(name)
-    if not component:
-        raise AurError(f"{name} is not in {manifest_path}")
-    return component
+def load_component(manifest_path: Path, name: str, fallbacks: tuple[Path, ...] = ()) -> dict:
+    """Return the component entry from the first manifest that contains it."""
+    for candidate in (manifest_path, *fallbacks):
+        payload = json.loads(candidate.read_text(encoding="utf-8"))
+        component = payload.get("components", {}).get(name)
+        if component:
+            return component
+    raise AurError(f"{name} is not in {manifest_path}" + (" or its fallbacks" if fallbacks else ""))
 
 
 def split_version(expected: str) -> tuple[str, str]:
@@ -66,6 +80,10 @@ def _array(text: str, key: str) -> re.Match | None:
     return re.search(rf"^{key}=\((.*?)\)\n", text, re.M | re.S)
 
 
+def url_basename(url: str) -> str:
+    return url.rstrip("/").rsplit("/", 1)[-1]
+
+
 def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None = None) -> str:
     """Return the AUR PKGBUILD text for ``recipe`` pinned to ``component``.
 
@@ -74,7 +92,9 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     """
     pkgver, pkgrel = split_version(component["expectedVersion"])
     directory = source_dir_name(component)
-    tarball = f"{component['repository'].split('/')[-1]}-{component['commit']}.tar.gz"
+    bundle = component.get("sourceLayout") == "release-bundle"
+    tarball = (url_basename(component["sourceUrl"]) if bundle
+               else f"{component['repository'].split('/')[-1]}-{component['commit']}.tar.gz")
     url = component["sourceUrl"]
     digest = component["sourceSha256"]
 
@@ -96,11 +116,22 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     extra = {name: sha for name, sha in (flattened or {}).items() if name not in existing_sources}
     new_sources = [f"{tarball}::{url}", *existing_sources, *extra]
     new_sums = [digest, *existing_sums, *extra.values()]
+    if bundle:
+        # The prebuilt release bundle has no top-level directory, so it is extracted by prepare().
+        new_sources.append(f"{url_basename(component['verifierUrl'])}::{component['verifierUrl']}")
+        new_sums.append(component["verifierSha256"])
     joined_sources = "\n        ".join(f"'{item}'" for item in new_sources)
     joined_sums = "\n            ".join(f"'{item}'" for item in new_sums)
     text = text.replace(sources.group(0), f"source=({joined_sources})\n", 1)
     text = text.replace(_array(text, "sha256sums").group(0), f"sha256sums=({joined_sums})\n", 1)
 
+    if bundle:
+        sums_now = _array(text, "sha256sums")
+        text = text.replace(sums_now.group(0), sums_now.group(0) + f"noextract=('{tarball}')\n", 1)
+        text = text.replace("prepare() {\n", "prepare() {\n  mkdir -p \"$srcdir/release_bundle\"\n  bsdtar -xf \"$srcdir/" + tarball + "\" -C \"$srcdir/release_bundle\"\n", 1)
+        if "bsdtar -xf" not in text:
+            raise AurError("release-bundle recipe has no prepare() to extend")
+        return f"{MAINTAINER}\n" + text
     if "$srcdir/source" not in text:
         raise AurError("recipe does not use $srcdir/source")
     text = text.replace('"$startdir/licenses/', '"$srcdir/')
@@ -111,10 +142,10 @@ def render_recipe(recipe: str, component: dict, flattened: dict[str, str] | None
     return header + text
 
 
-def render_package(manifest_path: Path, name: str, out_dir: Path) -> Path:
+def render_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tuple[Path, ...] = ()) -> Path:
     if name not in AUR_COMPONENTS:
         raise AurError(f"{name} is not an AUR component")
-    component = load_component(manifest_path, name)
+    component = load_component(manifest_path, name, fallbacks)
     package_dir = ROOT / "packages" / name
     recipe = (package_dir / "PKGBUILD").read_text(encoding="utf-8")
     target = out_dir / name
@@ -130,10 +161,107 @@ def render_package(manifest_path: Path, name: str, out_dir: Path) -> Path:
                     flattened[item.name] = hashlib.sha256(item.read_bytes()).hexdigest()
         else:
             shutil.copy2(source, target / extra)
+    for install_file in sorted(package_dir.glob("*.install")):
+        shutil.copy2(install_file, target / install_file.name)
     (target / "PKGBUILD").write_text(render_recipe(recipe, component, flattened), encoding="utf-8")
     srcinfo = subprocess.run(
         ["makepkg", "--printsrcinfo"], cwd=target, check=True, capture_output=True, text=True,
     ).stdout
+    (target / ".SRCINFO").write_text(srcinfo, encoding="utf-8")
+    return target
+
+
+def parse_pkginfo(text: str) -> dict[str, list[str]]:
+    info: dict[str, list[str]] = {}
+    for line in text.splitlines():
+        if line.startswith("#") or " = " not in line:
+            continue
+        key, value = line.split(" = ", 1)
+        info.setdefault(key.strip(), []).append(value.strip())
+    return info
+
+
+def _quote(items: list[str]) -> str:
+    return " ".join("'" + item.replace("'", "'\\''") + "'" for item in items)
+
+
+def render_bin_recipe(name: str, component: dict, info: dict[str, list[str]], filename: str, url: str, digest: str) -> str:
+    """AUR PKGBUILD that repackages a published Meo repository package (``name`` is the component)."""
+    pkgver, pkgrel = split_version(component["expectedVersion"])
+    one = lambda key, default="": (info.get(key) or [default])[0]
+    lines = [
+        MAINTAINER,
+        f"pkgname={BIN_COMPONENTS[name]}",
+        f"_pkgname={name}",
+        f"pkgver={pkgver}",
+        f"pkgrel={pkgrel}",
+        f'pkgdesc="{one("pkgdesc")} (prebuilt)"',
+        f"arch=({_quote(info.get('arch', ['x86_64']))})",
+        f"url='{one('url')}'",
+        f"license=({_quote(info.get('license', []))})",
+        f"depends=({_quote(info.get('depend', []))})",
+    ]
+    if info.get("optdepend"):
+        lines.append(f"optdepends=({_quote(info['optdepend'])})")
+    lines += [
+        f"provides=('{name}={pkgver}-{pkgrel}')",
+        f"conflicts=('{name}')",
+    ]
+    if info.get("backup"):
+        lines.append(f"backup=({_quote(info['backup'])})")
+    lines += [
+        "options=('!strip' '!debug')",
+        f"source=('{filename}::{url}')",
+        f"noextract=('{filename}')",
+        f"sha256sums=('{digest}')",
+        "",
+        "package() {",
+        f'  bsdtar -xf "$srcdir/{filename}" -C "$pkgdir" --exclude=.PKGINFO --exclude=.BUILDINFO --exclude=.MTREE --exclude=.INSTALL --exclude=.CHANGELOG',
+        "}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
+def render_bin_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tuple[Path, ...] = (),
+                       package_file: Path | None = None) -> Path:
+    """Render the -bin AUR package for ``name``; downloads the published package unless ``package_file`` is given."""
+    import hashlib as _hashlib
+    import urllib.request
+
+    component = load_component(manifest_path, name, fallbacks)
+    pkgver, pkgrel = split_version(component["expectedVersion"])
+    filename = f"{name}-{pkgver}-{pkgrel}-x86_64.pkg.tar.zst"
+    target = out_dir / BIN_COMPONENTS[name]
+    shutil.rmtree(target, ignore_errors=True)
+    target.mkdir(parents=True)
+    url = ""
+    if package_file is None:
+        package_file = target / ".download"
+        for channel in ("meo", "meo-beta"):
+            candidate = f"{REPO_BASE}/{channel}/os/x86_64/{filename}"
+            # Cloudflare in front of the repository rejects urllib's default User-Agent with 403.
+            request = urllib.request.Request(candidate, headers={"User-Agent": "MeoArch-AUR-publisher/1.0 (+https://meoarch.org)"})
+            try:
+                with urllib.request.urlopen(request, timeout=120) as response, package_file.open("wb") as handle:
+                    shutil.copyfileobj(response, handle)
+                url = candidate
+                break
+            except OSError:
+                package_file.unlink(missing_ok=True)
+        if not url:
+            raise AurError(f"{filename} is not published in the Meo repository")
+    else:
+        url = f"{REPO_BASE}/meo/os/x86_64/{filename}"
+    data = package_file.read_bytes()
+    digest = _hashlib.sha256(data).hexdigest()
+    info_text = subprocess.run(["bsdtar", "-xOf", str(package_file), ".PKGINFO"], check=True,
+                               capture_output=True, text=True).stdout
+    if package_file.name == ".download":
+        package_file.unlink()
+    (target / "PKGBUILD").write_text(
+        render_bin_recipe(name, component, parse_pkginfo(info_text), filename, url, digest), encoding="utf-8")
+    srcinfo = subprocess.run(["makepkg", "--printsrcinfo"], cwd=target, check=True, capture_output=True, text=True).stdout
     (target / ".SRCINFO").write_text(srcinfo, encoding="utf-8")
     return target
 
@@ -179,25 +307,28 @@ def main(argv: list[str] | None = None) -> int:
         item = sub.add_parser(command)
         item.add_argument("manifest", type=Path)
         item.add_argument("directory", type=Path)
-        item.add_argument("--component", action="append", choices=sorted(AUR_COMPONENTS))
+        item.add_argument("--component", action="append", choices=sorted([*AUR_COMPONENTS, *BIN_COMPONENTS]))
+        item.add_argument("--also", action="append", type=Path, default=[],
+                          help="fallback manifest consulted for components missing from MANIFEST")
         if command == "publish":
             item.add_argument("--push", action="store_true")
     args = parser.parse_args(argv)
     manifest = args.manifest.resolve()
-    names = args.component or [
-        name for name in AUR_COMPONENTS
-        if name in json.loads(manifest.read_text(encoding="utf-8")).get("components", {})
-    ]
+    fallbacks = tuple(path.resolve() for path in args.also)
+    known: set[str] = set()
+    for source in (manifest, *fallbacks):
+        known |= set(json.loads(source.read_text(encoding="utf-8")).get("components", {}))
+    names = args.component or [name for name in (*AUR_COMPONENTS, *BIN_COMPONENTS) if name in known]
     if not names:
         print("no AUR components in this manifest")
         return 0
     try:
         for name in names:
             if args.command == "render":
-                print(render_package(manifest, name, args.directory.resolve()))
+                print((render_bin_package if name in BIN_COMPONENTS else render_package)(manifest, name, args.directory.resolve(), fallbacks))
             else:
                 with_tmp = args.directory.resolve() / "_rendered"
-                rendered = render_package(manifest, name, with_tmp)
+                rendered = (render_bin_package if name in BIN_COMPONENTS else render_package)(manifest, name, with_tmp, fallbacks)
                 publish_package(rendered, args.directory.resolve(), args.push)
     except (AurError, subprocess.CalledProcessError) as error:
         print(f"publish_aur: {error}", file=sys.stderr)
