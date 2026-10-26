@@ -164,8 +164,14 @@ def render_package(manifest_path: Path, name: str, out_dir: Path, fallbacks: tup
     for install_file in sorted(package_dir.glob("*.install")):
         shutil.copy2(install_file, target / install_file.name)
     (target / "PKGBUILD").write_text(render_recipe(recipe, component, flattened), encoding="utf-8")
+    # GitHub's Arch container runs as root. This command only reads PKGBUILD
+    # metadata; allow makepkg's metadata-only mode through its root guard.
+    env = os.environ.copy()
+    if os.geteuid() == 0:
+        env["MAKEPKG_ALLOW_ROOT"] = "1"
     srcinfo = subprocess.run(
-        ["makepkg", "--printsrcinfo"], cwd=target, check=True, capture_output=True, text=True,
+        ["makepkg", "--printsrcinfo"], cwd=target, check=True,
+        capture_output=True, text=True, env=env,
     ).stdout
     (target / ".SRCINFO").write_text(srcinfo, encoding="utf-8")
     return target
