@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Install validation dependencies
-        run: pacman -Syu --noconfirm --needed python curl git openssh sudo namcap gnupg
+        run: pacman -Syu --noconfirm --needed python curl git openssh sudo namcap gnupg jq
 
       - name: Compile Python sources
         run: python -m compileall -q scripts tests
