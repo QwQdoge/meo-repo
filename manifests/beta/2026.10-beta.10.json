@@ -7,21 +7,21 @@
   "components": {
     "meoui-qml": {
       "repository": "QwQdoge/MeoUI",
-      "tag": "v1.0.4-beta.6",
-      "commit": "0b66dd546c4b3a57c086134ef9f20fdb792eea19",
-      "sourceUrl": "https://codeload.github.com/QwQdoge/MeoUI/tar.gz/0b66dd546c4b3a57c086134ef9f20fdb792eea19",
-      "sourceSha256": "7e9a505db407c78e7ce950c163e01c8f5fd472df060e23d4691d599174e915d7",
-      "sourceDateEpoch": 1792576436,
+      "tag": "v1.0.4-beta.9",
+      "commit": "5be2a8ff5691ae6437f0c54813a97124d135b805",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/MeoUI/tar.gz/5be2a8ff5691ae6437f0c54813a97124d135b805",
+      "sourceSha256": "2190c58fc6793074bb903c9b625c8afba6def1f6096aedc367434d245ee81742",
+      "sourceDateEpoch": 1793350675,
       "sourceLayout": "source",
-      "expectedVersion": "1.0.4beta3-3"
+      "expectedVersion": "1.0.4beta3-6"
     },
     "meo-ai": {
       "repository": "QwQdoge/meo-ai",
-      "tag": "v0.1.0-beta.5",
-      "commit": "0a689e93101184aaba9a8d6430489d60c97f866d",
-      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-ai/tar.gz/0a689e93101184aaba9a8d6430489d60c97f866d",
-      "sourceSha256": "beddfab24a0d6a6cf866cee6e4d3f609420f845f259dd28b38f0e6fe1156f149",
-      "sourceDateEpoch": 1792665553,
+      "tag": "v0.1.0-beta.4",
+      "commit": "bb6a6ebf352362a8b8209b45e2852729d7dec648",
+      "sourceUrl": "https://codeload.github.com/QwQdoge/meo-ai/tar.gz/bb6a6ebf352362a8b8209b45e2852729d7dec648",
+      "sourceSha256": "e3ed952e137dcdf3d5cd9bdcd6e8503458123403f66cc5114658771dbf504f4b",
+      "sourceDateEpoch": 1792634134,
       "sourceLayout": "source",
       "expectedVersion": "0.1.0beta2-4"
     },
@@ -164,5 +164,5 @@
       ]
     }
   },
-  "description": "Beta 9 pins plus meo-ai packaging fix (install list included three missing service modules)."
+  "description": "Add missing MeoTheme.space6 spacing token; fixes undefined binding errors in LauncherPopup and showcase files."
 }
