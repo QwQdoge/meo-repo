@@ -34,6 +34,13 @@ class MeoDesktopSessionIsolationTests(unittest.TestCase):
         self.assertNotIn("'plasma-login-manager'", depends_block)
         self.assertNotIn("'sddm'", depends_block)
 
+    def test_kde_application_defaults_are_session_seed_files(self):
+        self.assertIn('for app_default in dolphinrc katerc okularrc arkrc konsolerc; do', self.source)
+        self.assertIn('"$pkgdir/usr/share/meo-desktop/session-defaults/$app_default"', self.source)
+        for app_default in ('dolphinrc', 'katerc', 'okularrc', 'arkrc', 'konsolerc'):
+            with self.subTest(app_default=app_default):
+                self.assertNotIn(f'$pkgdir/etc/xdg/{app_default}', self.source)
+
     def test_plasma_defaults_are_session_seed_files_not_global_xdg_overrides(self):
         for relative in (
             'session-defaults/kdeglobals',
