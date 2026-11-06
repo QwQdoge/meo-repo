@@ -51,3 +51,9 @@ Release Center or another local control surface may validate and dispatch approv
 Keep maintained contracts in `docs/`. Project records belong under `$MEO_DOCS_ROOT/Projects/meo-repo/`. Existing package/test tools may use ephemeral work directories; retained evidence and deliverables belong under `$MEO_OUTPUT_ROOT/meo-repo/{build,install,validation,packages,tmp}/`. Do not invent machine-specific paths if those roots are unset.
 
 Preserve unrelated dirty work and existing tracked repository payloads. Avoid destructive Git cleanup or broad deletion.
+
+## Release dispatch and approval (owner-authorized workflow)
+
+- Beta builds one sparse candidate per run; dispatch each package separately with a reviewed manifest (`gh workflow run release.yml -f channel=beta -f manifest=... -f candidate=<package>`). Runs share a non-cancelling lock and execute one after another, so three candidates take roughly three build durations.
+- Before tagging a component, confirm its source archive extracts cleanly (no tracked build output such as `target/`, no absolute symlinks) and that its `main` CI is green; tag the newest green commit, not blindly `main`.
+- Once the owner has confirmed a release in chat ("go ahead" for that exact set of packages), the agent may drive the owner's Chrome to approve the pending `release` Environment deployment for those exact runs, without asking again for each run. The approval covers only the runs the owner just confirmed; it does not extend to later releases, other manifests or other repositories.
