@@ -59,7 +59,7 @@ Preserve unrelated dirty work and existing tracked repository payloads. Avoid de
 - Beta builds one sparse candidate per run; dispatch each package separately with a reviewed manifest (`gh workflow run release.yml -f channel=beta -f manifest=manifests/beta/<release>.json -f candidate=<package>`). Runs share a non-cancelling lock and execute one after another, so N candidates take roughly N build durations (a run is typically 20-60 minutes).
 - Before tagging a component, confirm its source archive extracts cleanly (no tracked build output such as `target/`, no absolute symlinks) and that its CI is green; tag the newest green commit, not blindly `main`.
 - `sign-and-publish` and the AUR publish job wait on the protected `release` Environment (reviewer: the owner). Established agent path, once the owner has confirmed the release in chat: approve through the authenticated `gh` CLI, no browser needed:
-  `gh api repos/QwQdoge/meo-repo/actions/runs/<run>/pending_deployments` (shows the environment id, currently 20640143512), then
+  `gh api repos/QwQdoge/meo-repo/actions/runs/<run>/pending_deployments` (shows the environment id), then
   `gh api -X POST repos/QwQdoge/meo-repo/actions/runs/<run>/pending_deployments -F 'environment_ids[]=<id>' -f state=approved -f comment='Approved by owner via Claude: <package and manifest>'`.
   Approve only runs the owner just confirmed. Driving the GitHub UI in Chrome for the final "Approve and deploy" click is blocked by the tool permission layer; do not use it.
 
@@ -73,7 +73,7 @@ Preserve unrelated dirty work and existing tracked repository payloads. Avoid de
 
 ## Shared workspace rules (owner)
 
-Source: the owner's `projects/agent.md` (Windows `C:/Users/Mingyue/projects/agent.md`), repeated here on purpose. These rules apply to every repository and win over generic caution in the rest of this file.
+Source: the owner's local `projects/agent.md`, repeated here on purpose. These rules apply to every repository and win over generic caution in the rest of this file.
 
 - "All repositories" means: the `projects` folder inside WSL Arch (`~/projects`), the Windows `projects` folder, and whatever `gh repo list QwQdoge` shows; confirm with `gh`.
 - Reading a repository: `git pull` and `git push` first so it matches the cloud. If there are open PRs/branches, merge all of them. If a branch is large or needs a decision, ask once, then merge everything without asking again before each merge; after merging, ask whether to run tests. Exceptions: old dependency-bump branches and branches that are clearly unneeded.
@@ -81,3 +81,4 @@ Source: the owner's `projects/agent.md` (Windows `C:/Users/Mingyue/projects/agen
 - Ask the user as little as possible: anything solvable by a simple attempt, or that matches the user's stated wishes, is done without asking. Ask only after repeated real attempts show the goal cannot be reached.
 - Read every relevant document before working: local ones and https://meoarch.org/docs/ (agent entry: https://meoarch.org/llms.txt).
 - Releases the owner asks for are authorized end to end (tag, manifest, dispatch, approve via `gh api .../pending_deployments`); do not stop for extra approvals.
+- Never write personal or machine-specific details (usernames, absolute local paths, emails, VM or machine layout, secrets, resource ids) into repositories or published docs; keep them in local-only files (`~/.claude/CLAUDE.md`, the owner's local `projects/agent.md`).
