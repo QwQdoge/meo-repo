@@ -1,3 +1,5 @@
+> 📚 [MeoArch 主文档 / Master Doc](https://github.com/QwQdoge/MeoArch-os-workspace/blob/main/docs/MEOARCH_MASTER.md)：全部仓库地图、操作手册、Cloudflare 清单、全部文档链接。<!-- meoarch-master -->
+
 # Package artifact storage policy
 
 `meo-repo` currently tracks repository payload under `x86_64/`. That state remains authoritative until the signed R2-backed publication path is complete and an explicit migration is approved.
