@@ -55,13 +55,36 @@ jobs:
           chown builder:builder /home/builder/.ssh/aur_key
           chmod 600 /home/builder/.ssh/aur_key
           chown -R builder:builder "$GITHUB_WORKSPACE"
-          sudo_env="AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key"
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+
+          # Validate the caller-supplied manifest before using it. Resolve symlinks
+          # and require a direct JSON file in the selected channel directory.
+          case "$RELEASE_CHANNEL" in
+            stable|beta) ;;
+            *) echo "Unsupported release channel: $RELEASE_CHANNEL" >&2; exit 64 ;;
+          esac
+          manifest_dir="$(realpath -e -- "manifests/$RELEASE_CHANNEL")"
+          manifest_path="$(realpath -e -- "$RELEASE_MANIFEST")"
+          if [[ "$(dirname "$manifest_path")" != "$manifest_dir" || "$manifest_path" != *.json ]]; then
+            echo "Manifest must be a direct JSON file in manifests/$RELEASE_CHANNEL" >&2
+            exit 64
+          fi
+          python scripts/validate_manifest.py "$manifest_path" --channel "$RELEASE_CHANNEL"
+
           if [ "$RELEASE_CHANNEL" = beta ]; then
             # A Beta release: the -beta packages only, compared with the newest Stable manifest.
-            stable="$(ls manifests/stable/*.json | sort -V | tail -1)"
-            args="publish '$stable' /home/builder/aur --also '$RELEASE_MANIFEST' --beta-manifest '$RELEASE_MANIFEST' --beta-only --push"
+            stable="$(find manifests/stable -maxdepth 1 -type f -name '*.json' -print | sort -V | tail -1)"
+            test -n "$stable"
+            python scripts/validate_manifest.py "$stable" --channel stable
+            runuser -u builder -- env AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key \
+              python scripts/publish_aur.py "$stable" /home/builder/aur \
+              --also "$manifest_path" --beta-manifest "$manifest_path" --beta-only --push
           else
-            latest_beta="$(ls manifests/beta/*.json | sort -V | tail -1)"
-            args="publish '$RELEASE_MANIFEST' /home/builder/aur --also '$latest_beta' --beta-manifest '$latest_beta' --push"
+            latest_beta="$(find manifests/beta -maxdepth 1 -type f -name '*.json' -print | sort -V | tail -1)"
+            test -n "$latest_beta"
+            python scripts/validate_manifest.py "$latest_beta" --channel beta
+            runuser -u builder -- env AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key \
+              python scripts/publish_aur.py "$manifest_path" /home/builder/aur \
+              --also "$latest_beta" --beta-manifest "$latest_beta" --push
           fi
-          su builder -c "cd '$GITHUB_WORKSPACE' && env $sudo_env python scripts/publish_aur.py $args"
