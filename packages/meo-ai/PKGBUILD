@@ -63,17 +63,23 @@ package() {
   install -d "$pkgdir/usr/bin"
   cat > "$pkgdir/usr/bin/meo-ai" <<'WRAPPER'
 #!/bin/sh
-args=
-for a in "$@"; do
-  case "$a" in
-    --live-recovery) export MEO_AI_LIVE_RECOVERY=1 ;;
+# Parse only the documented leading wrapper flags. Never reconstruct argv with eval:
+# arguments are untrusted input and must remain distinct shell positional parameters.
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --live-recovery)
+      export MEO_AI_LIVE_RECOVERY=1
+      shift
+      ;;
     --smoke)
       test -x /usr/bin/meo-ai-desktop && test -s /usr/share/meo-ai-desktop/qml/Main.qml
-      exit $? ;;
-    *) args="$args \"$a\"" ;;
+      exit $?
+      ;;
+    *)
+      break
+      ;;
   esac
 done
-eval "set -- $args"
 exec /usr/bin/meo-ai-desktop "$@"
 WRAPPER
   chmod 755 "$pkgdir/usr/bin/meo-ai"
