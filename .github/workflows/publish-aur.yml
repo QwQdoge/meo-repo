@@ -78,13 +78,13 @@ jobs:
             test -n "$stable"
             python scripts/validate_manifest.py "$stable" --channel stable
             runuser -u builder -- env HOME=/home/builder USER=builder LOGNAME=builder AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key \
-              python scripts/publish_aur.py "$stable" /home/builder/aur \
+              python scripts/publish_aur.py publish "$stable" /home/builder/aur \
               --also "$manifest_path" --beta-manifest "$manifest_path" --beta-only --push
           else
             latest_beta="$(find manifests/beta -maxdepth 1 -type f -name '*.json' -print | sort -V | tail -1)"
             test -n "$latest_beta"
             python scripts/validate_manifest.py "$latest_beta" --channel beta
             runuser -u builder -- env HOME=/home/builder USER=builder LOGNAME=builder AUR_SSH_KEY_FILE=/home/builder/.ssh/aur_key \
-              python scripts/publish_aur.py "$manifest_path" /home/builder/aur \
+              python scripts/publish_aur.py publish "$manifest_path" /home/builder/aur \
               --also "$latest_beta" --beta-manifest "$latest_beta" --push
           fi

@@ -7,7 +7,7 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 manifest="${1:?reviewed manifest is required}"
 channel_package="${2:-meo-channel-stable}"
 candidate="${3:-}"
-case "$candidate" in ''|meoui-qml|meo-account) ;; *) echo 'Unsupported sparse smoke scope' >&2; exit 2 ;; esac
+case "$candidate" in ''|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *) echo 'Unsupported sparse smoke scope' >&2; exit 2 ;; esac
 case "$channel_package" in
   meo-channel-stable|meo-channel-beta) ;;
   *) echo "Unsupported installed channel package: $channel_package" >&2; exit 2 ;;
@@ -66,6 +66,19 @@ if [ "$candidate" = meoui-qml ]; then
 fi
 if [ "$candidate" = meo-account ]; then
   "$repo_root/ci/check-account-payload.sh"
+  exit 0
+fi
+if [ -n "$candidate" ]; then
+  # Other sparse candidates: the core set above plus the candidate itself. Its own runtime checks
+  # run in remote-smoke.sh; the full-train payload below assumes every component is installed.
+  pacman -Q "$candidate" >/dev/null
+  if [ "$candidate" = meo-ai ]; then
+    command -v meo-ai >/dev/null
+    command -v meo-agent-service >/dev/null
+    test -s /usr/lib/systemd/user/meo-agent-service.service
+    test -s /usr/share/meo-account/clients/org.meo.MeoAI.account-client.json
+  fi
+  echo "PASS: installed Stable $candidate candidate and core package payload"
   exit 0
 fi
 command -v meo-settings >/dev/null

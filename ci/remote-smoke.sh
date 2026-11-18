@@ -178,7 +178,8 @@ case "$candidate" in
   meo-desktop|meo-kde-runtime|all) bash "$repo_root/ci/check-plasma-runtime.sh" ;;
 esac
 if [ "$channel" = stable ]; then
-  smoke_scope=""
-  case "$candidate" in meoui-qml|meo-account) smoke_scope="$candidate" ;; esac
+  # A sparse Stable run installs only the candidate and meo-core-meta, so the
+  # installed smoke checks that core set plus the candidate, not the whole train.
+  smoke_scope="$candidate"
   "$repo_root/ci/smoke-installed.sh" "$manifest" meo-channel-stable "$smoke_scope"
 fi
