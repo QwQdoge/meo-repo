@@ -180,6 +180,8 @@ def render_recipe(
         text = text.replace("prepare() {\n", "prepare() {\n  mkdir -p \"$srcdir/release_bundle\"\n  bsdtar -xf \"$srcdir/" + tarball + "\" -C \"$srcdir/release_bundle\"\n", 1)
         if "bsdtar -xf" not in text:
             raise AurError("release-bundle recipe has no prepare() to extend")
+        if beta_of:
+            text = beta_variant(text, beta_of, pkgver)
         return f"{MAINTAINER}\n" + text
     if "$srcdir/source" not in text:
         raise AurError("recipe does not use $srcdir/source")
