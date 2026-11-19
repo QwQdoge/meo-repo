@@ -135,17 +135,17 @@
     },
     "omnistore-bin": {
       "repository": "QwQdoge/OmniStore",
-      "tag": "v0.1.5-beta.1",
-      "commit": "615186e57b0abeec98fa04c183a36f0499d8e21f",
-      "expectedVersion": "0.1.5beta1-1",
-      "sourceUrl": "https://github.com/QwQdoge/OmniStore/releases/download/v0.1.5-beta.1/omnistore-linux-x64.tar.gz",
-      "sourceSha256": "3b14e8d06e29db8a6262c288ba064e8c6311dfc4e140471d0c5c7ae1391eb274",
-      "sourceDateEpoch": 1791551030,
+      "tag": "v0.1.5-beta.2",
+      "commit": "6df31d0b34b2901d14ae13f1a3929e7abe2a1e3e",
+      "expectedVersion": "0.1.5beta2-1",
+      "sourceUrl": "https://github.com/QwQdoge/OmniStore/releases/download/v0.1.5-beta.2/omnistore-linux-x64.tar.gz",
+      "sourceSha256": "b2b99ec82b4531871d03ca3095932efbc63669771c73cb046b46d1a9321b0506",
+      "sourceDateEpoch": 1795049833,
       "sourceLayout": "release-bundle",
-      "verifierUrl": "https://raw.githubusercontent.com/QwQdoge/OmniStore/615186e57b0abeec98fa04c183a36f0499d8e21f/verify_release_exporter_contract.py",
+      "verifierUrl": "https://raw.githubusercontent.com/QwQdoge/OmniStore/6df31d0b34b2901d14ae13f1a3929e7abe2a1e3e/verify_release_exporter_contract.py",
       "verifierSha256": "d4b7694e512898a32907be3a4fdf76ffba994b001ae2c957c0533b31b59c0773",
       "buildInputs": {
-        "meouiCommit": "3558171a246ea11c64b5002eb8099aaf1015f388"
+        "meouiCommit": "c3c1e441c4a5082cf6dc6f56c51bf8ceaf83bda7"
       }
     },
     "meo-repair": {
@@ -164,5 +164,5 @@
       ]
     }
   },
-  "description": "Beta 2026.11-beta.8: frosted blur for Dock, windows and sidebars; KDE apps and window corners follow Meo dynamic colour; stacked notifications; MeoStyle sliders on MeoUI tokens; lock screen follows the wallpaper; Meo Account release center and status pages; Repair UI fixes. Meo AI 0.1.0-beta.17; OmniStore joins when its build finishes."
+  "description": "Beta 2026.11-beta.8: frosted blur for Dock, windows and sidebars; KDE apps and window corners follow Meo dynamic colour; stacked notifications; MeoStyle sliders on MeoUI tokens; lock screen follows the wallpaper; Meo Account release center and status pages; Repair UI fixes. Meo AI 0.1.0-beta.17; OmniStore 0.1.5-beta.2 (native UI: load-state banners, two-level Settings, cross-platform groundwork, full zh_CN)."
 }
