@@ -1,0 +1,72 @@
+pkgname=bottles
+pkgver=67.7
+pkgrel=1
+pkgdesc="Run Windows software and games on MeoArch with managed Wine prefixes"
+arch=('any')
+url='https://github.com/bottlesdevs/Bottles'
+license=('GPL-3.0-only' 'LGPL-3.0-or-later')
+depends=('cabextract' 'gamemode' 'gtk4' 'gtksourceview5' 'hicolor-icon-theme'
+         'icoextract' 'libadwaita' 'libportal-gtk4' 'libsecret' 'xdg-utils'
+         'python' 'python-cairo' 'python-certifi' 'python-chardet'
+         'python-charset-normalizer' 'python-gobject' 'python-idna'
+         'python-markdown' 'python-pathvalidate' 'python-pefile' 'python-pycurl'
+         'python-requests' 'python-urllib3' 'python-yaml' 'python-yara')
+makedepends=('meson' 'blueprint-compiler' 'appstream-glib' 'desktop-file-utils'
+             'gettext' 'glib2-devel' 'python-pip')
+optdepends=('7zip: extract 7z archives'
+            'wine: use the system Wine as a runner'
+            'mangohud: performance overlay'
+            'gamescope: gamescope session integration'
+            'vulkan-tools: Vulkan diagnostics'
+            'xorg-xdpyinfo: display detection'
+            'python-pysocks: SOCKS proxy support'
+            'lib32-vulkan-icd-loader: 32-bit Windows programs (needs the multilib repository)')
+options=('!debug')
+# The Bottles release source is staged from the manifest into $srcdir/source,
+# and the two pure-Python wheels listed in runtime-sources.json into
+# $srcdir/third-party, both hash-checked before makepkg runs.
+source=('runtime-sources.json')
+sha256sums=('ba360d02a0f7e86b6b363031fc9e549715c1422fe626d43fc142b97ef4555205')
+
+build() {
+  local src="$srcdir/source"
+  # Upstream ships Bottles only as a Flatpak and blocks native builds and
+  # launches. MeoArch packages it natively for its Recommended profile, so lift
+  # exactly those guards. Each patch first proves its target text exists, so an
+  # upstream change fails the build instead of shipping a half-patched app.
+  # Release builds run makepkg with --noextract, which skips prepare().
+  grep -qF "if not fs.is_file('/' + '.flatpak-info')" "$src/bottles/frontend/meson.build"
+  sed -i "s|if not fs.is_file('/' + '.flatpak-info')|if false|" "$src/bottles/frontend/meson.build"
+
+  # Startup dialog that quits outside a sandbox.
+  grep -qF 'if not os.environ.get("CPAK_CONTAINER_ID") and not Xdp.Portal.running_under_sandbox():' \
+    "$src/bottles/frontend/windows/window.py"
+  sed -i 's|if not os.environ.get("CPAK_CONTAINER_ID") and not Xdp.Portal.running_under_sandbox():|if False:|' \
+    "$src/bottles/frontend/windows/window.py"
+
+  # Run-executable, new-bottle and preference dialogs that refuse to open
+  # outside a sandbox.
+  local guarded
+  for guarded in views/list.py views/bottle_preferences.py views/new_bottle_dialog.py; do
+    grep -qF 'not is_cpak() and not Xdp.Portal.running_under_sandbox()' "$src/bottles/frontend/$guarded"
+    sed -i 's|not is_cpak() and not Xdp.Portal.running_under_sandbox()|False|' "$src/bottles/frontend/$guarded"
+  done
+
+  arch-meson "$src" build
+  meson compile -C build
+}
+
+package() {
+  meson install -C build --destdir "$pkgdir"
+  # patool and vkbasalt-cli are not in the Arch repositories. Install the
+  # pinned wheels privately into Bottles' own module directory, which its
+  # launchers already put on sys.path; nothing else can import them.
+  PIP_NO_INDEX=1 python -m pip install --no-deps --no-compile \
+    --target "$pkgdir/usr/share/bottles" "$srcdir/third-party/"*.whl
+  rm -rf "$pkgdir/usr/share/bottles/bin"
+  # pip records the build directory here; it is not needed at runtime.
+  rm -f "$pkgdir"/usr/share/bottles/*.dist-info/direct_url.json
+  install -Dm644 "$srcdir/source/COPYING.md" "$pkgdir/usr/share/licenses/$pkgname/COPYING.md"
+  install -Dm644 "$startdir/runtime-sources.json" \
+    "$pkgdir/usr/share/licenses/$pkgname/runtime-sources.json"
+}

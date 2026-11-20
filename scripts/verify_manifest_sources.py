@@ -11,10 +11,13 @@ from pathlib import Path
 
 REPOSITORY = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 TAG = re.compile(r"^v[A-Za-z0-9._+-]+$")
+# Third-party upstreams keep their own tag scheme (Bottles tags "67.7").
+UPSTREAM_TAG = re.compile(r"^[0-9][0-9A-Za-z._+-]*$")
 
 
 def remote_tag_commit(repository: str, tag: str) -> str:
-    if not REPOSITORY.fullmatch(repository) or not TAG.fullmatch(tag):
+    tag_valid = TAG.fullmatch(tag) or (not repository.startswith("QwQdoge/") and UPSTREAM_TAG.fullmatch(tag))
+    if not REPOSITORY.fullmatch(repository) or not tag_valid:
         raise ValueError("invalid GitHub repository or tag")
     private_account = repository == "QwQdoge/MeoArch-account" and os.environ.get("MEO_ACCOUNT_SOURCE_SSH") == "1"
     repository_url = (

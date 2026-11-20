@@ -9,12 +9,12 @@ channel="${3:-stable}"
 candidate="${4:-}"
 case "$channel" in
   stable)
-    case "$candidate" in ''|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *)
+    case "$candidate" in ''|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair|bottles) ;; *)
       echo "Invalid Stable candidate" >&2; exit 2;;
     esac
     ;;
   beta)
-    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *)
+    case "$candidate" in meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair|bottles) ;; *)
       echo "Beta build requires one reviewed core package candidate" >&2; exit 2;;
     esac
     ;;
@@ -182,6 +182,8 @@ for package in "${core_packages[@]}"; do
     timeout 30 meoarch-repair --list-categories
     QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 \
       meoarch-repair --preview --screenshot "$output/repair-preview.png"
+  elif [ "$package" = bottles ]; then
+    bash "$repo_root/ci/check-bottles-runtime.sh"
   fi
 done
 

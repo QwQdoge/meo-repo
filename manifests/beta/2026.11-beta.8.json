@@ -162,6 +162,16 @@
         "installer/app",
         "LICENSE"
       ]
+    },
+    "bottles": {
+      "repository": "bottlesdevs/Bottles",
+      "tag": "67.7",
+      "commit": "1b16c736a8adb9c0e7827f82a8290da15407cd9e",
+      "sourceUrl": "https://codeload.github.com/bottlesdevs/Bottles/tar.gz/1b16c736a8adb9c0e7827f82a8290da15407cd9e",
+      "sourceSha256": "15d90f59efd2442b0658cb4c0d7d655e42371d8cfc8b9392b9a249b5ab852346",
+      "sourceDateEpoch": 1794930709,
+      "sourceLayout": "source",
+      "expectedVersion": "67.7-1"
     }
   },
   "description": "Beta 2026.11-beta.8: frosted blur for Dock, windows and sidebars; KDE apps and window corners follow Meo dynamic colour; stacked notifications; MeoStyle sliders on MeoUI tokens; lock screen follows the wallpaper; Meo Account release center and status pages; Repair UI fixes. Meo AI 0.1.0-beta.17; OmniStore 0.1.5-beta.2 (native UI: load-state banners, two-level Settings, cross-platform groundwork, full zh_CN)."

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "provenance": "Pinned pure-Python Bottles dependencies that are absent from the Arch official repositories (versions from Bottles 67.7 requirements.txt where pinned). All other dependencies use Arch packages.",
+  "sources": [
+    {
+      "type": "file",
+      "url": "https://files.pythonhosted.org/packages/7b/f6/9a9049cfa3b00073c632a437ba85b7d81c787bdeded80cd3dd295089a20a/patool-4.1.0-py2.py3-none-any.whl",
+      "sha256": "acb7cdc5c5b9138eb9713e021aa5450aa32bf3d5c9e778b51e7b6786407eac46"
+    },
+    {
+      "type": "file",
+      "url": "https://files.pythonhosted.org/packages/98/a3/fa72d390dc18dd92430cdf31c1adff9cc99a3d1cd3545d72e904b19ba4e9/vkbasalt_cli-3.1.1.post2-py3-none-any.whl",
+      "sha256": "8e6db4a366a26cb449ef54ba39c4d448d1141f4d5227799fb0adf6e2900f398a"
+    }
+  ]
+}

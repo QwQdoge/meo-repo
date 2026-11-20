@@ -158,6 +158,11 @@ def stage(manifest_path: Path, package: str, output: Path) -> None:
         safe_extract(dependency_archive, dependency_source)
         dependency_archive.unlink()
         stage_local_sources(output, ("org.meo.AI.desktop",))
+
+    # Pinned private Python wheels for packages whose pure-Python dependencies
+    # are absent from the Arch repositories (meo-ai, bottles).
+    if (output / "runtime-sources.json").is_file():
+        stage_local_sources(output, ("runtime-sources.json",))
         runtime_sources = json.loads((output / "runtime-sources.json").read_text())
         runtime_dir = output / "src" / "third-party"
         runtime_dir.mkdir()

@@ -59,7 +59,7 @@ PY
     channel_package=meo-channel-stable
     ;;
   beta)
-    case "$candidate" in all|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
+    case "$candidate" in all|meoui-qml|meo-icons|meo-plasma-login-manager|meo-desktop|meo-kde-runtime|meo-account|meo-icon-studio|meo-settings|omnistore-bin|meo-ai|meo-repair|bottles) ;; *) echo "Invalid beta candidate" >&2; exit 2;; esac
     repositories=$'[meo-beta]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo-beta/os/x86_64\n\n[meo]\nSigLevel = Required TrustedOnly\nServer = https://packages.meoarch.org/meo/os/x86_64'
     packages=("$candidate")
     if [ "$candidate" = all ]; then
@@ -164,6 +164,9 @@ if [ "$candidate" = meo-repair ] || [ "$candidate" = all ]; then
   timeout 30 meoarch-repair --list-categories
   QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 \
     meoarch-repair --preview --screenshot /tmp/meo-repair-preview.png
+fi
+if [ "$candidate" = bottles ]; then
+  bash "$repo_root/ci/check-bottles-runtime.sh"
 fi
 if [ "$candidate" = omnistore-bin ] || [ "$candidate" = all ]; then
   QT_QPA_PLATFORM=offscreen QSG_RHI_BACKEND=software timeout 30 omnistore --check-qml

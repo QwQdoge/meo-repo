@@ -10,7 +10,7 @@ REQUIRED = {"meoui-qml", "meo-icons", "meo-desktop", "meo-kde-runtime", "meo-acc
 MINIMAL = {"meoui-qml", "meo-icons", "meo-desktop"}
 LEGACY_RECOMMENDED = REQUIRED - {"meo-kde-runtime"}
 NEXT_COMPONENTS = {"meo-icon-studio", "meo-plasma-login-manager"}
-OPTIONAL_APPLICATIONS = {"meo-ai", "meo-repair"}
+OPTIONAL_APPLICATIONS = {"meo-ai", "meo-repair", "bottles"}
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
 VERSION = re.compile(r"^[A-Za-z0-9._+:-]+-[0-9][A-Za-z0-9._+]*$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -61,7 +61,13 @@ def main(path: str, channel: str | None = None) -> None:
             fail(f"{name} is not an object")
         if not isinstance(component.get("repository"), str) or "/" not in component["repository"]:
             fail(f"{name} has no GitHub repository")
-        if not isinstance(component.get("tag"), str) or not component["tag"].startswith("v"):
+        tag = component.get("tag")
+        # Meo components tag releases as v<version>. Third-party upstreams keep
+        # their own scheme (Bottles tags "67.7"); the pinned commit and source
+        # hash below are what make every component immutable.
+        upstream_tag = (not component["repository"].startswith("QwQdoge/")
+                        and isinstance(tag, str) and re.fullmatch(r"[0-9][0-9A-Za-z._+-]*", tag))
+        if not isinstance(tag, str) or not (tag.startswith("v") or upstream_tag):
             fail(f"{name} has no immutable release tag")
         if not COMMIT.fullmatch(str(component.get("commit", ""))):
             fail(f"{name} commit must be a pinned 40-character SHA")
